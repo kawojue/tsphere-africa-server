@@ -13,7 +13,7 @@ import {
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { LoginAdminDto, RegisterAdminDto } from './dto/admin.dto'
-import { ResetPasswordDto, ResetPasswordTokenDto } from './dto/reset-password.dto'
+import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dto/reset-password.dto'
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -93,6 +93,15 @@ export class AuthController {
   @Post('/login')
   async login(@Res() res: Response, @Body() loginDto: LoginDto) {
     return await this.authService.login(res, loginDto)
+  }
+
+  @Post('/update-password')
+  async updatePassword(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() body: UpdatePasswordDto
+  ) {
+    return await this.authService.updatePassword(res, req.user, body)
   }
 
   @Post('/admin-register')

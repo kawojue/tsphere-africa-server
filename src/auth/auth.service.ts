@@ -15,7 +15,7 @@ import { PrismaService } from 'lib/prisma.service'
 import { EncryptionService } from 'lib/encryption.service'
 import { generateUsername } from 'unique-username-generator'
 import { LoginAdminDto, RegisterAdminDto } from './dto/admin.dto'
-import { ResetPasswordDto, ResetPasswordTokenDto } from './dto/reset-password.dto'
+import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dto/reset-password.dto'
 import { GoogleOnboardingDto, RequestTokenDto, LoginDto, EmailDto, SignupDto } from './dto/auth.dto'
 
 @Injectable()
@@ -384,7 +384,7 @@ export class AuthService {
 
     async resetPassword(
         res: Response,
-        { password1, password2 }: ResetPasswordDto,
+        { password, password2 }: ResetPasswordDto,
         { token_type, token }: ResetPasswordTokenDto,
     ) {
         try {
@@ -393,7 +393,7 @@ export class AuthService {
                 return
             }
 
-            if (password1 !== password2) {
+            if (password !== password2) {
                 this.response.sendError(res, StatusCodes.BadRequest, 'Passwords not match')
                 return
             }
@@ -413,12 +413,14 @@ export class AuthService {
                 return
             }
 
-            const password = await this.encryption.hashAsync(password1)
+            const newPassword = await this.encryption.hashAsync(password)
             await this.prisma.user.update({
                 where: {
                     id: validation.userId
                 },
-                data: { password }
+                data: {
+                    password: newPassword
+                }
             })
             await this.prisma.validation.delete({
                 where: { token }
@@ -593,6 +595,43 @@ export class AuthService {
                 role: user.role,
                 access_token: accessToken,
                 message: "Login Successful"
+            })
+        } catch (err) {
+            this.handleError(res, err)
+        }
+    }
+
+    async updatePassword(
+        res: Response,
+        { sub }: ExpressUser,
+        { oldPassword, password }: UpdatePasswordDto
+    ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    id: sub
+                }
+            })
+
+            const isMatch = await this.encryption.compareAsync(oldPassword, user.password)
+
+            if (!isMatch) {
+                return this.response.sendError(res, StatusCodes.Unauthorized, 'Incorrect old password')
+            }
+
+            const hashedPassword = await this.encryption.hashAsync(password)
+
+            await this.prisma.user.update({
+                where: {
+                    id: sub
+                },
+                data: {
+                    password: hashedPassword
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                message: "Password updated successfully"
             })
         } catch (err) {
             this.handleError(res, err)

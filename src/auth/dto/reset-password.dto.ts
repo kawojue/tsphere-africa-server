@@ -3,7 +3,7 @@ import { TokenEnum } from 'enums/base.enum'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsEnum, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from 'class-validator'
 
-export class ResetPasswordDto {
+export class PasswordDto {
   @ApiProperty({
     example: 'P@ssw0rd1',
     description: 'The password for the user.',
@@ -19,8 +19,10 @@ export class ResetPasswordDto {
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*/, {
     message: 'Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 numeric digit',
   })
-  password1: string
+  password: string
+}
 
+export class ResetPasswordDto extends PasswordDto {
   @ApiProperty({
     example: 'P@ssw0rd1',
     description: 'Password confirmation for the user.',
@@ -37,4 +39,14 @@ export class ResetPasswordTokenDto extends TokenDto {
   })
   @IsEnum(TokenEnum)
   token_type: TokenEnum
+}
+
+export class UpdatePasswordDto extends PasswordDto {
+  @ApiProperty({
+    example: 'sknknvold_password'
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(72)
+  oldPassword: string
 }
