@@ -1,0 +1,26 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Application
+        run: npm run build
+
+      - name: Deploy Application
+        run: |
+          sudo apt update
+          sudo apt install -y sshpass
+          sshpass -p ${{ secrets.DROPLET_PASSWORD }} ssh Nest-TalentSphere-API@165.227.41.29 "cd /tsphere-backend && git pull origin main && npm install && pm2 restart all"
