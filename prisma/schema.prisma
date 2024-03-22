@@ -1,0 +1,160 @@
+datasource db {
+    provider = "mongodb"
+    url      = env("DATABASE_URI")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model User {
+    id                     String      @id @default(auto()) @map("_id") @db.ObjectId
+    email                  String      @unique
+    firstname              String
+    username               String      @unique
+    lastname               String
+    password               String?
+    skill                  String?
+    email_verified         Boolean     @default(false)
+    role                   Role        @default(user)
+    auth_method            AuthMethod
+    hasCompletedOnboarding Boolean     @default(false)
+    provider_id            String?     @unique
+    creative               Creative?
+    subscribed             Boolean     @default(false)
+    createdAt              DateTime    @default(now())
+    validation             Validation?
+}
+
+model Admin {
+    id       String @id @default(auto()) @map("_id") @db.ObjectId
+    fullName String
+    password String
+    email    String @unique
+    role     Role   @default(admin)
+}
+
+model Validation {
+    id           String   @id @default(auto()) @map("_id") @db.ObjectId
+    token        String   @unique
+    token_expiry DateTime
+    randomCode   String
+    user         User     @relation(fields: [userId], references: [id])
+    userId       String   @unique @db.ObjectId
+}
+
+model SubscribedEmails {
+    id    String @id @default(auto()) @map("_id") @db.ObjectId
+    email String @unique
+}
+
+model Creative {
+    id                 String                @id @default(auto()) @map("_id") @db.ObjectId
+    personalInfo       CreativePersonalInfo?
+    skill              CreativeSkill?
+    portfolio          CreativePortfolio?
+    experiences        CreativeExperience[]
+    education          CreativeEducation?
+    rateAndAvailabilty RateAndAvailabilty?
+    user               User                  @relation(references: [id], fields: [userId])
+    userId             String                @unique @db.ObjectId
+}
+
+model CreativePersonalInfo {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    phone       String?
+    gender      Gender?
+    languages   String[]
+    nationality String?
+    religion    String?
+    creative    Creative @relation(fields: [creativeId], references: [id])
+    creativeId  String   @unique @db.ObjectId
+}
+
+model CreativeSkill {
+    id         String             @id @default(auto()) @map("_id") @db.ObjectId
+    skills     String[]
+    level      CreativeSkillLevel
+    creative   Creative           @relation(fields: [creativeId], references: [id])
+    creativeId String             @unique @db.ObjectId
+}
+
+model CreativeExperience {
+    id         String    @id @default(auto()) @map("_id") @db.ObjectId
+    title      String
+    employer   String?
+    startDate  DateTime
+    endDate    DateTime?
+    location   String
+    details    String?
+    creative   Creative  @relation(fields: [creativeId], references: [id])
+    creativeId String    @unique @db.ObjectId
+}
+
+model RateAndAvailabilty {
+    id               String     @id @default(auto()) @map("_id") @db.ObjectId
+    chargeTime       ChargeTime
+    workingDays      String[]
+    chargePerTime    Int
+    workHoursPerTime String
+    creative         Creative   @relation(fields: [creativeId], references: [id])
+    creativeId       String     @unique @db.ObjectId
+}
+
+model CreativePortfolio {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    title       String
+    files       File[]
+    description String
+    creative    Creative @relation(fields: [creativeId], references: [id])
+    creativeId  String   @unique @db.ObjectId
+}
+
+model CreativeEducation {
+    id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+    school               String
+    startDate            DateTime
+    endDate              DateTime
+    study                String
+    levelOfCertification String
+    typeOfDegree         String?
+    creative             Creative @relation(fields: [creativeId], references: [id])
+    creativeId           String   @unique @db.ObjectId
+}
+
+enum CreativeSkillLevel {
+    intermidiate
+    beginner
+    professional
+}
+
+enum ChargeTime {
+    Hourly
+    Weekly
+    Monthly
+}
+
+enum Gender {
+    Male
+    Female
+}
+
+type File {
+    idx  String? @default(uuid())
+    url  String
+    path String
+    type String?
+}
+
+enum AuthMethod {
+    local
+    google
+}
+
+enum Role {
+    user
+    admin
+    talent
+    creative
+    client
+}
