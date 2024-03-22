@@ -16,19 +16,12 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Build Application
-        run: npm run build
-
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      - name: Build Application
+        run: npm run build
+
       - name: Deploy Application
         run: |
-          sudo apt update
-          sudo apt install -y sshpass
-          sshpass -p '${{ secrets.DROPLET_PASSWORD }}' ssh Nest-TalentSphere-API@165.227.41.29 "cd /tsphere-backend && git pull origin main && npm install && pm2 restart all"
-
-
-      - name: Start Application
-        run: |
-          sshpass -p ${{ secrets.DROPLET_PASSWORD }} ssh Nest-TalentSphere-API@165.227.41.29 "cd /tsphere-backend && npm start"
+          sshpass -p ${{ secrets.DROPLET_PASSWORD }} ssh Nest-TalentSphere-API@165.227.41.29 "sudo apt update && sudo apt install -y sshpass; cd /tsphere-backend && git pull origin main && npm install && pm2 restart all"
