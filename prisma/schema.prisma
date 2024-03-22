@@ -135,16 +135,19 @@ enum ChargeTime {
 }
 
 model Talent {
-    id String @id @default(auto()) @map("_id") @db.ObjectId
+    id           String              @id @default(auto()) @map("_id") @db.ObjectId
+    personalInfo TalentPersonalInfo?
 }
 
-model TalentPersonalInformation {
+model TalentPersonalInfo {
     id                String  @id @default(auto()) @map("_id") @db.ObjectId
     address           String
     race              String?
     gender            Gender?
     religion          String?
     yearsOfExperience String?
+    talent            Talent  @relation(fields: [talentId], references: [id])
+    talentId          String  @unique @db.ObjectId
 }
 
 enum Gender {
