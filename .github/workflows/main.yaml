@@ -26,7 +26,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y sshpass
-          sshpass -p ${{ secrets.DROPLET_PASSWORD }} ssh Nest-TalentSphere-API@165.227.41.29 "cd /tsphere-backend && git pull origin main && npm install && pm2 restart all"
+          sshpass -p '${{ secrets.DROPLET_PASSWORD }}' ssh Nest-TalentSphere-API@165.227.41.29 "cd /tsphere-backend && git pull origin main && npm install && pm2 restart all"
+
 
       - name: Start Application
         run: |
