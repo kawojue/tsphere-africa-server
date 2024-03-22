@@ -5,12 +5,14 @@ import { AuthModule } from './auth/auth.module'
 import { FileModule } from './file/file.module'
 import { AppController } from './app.controller'
 import { CreativeModule } from './creative/creative.module'
+import { TalentModule } from './talent/talent.module';
 
 @Module({
   imports: [
     AuthModule,
     FileModule,
-    CreativeModule
+    CreativeModule,
+    TalentModule
   ],
   controllers: [AppController],
   providers: [AppService, JwtService],
