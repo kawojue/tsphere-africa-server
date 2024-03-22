@@ -24,9 +24,12 @@ jobs:
 
       - name: Deploy Application
         run: |
-          sudo apt update
-          sudo apt install -y sshpass
-          sudo sshpass -p '${{ secrets.DROPLET_PASSWORD }}' ssh root@165.227.41.29 "cd /tsphere-backend && git pull origin main && npm install && pm2 restart all"
+          sudo apt update && \
+          sudo apt install -y sshpass && \
+          sudo sshpass -p '${{ secrets.DROPLET_PASSWORD }}' ssh root@165.227.41.29 "cd /tsphere-backend && \
+          git pull origin main && \
+          npm install && \
+          pm2 restart all"
 
       - name: Start Application
         run: |
