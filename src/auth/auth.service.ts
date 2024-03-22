@@ -614,13 +614,11 @@ export class AuthService {
             })
 
             const isMatch = await this.encryption.compareAsync(oldPassword, user.password)
-
             if (!isMatch) {
                 return this.response.sendError(res, StatusCodes.Unauthorized, 'Incorrect old password')
             }
 
             const hashedPassword = await this.encryption.hashAsync(password)
-
             await this.prisma.user.update({
                 where: {
                     id: sub
