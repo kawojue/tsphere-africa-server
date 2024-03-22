@@ -138,6 +138,15 @@ model Talent {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 }
 
+model TalentPersonalInformation {
+    id                String  @id @default(auto()) @map("_id") @db.ObjectId
+    address           String
+    race              String?
+    gender            Gender?
+    religion          String?
+    yearsOfExperience String?
+}
+
 enum Gender {
     Male
     Female
