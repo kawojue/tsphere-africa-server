@@ -134,6 +134,10 @@ enum ChargeTime {
     Monthly
 }
 
+model Talent {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+}
+
 enum Gender {
     Male
     Female

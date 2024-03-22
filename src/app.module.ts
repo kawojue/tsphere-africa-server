@@ -4,8 +4,8 @@ import { AppService } from './app.service'
 import { AuthModule } from './auth/auth.module'
 import { FileModule } from './file/file.module'
 import { AppController } from './app.controller'
+import { TalentModule } from './talent/talent.module'
 import { CreativeModule } from './creative/creative.module'
-import { TalentModule } from './talent/talent.module';
 
 @Module({
   imports: [
