@@ -26,11 +26,11 @@ jobs:
         run: |
           sudo apt update && \
           sudo apt install -y sshpass && \
-          sudo sshpass -p '${{ secrets.DROPLET_PASSWORD }}' ssh root@165.227.41.29 "cd /tsphere-backend && \
+          sudo sshpass -p '${{ secrets.DROPLET_PASSWORD }}' ssh -o StrictHostKeyChecking=no root@165.227.41.29 "cd /tsphere-backend && \
           git pull origin main && \
           npm install && \
           npm start"
 
       - name: Start Application
         run: |
-          sudo sshpass -p '${{ secrets.DROPLET_PASSWORD }}' ssh root@165.227.41.29 "cd /tsphere-backend && npm start"
+          sudo sshpass -p '${{ secrets.DROPLET_PASSWORD }}' ssh -o StrictHostKeyChecking=no root@165.227.41.29 "cd /tsphere-backend && npm start"
