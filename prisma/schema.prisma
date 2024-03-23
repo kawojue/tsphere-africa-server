@@ -140,14 +140,19 @@ model Talent {
 }
 
 model TalentPersonalInfo {
-    id                String  @id @default(auto()) @map("_id") @db.ObjectId
+    id                String   @id @default(auto()) @map("_id") @db.ObjectId
     address           String
-    race              String?
+    phone             String?
     gender            Gender?
+    languages         String[]
+    nationality       String?
     religion          String?
-    yearsOfExperience String?
-    talent            Talent  @relation(fields: [talentId], references: [id])
-    talentId          String  @unique @db.ObjectId
+    race              String?
+    yearsOfExperience String
+    instagramHandle   String?
+    xHandler          String?
+    talent            Talent   @relation(fields: [talentId], references: [id])
+    talentId          String   @unique @db.ObjectId
 }
 
 enum Gender {
