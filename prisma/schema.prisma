@@ -21,6 +21,7 @@ model User {
     hasCompletedOnboarding Boolean     @default(false)
     provider_id            String?     @unique
     creative               Creative?
+    talent                 Talent?
     subscribed             Boolean     @default(false)
     createdAt              DateTime    @default(now())
     validation             Validation?
@@ -137,6 +138,8 @@ enum ChargeTime {
 model Talent {
     id           String              @id @default(auto()) @map("_id") @db.ObjectId
     personalInfo TalentPersonalInfo?
+    user         User                @relation(fields: [userId], references: [id])
+    userId       String              @unique @db.ObjectId
 }
 
 model TalentPersonalInfo {
@@ -148,9 +151,11 @@ model TalentPersonalInfo {
     nationality       String?
     religion          String?
     race              String?
-    yearsOfExperience String
+    yearsOfExperience Float
+    idNumber          String
+    idType            String
     instagramHandle   String?
-    xHandler          String?
+    xHandle           String?
     talent            Talent   @relation(fields: [talentId], references: [id])
     talentId          String   @unique @db.ObjectId
 }

@@ -67,8 +67,12 @@ export class CreativeService {
                     creativeId: creative.id,
                 },
                 create: {
+                    phone,
+                    gender,
+                    religion,
+                    languages,
+                    nationality,
                     creative: { connect: { id: creative.id } },
-                    ...personalInfoData,
                 },
                 update: personalInfoData,
             })
