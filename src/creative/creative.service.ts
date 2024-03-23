@@ -424,13 +424,17 @@ export class CreativeService {
                 create: {
                     title,
                     description,
+                    files: filesArr,
                     creative: {
                         connect: {
                             id: user.creative.id
                         }
                     }
                 },
-                update: newPortfolioData
+                update: {
+                    files: filesArr,
+                    ...newPortfolioData,
+                }
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, {
