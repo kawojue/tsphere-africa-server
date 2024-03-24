@@ -98,7 +98,8 @@ export class CreativeService {
     ) {
         try {
             const MAX_SKILL = 5 as const
-            if (skills.length > 5) {
+            const creativeSkills = JSON.parse(skills.replace(/'/g, '"')) as Array<string>
+            if (creativeSkills.length > 5) {
                 return this.response.sendError(res, StatusCodes.BadRequest, `Maximum skill is ${MAX_SKILL}`)
             }
 
@@ -132,8 +133,8 @@ export class CreativeService {
 
             const creativeSkill = await this.prisma.creativeSkill.create({
                 data: {
-                    skills,
                     level,
+                    skills: creativeSkills,
                     creative: {
                         connect: {
                             id: creativeId
@@ -363,7 +364,7 @@ export class CreativeService {
             const portfolioData = user.creative.portfolio
 
             if (files.length > 0) {
-                const MAX_SIZE = 4 << 20
+                const MAX_SIZE = 10 << 20
                 const allowedExt: string[] = ['jpg', 'png', 'pdf', 'mp4']
 
                 const isContainAtLeastImg = files.some((file) => allowedExt.slice(0, 2).includes(file.originalname.split('.').pop()))
@@ -407,8 +408,8 @@ export class CreativeService {
                             }
                         }
                         filesArr = []
-                    } catch {
-                        return this.response.sendError(res, StatusCodes.InternalServerError, "Error uploading file(s)")
+                    } catch (err) {
+                        return this.handleServerError(res, err, "Error uploading file(s)")
                     }
                 }
             }

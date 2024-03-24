@@ -1,18 +1,16 @@
+import { IsEnum } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsArray, IsEnum } from 'class-validator'
 import { CreativeSkillLevel } from '@prisma/client'
 
 export class SkillDto {
     @ApiProperty({
-        example: 'Software Engineer',
-        description: 'The skill for the user',
+        example: ['Backend Engineer', 'Frontend Engineer'],
+        description: "Stringify the payload"
     })
-    @IsArray()
-    skills: string[]
+    skills: string
 
     @ApiProperty({
         example: 'Professional',
-        description: "The level for the user's skill",
     })
     @IsEnum(CreativeSkillLevel)
     level: CreativeSkillLevel
