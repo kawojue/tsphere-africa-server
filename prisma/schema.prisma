@@ -154,6 +154,7 @@ model TalentPersonalInfo {
     yearsOfExperience Float
     idNumber          String
     idType            String
+    idPhoto           File?
     instagramHandle   String?
     xHandle           String?
     talent            Talent   @relation(fields: [talentId], references: [id])

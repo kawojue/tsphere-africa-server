@@ -1,6 +1,6 @@
 import {
   Body, Controller, Put, Delete,
-  UseInterceptors, UploadedFile,
+  UseInterceptors, UploadedFiles,
   Param, Post, Req, Res, UseGuards,
 } from '@nestjs/common'
 import { Role } from 'src/role.decorator'
@@ -94,7 +94,7 @@ export class CreativeController {
   async portfolio(
     @Req() req: Request,
     @Res() res: Response,
-    @UploadedFile() file: Express.Multer.File[],
+    @UploadedFiles() file: Express.Multer.File[],
     @Body() body: PortfolioDto,
   ) {
     return await this.creativeService.portfolio(req, res, file, body)
