@@ -14,3 +14,8 @@ export enum TokenEnum {
   email = 'email',
   password = 'password'
 }
+
+export enum ResourceType {
+  image = 'image',
+  video = 'video'
+}

@@ -7,6 +7,7 @@ import { PassportModule } from '@nestjs/passport'
 import { AuthController } from './auth.controller'
 import { JwtStrategy } from 'src/jwt/jwt.strategy'
 import { PrismaService } from 'lib/prisma.service'
+import { WasabiService } from 'lib/wasabi.service'
 import { EncryptionService } from 'lib/encryption.service'
 
 @Module({
@@ -21,6 +22,7 @@ import { EncryptionService } from 'lib/encryption.service'
     JwtStrategy,
     PlunkService,
     PrismaService,
+    WasabiService,
     EncryptionService,
   ],
 })

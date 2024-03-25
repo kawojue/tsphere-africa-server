@@ -1,17 +1,15 @@
-import {
-  Post, Query, Res, Body, Patch,
-  Req, Controller, Get, UseGuards,
-} from '@nestjs/common'
-import { Role } from 'src/role.decorator'
-import { Request, Response } from 'express'
+import { Response } from 'express'
 import { AuthService } from './auth.service'
-import { AuthGuard } from '@nestjs/passport'
+import {
+  UseInterceptors, Post, Query, Res, Body,
+  Patch, Req, Controller, Get, UploadedFiles,
+} from '@nestjs/common'
 import {
   UsernameDto, LoginDto, SignupDto, TokenDto,
-  EmailDto, GoogleOnboardingDto, RequestTokenDto,
+  SignupUnder18Dto, EmailDto, RequestTokenDto,
 } from './dto/auth.dto'
-import { RolesGuard } from 'src/jwt/jwt-auth.guard'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { ApiConsumes, ApiTags } from '@nestjs/swagger'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { LoginAdminDto, RegisterAdminDto } from './dto/admin.dto'
 import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dto/reset-password.dto'
 
@@ -19,37 +17,6 @@ import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dt
 @ApiTags('Auth')
 export class AuthController {
   constructor(private authService: AuthService) { }
-
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  googleAuth() { }
-
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
-    // @ts-ignore
-    const { access_token, user } = req.user
-    if (access_token && !user.hasCompletedOnboarding) {
-      res.redirect(`${process.env.CLIENT_URL}/google/onboarding?token=${access_token}`)
-    } else if (access_token && user.hasCompletedOnboarding) {
-      res.redirect(`${process.env.CLIENT_URL}/${user.role}`)
-    } else {
-      res.redirect(`${process.env.CLIENT_URL}/login`)
-    }
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Role('user')
-  @Post('google/onboarding')
-  async completeGoogleOnboarding(
-    @Res() res: Response,
-    @Req() req: IRequest,
-    @Body() googleOnboardingDto: GoogleOnboardingDto
-  ) {
-    //@ts-ignore
-    return await this.authService.completeGoogleOnboarding(res, req.user, googleOnboardingDto)
-  }
 
   @Post('/subscribe-newsletter')
   async subscribeToNewsletter(@Res() res: Response, @Body() subscribeNews: EmailDto) {
@@ -85,9 +52,20 @@ export class AuthController {
     return await this.authService.usernameExists(res, username)
   }
 
-  @Post('/register')
-  async signup(@Res() res: Response, @Body() signupDto: SignupDto) {
-    await this.authService.signup(res, signupDto)
+  @Post('/signup-under18')
+  @ApiConsumes('image/jpeg', 'image/png')
+  @UseInterceptors(FileInterceptor('kyc'))
+  async signupUnder18(
+    @Res() res: Response,
+    @Body() signupDto: SignupUnder18Dto,
+    @UploadedFiles() files: Express.Multer.File[]
+  ) {
+    return await this.authService.signupUnder18(res, files, signupDto)
+  }
+
+  @Post('/signup-over18')
+  async signupOver18(@Res() res: Response, @Body() signupDto: SignupDto) {
+    return await this.authService.signupOver18(res, signupDto)
   }
 
   @Post('/login')

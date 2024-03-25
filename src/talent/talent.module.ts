@@ -4,6 +4,7 @@ import { JwtModule } from 'src/jwt/jwt.module'
 import { TalentService } from './talent.service'
 import { PassportModule } from '@nestjs/passport'
 import { PrismaService } from 'lib/prisma.service'
+import { WasabiService } from 'lib/wasabi.service'
 import { TalentController } from './talent.controller'
 
 @Module({
@@ -12,6 +13,6 @@ import { TalentController } from './talent.controller'
     PassportModule.register({ defaultStrategy: 'jwt' })
   ],
   controllers: [TalentController],
-  providers: [TalentService, PrismaService, SendRes],
+  providers: [TalentService, PrismaService, SendRes, WasabiService],
 })
 export class TalentModule { }

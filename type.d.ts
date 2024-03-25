@@ -11,3 +11,9 @@ interface JwtPayload {
     sub: string
     role: Roles
 }
+
+interface IFile {
+    url: string
+    path: string
+    type: string
+}

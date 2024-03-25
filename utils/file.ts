@@ -1,6 +1,6 @@
 import { Response } from 'express'
 
-export const validateFile = (
+export const validateFile = async (
     res: Response, file: Express.Multer.File,
     maxSize: number, ...extensions: string[]
 ) => {

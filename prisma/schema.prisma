@@ -8,23 +8,30 @@ generator client {
 }
 
 model User {
-    id                     String      @id @default(auto()) @map("_id") @db.ObjectId
-    email                  String      @unique
-    firstname              String
-    username               String      @unique
-    lastname               String
-    password               String?
-    skill                  String?
-    email_verified         Boolean     @default(false)
-    role                   Role        @default(user)
-    auth_method            AuthMethod
-    hasCompletedOnboarding Boolean     @default(false)
-    provider_id            String?     @unique
-    creative               Creative?
-    talent                 Talent?
-    subscribed             Boolean     @default(false)
-    createdAt              DateTime    @default(now())
-    validation             Validation?
+    id             String      @id @default(auto()) @map("_id") @db.ObjectId
+    email          String      @unique
+    username       String      @unique
+    firstname      String
+    lastname       String
+    password       String
+    skill          String
+    under18Kyc     under18Kyc?
+    email_verified Boolean     @default(false)
+    role           Role        @default(user)
+    under18        Boolean
+    creative       Creative?
+    talent         Talent?
+    subscribed     Boolean     @default(false)
+    createdAt      DateTime    @default(now())
+    validation     Validation?
+}
+
+model under18Kyc {
+    id             String @id @default(auto()) @map("_id") @db.ObjectId
+    issuingCountry String
+    images         File[]
+    user           User   @relation(fields: [userId], references: [id])
+    userId         String @unique @db.ObjectId
 }
 
 model Admin {
@@ -138,6 +145,7 @@ enum ChargeTime {
 model Talent {
     id           String              @id @default(auto()) @map("_id") @db.ObjectId
     personalInfo TalentPersonalInfo?
+    portfolio    TalentPortfolio?
     user         User                @relation(fields: [userId], references: [id])
     userId       String              @unique @db.ObjectId
 }
@@ -161,6 +169,14 @@ model TalentPersonalInfo {
     talentId          String   @unique @db.ObjectId
 }
 
+model TalentPortfolio {
+    id       String @id @default(auto()) @map("_id") @db.ObjectId
+    video    File?
+    images   File[]
+    talent   Talent @relation(fields: [talentId], references: [id])
+    talentId String @unique @db.ObjectId
+}
+
 enum Gender {
     Male
     Female
@@ -171,11 +187,6 @@ type File {
     url  String
     path String
     type String?
-}
-
-enum AuthMethod {
-    local
-    google
 }
 
 enum Role {

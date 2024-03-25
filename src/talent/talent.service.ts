@@ -3,6 +3,7 @@ import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
+import { ResourceType } from 'enums/base.enum'
 import { Gender, Talent } from '@prisma/client'
 import { genFileName } from 'helpers/genFilename'
 import { WasabiService } from 'lib/wasabi.service'
@@ -54,7 +55,7 @@ export class TalentService {
             }
 
             if (file) {
-                const validatedFile = validateFile(res, file, 4 << 20, 'jpg', 'mp4')
+                const validatedFile = await validateFile(res, file, 4 << 20, 'jpg', 'mp4')
                 const { Key, Location } = await this.wasabi.uploadS3(validatedFile, genFileName())
 
                 newFile = {
@@ -121,6 +122,43 @@ export class TalentService {
             })
         } catch (err) {
             this.handleServerError(res, err, 'Error saving personal information')
+        }
+    }
+
+    async portfolio(
+        res: Response,
+        action: string,
+        { sub }: ExpressUser,
+        file: Express.Multer.File,
+        resource_type: ResourceType,
+        files: Express.Multer.File[]
+    ) {
+        try {
+            const talent = await this.prisma.talent.findUnique({
+                where: {
+                    userId: sub
+                }
+            })
+
+            if (!talent) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'Add your personal information')
+            }
+
+            const portfolio = await this.prisma.talentPortfolio.findUnique({
+                where: {
+                    talentId: talent.id
+                }
+            })
+
+            if (file) {
+                if (portfolio.video?.path) {
+                    await this.wasabi.deleteS3(portfolio.video.path)
+                }
+            }
+
+
+        } catch (err) {
+            return this.handleServerError(res, err, 'Error uploading portfolio')
         }
     }
 }

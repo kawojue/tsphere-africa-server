@@ -1,22 +1,22 @@
-import { User } from '@prisma/client'
+import { Response } from 'express'
 import { JwtService } from '@nestjs/jwt'
+import { validateFile } from 'utils/file'
 import { USER_REGEX } from 'utils/regExp'
 import { Injectable } from '@nestjs/common'
-import { Request, Response } from 'express'
 import StatusCodes from 'enums/StatusCodes'
 import { genToken } from 'helpers/genToken'
 import { SendRes } from 'lib/sendRes.service'
 import { titleName } from 'helpers/formatTexts'
 import { PlunkService } from 'lib/plunk.service'
-import { Profile } from 'passport-google-oauth20'
+import { genFileName } from 'helpers/genFilename'
 import { Role, Validation } from '@prisma/client'
 import { genRandomCode } from 'helpers/genRandStr'
 import { PrismaService } from 'lib/prisma.service'
+import { WasabiService } from 'lib/wasabi.service'
 import { EncryptionService } from 'lib/encryption.service'
-import { generateUsername } from 'unique-username-generator'
 import { LoginAdminDto, RegisterAdminDto } from './dto/admin.dto'
+import { RequestTokenDto, LoginDto, EmailDto, SignupDto, SignupUnder18Dto } from './dto/auth.dto'
 import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dto/reset-password.dto'
-import { GoogleOnboardingDto, RequestTokenDto, LoginDto, EmailDto, SignupDto } from './dto/auth.dto'
 
 @Injectable()
 export class AuthService {
@@ -25,6 +25,7 @@ export class AuthService {
         private readonly response: SendRes,
         private readonly plunk: PlunkService,
         private readonly prisma: PrismaService,
+        private readonly wasabi: WasabiService,
         private readonly encryption: EncryptionService,
     ) { }
 
@@ -78,115 +79,6 @@ export class AuthService {
         })
     }
 
-    async googleAuth(
-        req: Request,
-        refreshToken: string,
-        accessToken: string,
-        profile: Profile,
-    ): Promise<{
-        access_token: string
-        user: User
-    }> {
-        try {
-            const email: string = profile.emails![0].value
-
-            let user = await this.prisma.user.findFirst({
-                where: {
-                    OR: [
-                        { email },
-                        {
-                            provider_id: String(profile.id)
-                        }
-                    ]
-                }
-            })
-
-            let username: string = profile.name?.givenName?.toLowerCase()
-                || profile.name?.middleName?.toLowerCase()
-                || profile.name?.familyName?.toLowerCase()
-                || email.split('@')[0]?.toLowerCase()
-
-            if (!user) {
-                const usernameTaken = await this.prisma.user.findUnique({
-                    where: { username }
-                })
-                if (usernameTaken || !this.isValidUsername(username)) {
-                    username = generateUsername("", 0, 9)
-                }
-
-                const subscribed = await this.prisma.subscribedEmails.findUnique({
-                    where: { email }
-                })
-
-                user = await this.prisma.user.create({
-                    data: {
-                        email,
-                        username,
-                        auth_method: 'google',
-                        subscribed: subscribed ? true : false,
-                        email_verified: true,
-                        firstname: profile.name?.givenName || profile.name.middleName,
-                        lastname: profile.name?.familyName || profile.displayName,
-                        provider_id: String(profile.id)
-                    }
-                })
-            }
-
-            return {
-                access_token: await this.generateAccessToken({
-                    sub: user.id,
-                    role: user.role,
-                }),
-                user
-            }
-        } catch (err) {
-            throw err
-        }
-    }
-
-    async completeGoogleOnboarding(
-        res: Response,
-        { sub }: ExpressUser,
-        { username, role, firstname, lastname }: GoogleOnboardingDto,
-    ) {
-        try {
-            firstname = titleName(firstname)
-            lastname = titleName(lastname)
-
-            if (!this.isValidUsername(username)) {
-                this.response.sendError(res, StatusCodes.BadRequest, 'Username is not allowed')
-                return
-            }
-
-            if (!['talent', 'creative', 'client'].includes(role)) {
-                this.response.sendError(res, StatusCodes.BadRequest, 'Invalid role selected')
-                return
-            }
-
-            const isUsernameTaken = await this.prisma.user.findUnique({
-                where: { username }
-            })
-
-            if (isUsernameTaken) {
-                this.response.sendError(res, StatusCodes.Conflict, 'Username has been taken')
-                return
-            }
-
-            await this.prisma.user.update({
-                where: {
-                    id: sub
-                },
-                data: { role, firstname, lastname }
-            })
-
-            const access_token = await this.generateAccessToken({ sub, role })
-
-            this.response.sendSuccess(res, StatusCodes.Created, { access_token, role })
-        } catch (err) {
-            this.handleError(res, err, "Error completing onboarding")
-        }
-    }
-
     async subscribeToNewsletter(
         res: Response,
         { email }: EmailDto,
@@ -225,11 +117,126 @@ export class AuthService {
         }
     }
 
-    async signup(
+    async signupUnder18(
+        res: Response,
+        files: Express.Multer.File[],
+        {
+            first_name, last_name,
+            email, username, password,
+            skill, role, issuingCountry,
+        }: SignupUnder18Dto
+    ) {
+        try {
+            last_name = titleName(last_name)
+            first_name = titleName(first_name)
+
+            if (files.length === 0) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "ID is required")
+            }
+
+            if (files.length > 2) {
+                return this.response.sendError(res, StatusCodes.PayloadTooLarge, "Images shouldn't be greater than 2")
+            }
+
+            if (!this.isValidUsername(username)) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "Username is not allowed")
+            }
+
+            const findUserByUsername = await this.prisma.user.findUnique({
+                where: { username }
+            })
+
+            if (findUserByUsername) {
+                return this.response.sendError(res, StatusCodes.Conflict, "Username has been taken")
+            }
+
+            const findUserByEmail = await this.prisma.user.findUnique({
+                where: { email }
+            })
+
+            if (findUserByEmail) {
+                return this.response.sendError(res, StatusCodes.Conflict, 'User with this email already exists')
+            }
+
+            password = await this.encryption.hashAsync(password)
+
+            let filesArray = [] as IFile[]
+            try {
+                filesArray = await Promise.all(files.map(async (file) => {
+                    const validatedFile = await validateFile(res, file, 5 << 20, 'jpg', 'png')
+
+                    const { Key, Location } = await this.wasabi.uploadS3(validatedFile, genFileName())
+
+                    return {
+                        path: Key,
+                        url: Location,
+                        type: file.mimetype
+                    }
+                }))
+            } catch {
+                try {
+                    if (filesArray.length > 0) {
+                        for (const file of filesArray) {
+                            if (file?.path) {
+                                await this.wasabi.deleteS3(file.path)
+                            }
+                        }
+                    }
+                    filesArray = []
+                } catch (err) {
+                    return this.handleError(res, err, err.message)
+                }
+            }
+
+            const user = await this.prisma.user.create({
+                data: {
+                    under18: true,
+                    role, password,
+                    lastname: last_name,
+                    firstname: first_name,
+                    email, username, skill,
+                }
+            })
+
+            await this.prisma.under18Kyc.create({
+                data: {
+                    issuingCountry,
+                    images: filesArray,
+                    user: {
+                        connect: {
+                            id: user.id
+                        }
+                    }
+                }
+            })
+
+
+            const token = this.genenerateToken(user.id)
+            await this.prisma.validation.create({
+                data: {
+                    ...token,
+                    user: {
+                        connect: {
+                            id: user.id
+                        }
+                    }
+                }
+            })
+            await this.sendVerificationEmail(email, token.token)
+
+            this.response.sendSuccess(res, StatusCodes.Created, {
+                message: "A verification link has been sent to your email"
+            })
+        } catch (err) {
+            return this.handleError(res, err)
+        }
+    }
+
+    async signupOver18(
         res: Response,
         {
+            email, password, role, skill,
             first_name, last_name, username,
-            email, password, role,
         }: SignupDto
     ) {
         try {
@@ -260,13 +267,11 @@ export class AuthService {
 
             const newUser = await this.prisma.user.create({
                 data: {
-                    email,
-                    username,
-                    password,
-                    role: role as Role,
-                    auth_method: 'local',
-                    firstname: first_name,
+                    under18: false,
+                    skill, username,
                     lastname: last_name,
+                    firstname: first_name,
+                    password, email, role,
                 }
             })
 
@@ -284,10 +289,10 @@ export class AuthService {
             await this.sendVerificationEmail(email, token.token)
 
             this.response.sendSuccess(res, StatusCodes.Created, {
-                message: "A verification link has been sent to you email"
+                message: "A verification link has been sent to your email"
             })
         } catch (err) {
-            this.handleError(res, err)
+            return this.handleError(res, err)
         }
     }
 
@@ -551,11 +556,6 @@ export class AuthService {
 
             if (!user) {
                 this.response.sendError(res, StatusCodes.NotFound, 'Invalid email or password')
-                return
-            }
-
-            if (user.auth_method === 'google') {
-                this.response.sendError(res, StatusCodes.Forbidden, 'Login through Google Provider')
                 return
             }
 
