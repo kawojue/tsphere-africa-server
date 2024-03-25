@@ -11,7 +11,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      'https://talentsphereafrica.co'
+      'https://talentsphereafrica.co',
+      'https://talentsphereafrica.com'
     ],
     methods: 'GET,PATCH,POST,PUT,DELETE',
     credentials: true
@@ -23,8 +24,9 @@ async function bootstrap() {
     .setTitle('Talent Sphere Africa API')
     .setDescription('API Endpoints')
     .setVersion('1.0.1')
-    .addServer(`http://localhost:${PORT}/`, 'Local environment')
-    .addServer(`https://tsphere-backend.onrender.com`, 'Development')
+    .addServer(`http://localhost:${PORT}/`, 'Local')
+    .addServer(`https://api.talentsphereafrica.co`, 'Development')
+    .addServer(`https://api.talentsphereafrica.com`, 'Production')
     .addBearerAuth()
     .addTag('Routes')
     .build()
