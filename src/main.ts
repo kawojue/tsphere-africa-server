@@ -9,13 +9,15 @@ async function bootstrap() {
   const expressApp = app.getHttpAdapter().getInstance()
 
   app.enableCors({
-    origin: ['http://localhost:3000'],
+    origin: [
+      'http://localhost:3000',
+      'https://talentsphereafrica.co'
+    ],
     methods: 'GET,PATCH,POST,PUT,DELETE',
     credentials: true
   })
   expressApp.set('trust proxy', true)
   app.useGlobalPipes(new ValidationPipe())
-  app.setGlobalPrefix('/api')
 
   const swaggerOptions = new DocumentBuilder()
     .setTitle('Talent Sphere Africa API')
