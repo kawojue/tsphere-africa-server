@@ -23,12 +23,11 @@ async function bootstrap() {
   const swaggerOptions = new DocumentBuilder()
     .setTitle('Talent Sphere Africa API')
     .setDescription('API Endpoints')
-    .setVersion('1.0.1')
+    .setVersion('1.5.1')
     .addServer(`https://api.talentsphereafrica.co`, 'Development')
     .addServer(`http://localhost:${PORT}/`, 'Local')
     .addServer(`https://api.talentsphereafrica.com`, 'Production')
     .addBearerAuth()
-    .addTag('Routes')
     .build()
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerOptions)
