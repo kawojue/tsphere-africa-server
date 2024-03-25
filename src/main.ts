@@ -12,7 +12,9 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'https://talentsphereafrica.co',
-      'https://talentsphereafrica.com'
+      'https://talentsphereafrica.com',
+      'https://api.talentsphereafrica.co',
+      'https://api.talentsphereafrica.com',
     ],
     methods: 'GET,PATCH,POST,PUT,DELETE',
     credentials: true
