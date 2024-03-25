@@ -82,7 +82,7 @@ export class AuthService {
     async subscribeToNewsletter(
         res: Response,
         { email }: EmailDto,
-    ): Promise<{ message: string }> {
+    ) {
         try {
             email = email.trim().toLowerCase()
             const user = await this.prisma.user.findUnique({
@@ -94,8 +94,7 @@ export class AuthService {
             })
 
             if ((user && user.subscribed) || subscribedEmail) {
-                this.response.sendError(res, StatusCodes.Conflict, `You've already subscribed`)
-                return
+                return this.response.sendError(res, StatusCodes.Conflict, `You've already subscribed`)
             } else if (!user && !subscribedEmail) {
                 await this.prisma.subscribedEmails.create({
                     data: { email }
@@ -113,7 +112,7 @@ export class AuthService {
                 message: 'Thanks for subscribing to our news letter!'
             })
         } catch (err) {
-            this.handleError(res, err, "Error subscribing to news letter")
+            return this.handleError(res, err, "Error subscribing to news letter")
         }
     }
 
