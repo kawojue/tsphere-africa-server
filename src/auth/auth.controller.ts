@@ -57,17 +57,16 @@ export class AuthController {
   }
 
   @Post('/signup-under18')
-  @ApiConsumes('image/jpeg', 'image/png')
   @UseInterceptors(FileInterceptor('kyc'))
   @ApiOperation({
     summary: 'The ID photo(s) key/fieldname should be kyc in the formdata'
   })
   async signupUnder18(
     @Res() res: Response,
-    @Body() signupDto: SignupUnder18Dto,
+    @Body() signupUnder18Dto: SignupUnder18Dto,
     @UploadedFiles() files: Express.Multer.File[]
   ) {
-    return await this.authService.signupUnder18(res, files, signupDto)
+    return await this.authService.signupUnder18(res, files, signupUnder18Dto)
   }
 
   @Post('/signup-over18')
@@ -82,7 +81,7 @@ export class AuthController {
 
   @Patch('/avatar')
   @ApiBearerAuth()
-  @ApiConsumes('image/jpeg', 'image/png')
+  @ApiConsumes('multipart/formdata', 'image/jpeg', 'image/png')
   @UseInterceptors(FileInterceptor('avatar'))
   @ApiOperation({
     summary: 'The profile photo key should be avatar in the formdata'

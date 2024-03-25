@@ -3,8 +3,8 @@ import {
     IsEmail, Matches, IsEnum, IsString,
 } from 'class-validator'
 import { Role } from '@prisma/client'
-import { ApiProperty } from '@nestjs/swagger'
 import { TokenEnum } from 'enums/base.enum'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class EmailDto {
     @ApiProperty({
