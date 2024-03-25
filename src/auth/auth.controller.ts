@@ -1,16 +1,20 @@
 import { Response } from 'express'
+import { Role } from 'src/role.decorator'
 import { AuthService } from './auth.service'
+import { AuthGuard } from '@nestjs/passport'
 import {
   UseInterceptors, Post, Query, Res, Body,
   Patch, Req, Controller, Get, UploadedFiles,
+  UseGuards,
 } from '@nestjs/common'
 import {
   UsernameDto, LoginDto, SignupDto, TokenDto,
   SignupUnder18Dto, EmailDto, RequestTokenDto,
 } from './dto/auth.dto'
-import { ApiConsumes, ApiTags } from '@nestjs/swagger'
+import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { LoginAdminDto, RegisterAdminDto } from './dto/admin.dto'
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dto/reset-password.dto'
 
 @Controller('auth')
@@ -55,6 +59,9 @@ export class AuthController {
   @Post('/signup-under18')
   @ApiConsumes('image/jpeg', 'image/png')
   @UseInterceptors(FileInterceptor('kyc'))
+  @ApiOperation({
+    summary: 'The ID photo(s) key/fieldname should be kyc in the formdata'
+  })
   async signupUnder18(
     @Res() res: Response,
     @Body() signupDto: SignupUnder18Dto,
@@ -71,6 +78,23 @@ export class AuthController {
   @Post('/login')
   async login(@Res() res: Response, @Body() loginDto: LoginDto) {
     return await this.authService.login(res, loginDto)
+  }
+
+  @Patch('/avatar')
+  @ApiBearerAuth()
+  @ApiConsumes('image/jpeg', 'image/png')
+  @UseInterceptors(FileInterceptor('avatar'))
+  @ApiOperation({
+    summary: 'The profile photo key should be avatar in the formdata'
+  })
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role('user', 'client', 'creative', 'talent')
+  async uploadAvatar(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @UploadedFiles() file: Express.Multer.File
+  ) {
+    return await this.authService.uploadAvatar(res, req.user, file)
   }
 
   @Post('/update-password')

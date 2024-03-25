@@ -592,7 +592,14 @@ export class AuthService {
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                role: user.role,
+                data: {
+                    email: user.email,
+                    avatar: user.avatar,
+                    lastname: user.lastname,
+                    username: user.username,
+                    firstname: user.firstname,
+                    role: user.role,
+                },
                 access_token: accessToken,
                 message: "Login Successful"
             })
@@ -633,6 +640,53 @@ export class AuthService {
             })
         } catch (err) {
             this.handleError(res, err)
+        }
+    }
+
+    async uploadAvatar(
+        res: Response,
+        { sub }: ExpressUser,
+        file: Express.Multer.File
+    ) {
+        try {
+            if (!file) {
+                return this.response.sendError(res, StatusCodes.BadRequest, 'No file was selected')
+            }
+
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    id: sub
+                }
+            })
+
+            if (user.avatar?.path) {
+                await this.wasabi.deleteS3(user.avatar.path)
+            }
+
+            const validatedFile = await validateFile(res, file, 6 << 20, 'jpg', 'png')
+            const { Key, Location } = await this.wasabi.uploadS3(file, genFileName())
+
+            await this.prisma.user.update({
+                where: {
+                    id: sub
+                },
+                data: {
+                    avatar: {
+                        path: Key,
+                        url: Location,
+                        type: validatedFile.mimetype,
+                    }
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                message: "Profile photo has been updated successfully",
+                data: {
+                    url: Location
+                }
+            })
+        } catch (err) {
+            return this.handleError(res, err)
         }
     }
 }

@@ -16,6 +16,7 @@ model User {
     password       String
     skill          String
     under18Kyc     under18Kyc?
+    avatar         File?
     email_verified Boolean     @default(false)
     role           Role        @default(user)
     under18        Boolean
