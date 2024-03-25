@@ -223,6 +223,8 @@ export class AuthService {
             })
             await this.sendVerificationEmail(email, token.token)
 
+            await this.prisma.isSubscribed(email)
+
             this.response.sendSuccess(res, StatusCodes.Created, {
                 message: "A verification link has been sent to your email"
             })
@@ -286,6 +288,8 @@ export class AuthService {
                 }
             })
             await this.sendVerificationEmail(email, token.token)
+
+            await this.prisma.isSubscribed(email)
 
             this.response.sendSuccess(res, StatusCodes.Created, {
                 message: "A verification link has been sent to your email"

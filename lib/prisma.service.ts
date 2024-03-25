@@ -10,4 +10,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     async onModuleDestroy() {
         await this.$disconnect()
     }
+
+    async isSubscribed(email: string) {
+        const subscribed = await this.subscribedEmails.findUnique({
+            where: { email }
+        })
+
+        if (subscribed) {
+            await this.subscribedEmails.delete({
+                where: { email }
+            })
+            await this.user.update({
+                where: { email },
+                data: { subscribed: true }
+            })
+        }
+    }
 }
