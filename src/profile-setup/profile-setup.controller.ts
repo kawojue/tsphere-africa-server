@@ -2,6 +2,7 @@ import { Response } from 'express'
 import { Role } from 'src/role.decorator'
 import { AuthGuard } from '@nestjs/passport'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { ExperienceDto } from './dto/experiece.dto'
 import {
   Controller, Delete, Param, Post, UseInterceptors, Put,
   UploadedFiles, UseGuards, Req, Res, Body, UploadedFile,
@@ -9,7 +10,6 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ProfileSetupService } from './profile-setup.service'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { ExperienceDto } from './experiece.dto'
 
 @ApiTags("Profile Setup")
 @ApiBearerAuth()

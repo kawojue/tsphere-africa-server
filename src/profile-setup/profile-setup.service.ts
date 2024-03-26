@@ -7,7 +7,7 @@ import { MiscService } from 'lib/misc.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { WasabiService } from 'lib/wasabi.service'
-import { ExperienceDto } from './experiece.dto'
+import { ExperienceDto } from './dto/experiece.dto'
 
 @Injectable()
 export class ProfileSetupService {
