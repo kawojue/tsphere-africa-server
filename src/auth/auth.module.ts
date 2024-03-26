@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { SendRes } from 'lib/sendRes.service'
 import { JwtModule } from 'src/jwt/jwt.module'
+import { MiscService } from 'lib/misc.service'
 import { PlunkService } from 'lib/plunk.service'
 import { PassportModule } from '@nestjs/passport'
 import { AuthController } from './auth.controller'
@@ -19,6 +20,7 @@ import { EncryptionService } from 'lib/encryption.service'
   providers: [
     AuthService,
     SendRes,
+    MiscService,
     JwtStrategy,
     PlunkService,
     PrismaService,

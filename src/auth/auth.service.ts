@@ -107,17 +107,21 @@ export class AuthService {
 
             let filesArray = [] as IFile[]
             try {
-                filesArray = await Promise.all(files.map(async (file) => {
-                    const validatedFile = await validateFile(res, file, 5 << 20, 'jpg', 'png')
+                const results = await Promise.all(files.map(async (file) => {
+                    const result = validateFile(file, 5 << 20, 'jpg', 'png')
+                    if (result.status) {
+                        return this.response.sendError(res, result.status, result.message)
+                    }
 
-                    const { Key, Location } = await this.wasabi.uploadS3(validatedFile, genFileName())
-
+                    const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
                     return {
                         path: Key,
                         url: Location,
                         type: file.mimetype
                     }
                 }))
+
+                filesArray = results.filter((result): result is IFile => !!result)
             } catch {
                 try {
                     if (filesArray.length > 0) {
@@ -615,8 +619,11 @@ export class AuthService {
                 await this.wasabi.deleteS3(user.avatar.path)
             }
 
-            const validatedFile = await validateFile(res, file, 6 << 20, 'jpg', 'png')
-            const { Key, Location } = await this.wasabi.uploadS3(file, genFileName())
+            const result = validateFile(file, 5 << 20, 'jpg', 'png')
+            if (result?.status) {
+                return this.response.sendError(res, result.status, result.message)
+            }
+            const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
 
             await this.prisma.user.update({
                 where: {
@@ -626,7 +633,7 @@ export class AuthService {
                     avatar: {
                         path: Key,
                         url: Location,
-                        type: validatedFile.mimetype,
+                        type: result.file.mimetype,
                     }
                 }
             })
