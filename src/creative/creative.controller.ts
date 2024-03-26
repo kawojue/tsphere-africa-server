@@ -21,7 +21,7 @@ export class CreativeController {
   constructor(private readonly creativeService: CreativeService) { }
 
   @Role('talent')
-  @Put('personalInfo')
+  @Put('personal-info')
   @ApiConsumes('multipart/formdata', 'image/jpeg', 'image/png')
   @UseInterceptors(FileInterceptor('proof_id'))
   async createPersonalInfo(

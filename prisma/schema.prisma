@@ -60,8 +60,13 @@ model SubscribedEmails {
     email String @unique
 }
 
-model Profile {
-    id String @id @default(auto()) @map("_id") @db.ObjectId
+model Portfolio {
+    id     String @id @default(auto()) @map("_id") @db.ObjectId
+    video  File?
+    images File[]
+    audio  File?
+    user   User   @relation(fields: [userId], references: [id])
+    userId String @unique @db.ObjectId
 }
 
 model BankDetails {
@@ -87,12 +92,12 @@ model Experience {
 }
 
 model Creative {
-    id                  String                      @id @default(auto()) @map("_id") @db.ObjectId
-    bio                 String?
-    personalInfo        CreativePersonalInfo?
-    rateAndAvailability CreativeRatesAndAvailabily?
-    user                User                        @relation(references: [id], fields: [userId])
-    userId              String                      @unique @db.ObjectId
+    id                   String                      @id @default(auto()) @map("_id") @db.ObjectId
+    bio                  String?
+    personalInfo         CreativePersonalInfo?
+    ratesAndAvailability CreativeRatesAndAvailabily?
+    user                 User                        @relation(references: [id], fields: [userId])
+    userId               String                      @unique @db.ObjectId
 }
 
 model CreativePersonalInfo {
@@ -127,12 +132,12 @@ model CreativeRatesAndAvailabily {
 }
 
 model Talent {
-    id                  String                    @id @default(auto()) @map("_id") @db.ObjectId
-    personalInfo        TalentPersonalInfo?
-    bio                 TalentBio?
-    rateAndAvailability TalentRatesAndAvailabily?
-    user                User                      @relation(fields: [userId], references: [id])
-    userId              String                    @unique @db.ObjectId
+    id                   String                      @id @default(auto()) @map("_id") @db.ObjectId
+    personalInfo         TalentPersonalInfo?
+    bio                  TalentBio?
+    ratesAndAvailability TalentRatesAndAvailability?
+    user                 User                        @relation(fields: [userId], references: [id])
+    userId               String                      @unique @db.ObjectId
 }
 
 model TalentPersonalInfo {
@@ -157,15 +162,6 @@ model TalentPersonalInfo {
     talentId    String    @unique @db.ObjectId
 }
 
-model Portfolio {
-    id     String @id @default(auto()) @map("_id") @db.ObjectId
-    video  File?
-    images File[]
-    audio  File?
-    user   User   @relation(fields: [userId], references: [id])
-    userId String @unique @db.ObjectId
-}
-
 model TalentBio {
     id        String  @id @default(auto()) @map("_id") @db.ObjectId
     bio       String?
@@ -183,7 +179,7 @@ model TalentBio {
     talentId  String  @unique @db.ObjectId
 }
 
-model TalentRatesAndAvailabily {
+model TalentRatesAndAvailability {
     id           String      @id @default(auto()) @map("_id") @db.ObjectId
     availability Boolean     @default(true)
     chargeType   ChargeType?
