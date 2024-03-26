@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Validation } from '@prisma/client'
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
 
 @Injectable()
@@ -25,5 +25,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
                 data: { subscribed: true }
             })
         }
+    }
+
+    async isTokenExpired(validation: Validation) {
+        const isExpired = new Date() > new Date(validation.token_expiry)
+        if (isExpired) {
+            await this.validation.delete({
+                where: {
+                    token: validation.token
+                }
+            })
+
+            return true
+        }
+
+        return false
     }
 }

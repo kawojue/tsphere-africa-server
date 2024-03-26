@@ -37,21 +37,6 @@ export class AuthService {
         return USER_REGEX.test(username)
     }
 
-    private async isTokenExpired(validation: Validation) {
-        const isExpired = new Date() > new Date(validation.token_expiry)
-        if (isExpired) {
-            await this.prisma.validation.delete({
-                where: {
-                    token: validation.token
-                }
-            })
-
-            return true
-        }
-
-        return false
-    }
-
     private async validateToken(recv_token: string, validation: Validation) {
         const decodedToken = atob(recv_token)
         const token = genToken(validation?.userId, validation?.randomCode)
@@ -311,7 +296,7 @@ export class AuthService {
                 return
             }
 
-            if ((await this.isTokenExpired(validation))) {
+            if ((await this.prisma.isTokenExpired(validation))) {
                 this.response.sendError(res, StatusCodes.Forbidden, 'Token has expired')
                 return
             }
@@ -416,7 +401,7 @@ export class AuthService {
                 return
             }
 
-            if ((await this.isTokenExpired(validation))) {
+            if ((await this.prisma.isTokenExpired(validation))) {
                 this.response.sendError(res, StatusCodes.Forbidden, 'Token has expired')
                 return
             }
@@ -469,13 +454,16 @@ export class AuthService {
 
         this.response.sendSuccess(res, StatusCodes.OK, {
             isExist: user ? true : false,
-            message: user ? "Username has been taken" : 'Username is valid'
+            message: user ? "Username has been taken" : "Username is valid"
         })
     }
 
     async registerAdmin(
         res: Response,
-        { email, password, fullName, registrationKey }: RegisterAdminDto
+        {
+            password, fullName,
+            email, registrationKey,
+        }: RegisterAdminDto
     ) {
         try {
             fullName = titleName(fullName)
