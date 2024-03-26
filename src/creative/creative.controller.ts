@@ -1,9 +1,3 @@
-import {
-  Body, Controller, Put, Delete,
-  UseInterceptors, UploadedFiles,
-  Param, Post, Req, Res, UseGuards,
-  UploadedFile,
-} from '@nestjs/common'
 import { Role } from 'src/role.decorator'
 import { Request, Response } from 'express'
 import { AuthGuard } from '@nestjs/passport'
@@ -13,9 +7,14 @@ import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { CreativeService } from './creative.service'
 import { ExperienceDto } from './dto/experience.dto'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
+import {
+  Body, Controller, Put, Delete, UseInterceptors, UploadedFiles,
+  Param, Post, Req, Res, UseGuards, UploadedFile, Patch,
+} from '@nestjs/common'
 import { RatesAvailabilityDto } from './dto/rates-availability.dto'
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { BioDto } from './dto/bio.dto'
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -35,6 +34,16 @@ export class CreativeController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return await this.creativeService.personalInfo(res, req.user, personalInfoDto, file)
+  }
+
+  @Role('talent')
+  @Patch('bio')
+  async bio(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() { bio }: BioDto,
+  ) {
+    return await this.creativeService.bio(res, bio, req.user)
   }
 
   @ApiOperation({
@@ -64,7 +73,6 @@ export class CreativeController {
   ) {
     return await this.creativeService.uploadPortfolioVideo(res, req.user, file)
   }
-
 
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Audio should be audio'

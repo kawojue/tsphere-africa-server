@@ -9,6 +9,7 @@ import { genFileName } from 'helpers/genFilename'
 import { WasabiService } from 'lib/wasabi.service'
 import { PrismaService } from 'lib/prisma.service'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
+import { BioDto } from './dto/bio.dto'
 
 @Injectable()
 export class TalentService {
@@ -322,6 +323,39 @@ export class TalentService {
             this.response.sendSuccess(res, StatusCodes.OK, { data: portfolio })
         } catch (err) {
             return this.misc.handleServerError(res, err)
+        }
+    }
+
+    async bio(
+        res: Response,
+        bio: BioDto,
+        { sub }: ExpressUser
+    ) {
+        try {
+            const talent = await this.prisma.talent.findUnique({
+                where: {
+                    id: sub
+                },
+                include: {
+                    portfolio: true
+                }
+            })
+
+            if (!talent) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'Add your personal information')
+            }
+
+            const bioStat = await this.prisma.talentBio.upsert({
+                where: {
+                    talentId: talent.id
+                },
+                create: { ...bio, talent: { connect: { id: talent.id } } },
+                update: bio
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: bioStat })
+        } catch (err) {
+            return this.misc.handleServerError(res, err, 'Error saving Bio and Statistics')
         }
     }
 }

@@ -1,4 +1,5 @@
 import { Response } from 'express'
+import { BioDto } from './dto/bio.dto'
 import { Role } from 'src/role.decorator'
 import { AuthGuard } from '@nestjs/passport'
 import {
@@ -32,6 +33,16 @@ export class TalentController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return await this.talentService.personalInfo(res, req.user, personalInfoDto, file)
+  }
+
+  @Role('talent')
+  @Put('bio')
+  async bio(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() bio: BioDto,
+  ) {
+    return await this.talentService.bio(res, bio, req.user)
   }
 
   @ApiOperation({

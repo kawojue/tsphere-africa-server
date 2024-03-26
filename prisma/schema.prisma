@@ -103,6 +103,7 @@ model Talent {
     id           String              @id @default(auto()) @map("_id") @db.ObjectId
     personalInfo TalentPersonalInfo?
     portfolio    TalentPortfolio?
+    bio          TalentBio?
     user         User                @relation(fields: [userId], references: [id])
     userId       String              @unique @db.ObjectId
 }
@@ -136,6 +137,23 @@ model TalentPortfolio {
     audio    File?
     talent   Talent @relation(fields: [talentId], references: [id])
     talentId String @unique @db.ObjectId
+}
+
+model TalentBio {
+    id        String  @id @default(auto()) @map("_id") @db.ObjectId
+    bio       String?
+    height    String?
+    weight    String?
+    bodyType  String?
+    hairColor String?
+    eyeColor  String?
+    gender    Gender?
+    bust      String?
+    hips      String?
+    waist     String?
+    dressSize String?
+    talent    Talent  @relation(fields: [talentId], references: [id])
+    talentId  String  @unique @db.ObjectId
 }
 
 enum Gender {
