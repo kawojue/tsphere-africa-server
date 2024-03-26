@@ -10,6 +10,7 @@ import { genFileName } from 'helpers/genFilename'
 import { WasabiService } from 'lib/wasabi.service'
 import { PrismaService } from 'lib/prisma.service'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
+import { TalentRatesAvailabilityDto } from './dto/rates-availability.dto'
 
 @Injectable()
 export class TalentService {
@@ -172,6 +173,43 @@ export class TalentService {
             this.response.sendSuccess(res, StatusCodes.OK, { data: bioStat })
         } catch (err) {
             return this.misc.handleServerError(res, err, 'Error saving Bio and Statistics')
+        }
+    }
+
+    async ratesAndAvailability(
+        res: Response,
+        { sub }: ExpressUser,
+        ratesObj: TalentRatesAvailabilityDto
+    ) {
+        try {
+            const creative = await this.prisma.creative.findUnique({
+                where: {
+                    userId: sub
+                }
+            })
+
+            if (!creative) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'Add your personal information')
+            }
+
+            if (!this.misc.isValidWorkday(ratesObj.from, ratesObj.to)) {
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid weekdays')
+            }
+
+            const rates = await this.prisma.creativeRatesAndAvailabily.upsert({
+                where: {
+                    creativeId: creative.id
+                },
+                create: { ...ratesObj, creative: { connect: { id: creative.id } } },
+                update: ratesObj
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: rates,
+                message: 'Saved'
+            })
+        } catch (err) {
+            return this.misc.handleServerError(res, err)
         }
     }
 }

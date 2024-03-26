@@ -1,14 +1,20 @@
-import { Weekday } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
+import { ChargeTime, Weekday } from '@prisma/client'
 import { IsOptional, IsEnum, IsNumber, MinLength, IsBoolean } from 'class-validator'
 
-export class CreativeRatesAvailabilityDto {
+export class TalentRatesAvailabilityDto {
   @ApiProperty({
     example: true
   })
   @IsBoolean()
   @IsOptional()
   availability: boolean
+
+  @ApiProperty({
+    example: 'Daily'
+  })
+  @IsEnum(ChargeTime)
+  chargeTime: ChargeTime
 
   @ApiProperty({
     example: 9

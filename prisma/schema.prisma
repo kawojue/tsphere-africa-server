@@ -30,6 +30,11 @@ model User {
     validation     Validation?
 }
 
+model SubscribedEmails {
+    id    String @id @default(auto()) @map("_id") @db.ObjectId
+    email String @unique
+}
+
 model under18Kyc {
     id             String @id @default(auto()) @map("_id") @db.ObjectId
     issuingCountry String
@@ -53,11 +58,6 @@ model Validation {
     randomCode   String
     user         User     @relation(fields: [userId], references: [id])
     userId       String   @unique @db.ObjectId
-}
-
-model SubscribedEmails {
-    id    String @id @default(auto()) @map("_id") @db.ObjectId
-    email String @unique
 }
 
 model Portfolio {
@@ -121,14 +121,13 @@ model CreativePersonalInfo {
 }
 
 model CreativeRatesAndAvailabily {
-    id           String      @id @default(auto()) @map("_id") @db.ObjectId
-    availability Boolean     @default(true)
-    chargeType   ChargeType?
-    charge       Float?
-    from         Weekday?
-    to           Weekday?
-    creative     Creative    @relation(fields: [creativeId], references: [id])
-    creativeId   String      @unique @db.ObjectId
+    id           String   @id @default(auto()) @map("_id") @db.ObjectId
+    availability Boolean  @default(true)
+    charge       Float
+    from         Weekday
+    to           Weekday
+    creative     Creative @relation(fields: [creativeId], references: [id])
+    creativeId   String   @unique @db.ObjectId
 }
 
 model Talent {
@@ -180,14 +179,14 @@ model TalentBio {
 }
 
 model TalentRatesAndAvailability {
-    id           String      @id @default(auto()) @map("_id") @db.ObjectId
-    availability Boolean     @default(true)
-    chargeType   ChargeType?
-    charge       Float?
-    from         Weekday?
-    to           Weekday?
-    talent       Talent      @relation(fields: [talentId], references: [id])
-    talentId     String      @unique @db.ObjectId
+    id           String     @id @default(auto()) @map("_id") @db.ObjectId
+    availability Boolean    @default(true)
+    chargeTime   ChargeTime
+    charge       Float
+    from         Weekday
+    to           Weekday
+    talent       Talent     @relation(fields: [talentId], references: [id])
+    talentId     String     @unique @db.ObjectId
 }
 
 enum Gender {
@@ -195,7 +194,7 @@ enum Gender {
     Female
 }
 
-enum ChargeType {
+enum ChargeTime {
     Daily
     Weekly
     Monthly

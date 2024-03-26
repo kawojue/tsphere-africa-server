@@ -1,5 +1,6 @@
 import { Response } from 'express'
 import { JwtService } from '@nestjs/jwt'
+import { Weekday } from '@prisma/client'
 import { USER_REGEX } from 'utils/regExp'
 import { genToken } from 'helpers/genToken'
 import { Injectable } from '@nestjs/common'
@@ -32,6 +33,20 @@ export class MiscService {
             randomCode,
             token_expiry: tk.token_expiry
         }
+    }
+
+    isValidWorkday(from: Weekday, to: Weekday) {
+        const weekdays = [
+            'Sunday',
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday'
+        ]
+
+        return weekdays.indexOf(from) < weekdays.indexOf(to)
     }
 
     async handleServerError(res: Response, err?: any, msg?: string) {
