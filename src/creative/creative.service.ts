@@ -1,5 +1,4 @@
 import { validateFile } from 'utils/file'
-import { SkillDto } from './dto/skill.dto'
 import { Request, Response } from 'express'
 import StatusCodes from 'enums/StatusCodes'
 import { Injectable, } from '@nestjs/common'

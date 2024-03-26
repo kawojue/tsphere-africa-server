@@ -1,4 +1,3 @@
-import { ChargeTime } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsString, IsNotEmpty, IsArray, IsEnum, IsNumber } from 'class-validator'
 
@@ -7,8 +6,7 @@ export class RatesAvailabilityDto {
     example: 'Hourly'
   })
   @IsNotEmpty()
-  @IsEnum(ChargeTime)
-  chargeTime: ChargeTime
+  chargeTime: string
 
   @ApiProperty({
     example: ['Mon', 'Wed', 'Fri', 'Sat']

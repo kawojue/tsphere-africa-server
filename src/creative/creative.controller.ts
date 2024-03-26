@@ -5,7 +5,6 @@ import {
   UploadedFile,
 } from '@nestjs/common'
 import { Role } from 'src/role.decorator'
-import { SkillDto } from './dto/skill.dto'
 import { Request, Response } from 'express'
 import { AuthGuard } from '@nestjs/passport'
 import { EducationDto } from './dto/education.dto'
