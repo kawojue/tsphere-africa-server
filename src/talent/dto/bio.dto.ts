@@ -26,7 +26,6 @@ export class BioDto {
     @IsOptional()
     weight: string
 
-
     @ApiProperty({
         example: 'N/A'
     })

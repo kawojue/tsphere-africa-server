@@ -1,4 +1,5 @@
 import { Response } from 'express'
+import { BioDto } from './dto/bio.dto'
 import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
@@ -9,7 +10,6 @@ import { genFileName } from 'helpers/genFilename'
 import { WasabiService } from 'lib/wasabi.service'
 import { PrismaService } from 'lib/prisma.service'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
-import { BioDto } from './dto/bio.dto'
 
 @Injectable()
 export class TalentService {

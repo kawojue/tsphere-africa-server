@@ -61,13 +61,26 @@ model Profile {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 }
 
+model BankDetails {
+    id            String    @id @default(auto()) @map("_id") @db.ObjectId
+    bankName      String
+    accountName   String
+    accountNumber String
+    creative      Creative? @relation(fields: [creativeId], references: [id])
+    creativeId    String?   @unique @db.ObjectId
+    talent        Talent?   @relation(fields: [talentId], references: [id])
+    talentId      String?   @unique @db.ObjectId
+}
+
 model Creative {
-    id           String                @id @default(auto()) @map("_id") @db.ObjectId
-    bio          String?
-    personalInfo CreativePersonalInfo?
-    portfolio    CreativePortfolio?
-    user         User                  @relation(references: [id], fields: [userId])
-    userId       String                @unique @db.ObjectId
+    id                  String                      @id @default(auto()) @map("_id") @db.ObjectId
+    bio                 String?
+    personalInfo        CreativePersonalInfo?
+    portfolio           CreativePortfolio?
+    rateAndAvailability CreativeRatesAndAvailabily?
+    bankDetails         BankDetails?
+    user                User                        @relation(references: [id], fields: [userId])
+    userId              String                      @unique @db.ObjectId
 }
 
 model CreativePersonalInfo {
@@ -99,13 +112,26 @@ model CreativePortfolio {
     creativeId String   @unique @db.ObjectId
 }
 
+model CreativeRatesAndAvailabily {
+    id           String      @id @default(auto()) @map("_id") @db.ObjectId
+    availability Boolean     @default(true)
+    chargeType   ChargeType?
+    charge       Float?
+    from         Weekday?
+    to           Weekday?
+    creative     Creative    @relation(fields: [creativeId], references: [id])
+    creativeId   String      @unique @db.ObjectId
+}
+
 model Talent {
-    id           String              @id @default(auto()) @map("_id") @db.ObjectId
-    personalInfo TalentPersonalInfo?
-    portfolio    TalentPortfolio?
-    bio          TalentBio?
-    user         User                @relation(fields: [userId], references: [id])
-    userId       String              @unique @db.ObjectId
+    id                  String                    @id @default(auto()) @map("_id") @db.ObjectId
+    personalInfo        TalentPersonalInfo?
+    portfolio           TalentPortfolio?
+    bio                 TalentBio?
+    bankDetails         BankDetails?
+    rateAndAvailability TalentRatesAndAvailabily?
+    user                User                      @relation(fields: [userId], references: [id])
+    userId              String                    @unique @db.ObjectId
 }
 
 model TalentPersonalInfo {
@@ -156,9 +182,36 @@ model TalentBio {
     talentId  String  @unique @db.ObjectId
 }
 
+model TalentRatesAndAvailabily {
+    id           String      @id @default(auto()) @map("_id") @db.ObjectId
+    availability Boolean     @default(true)
+    chargeType   ChargeType?
+    charge       Float?
+    from         Weekday?
+    to           Weekday?
+    talent       Talent      @relation(fields: [talentId], references: [id])
+    talentId     String      @unique @db.ObjectId
+}
+
 enum Gender {
     Male
     Female
+}
+
+enum ChargeType {
+    Daily
+    Weekly
+    Monthly
+}
+
+enum Weekday {
+    Sunday
+    Monday
+    Tuesday
+    Wednesday
+    Thursday
+    Friday
+    Saturday
 }
 
 type File {

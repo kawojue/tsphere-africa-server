@@ -73,7 +73,6 @@ export class TalentController {
     return await this.talentService.uploadPortfolioVideo(res, req.user, file)
   }
 
-
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Audio should be audio'
   })
