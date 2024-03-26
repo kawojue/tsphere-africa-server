@@ -1,35 +1,33 @@
 import { Response } from 'express'
-import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
-import { ResourceType } from 'enums/base.enum'
-import { Gender, Talent } from '@prisma/client'
+import { MiscService } from 'lib/misc.service'
+import { titleName } from 'helpers/formatTexts'
 import { genFileName } from 'helpers/genFilename'
 import { WasabiService } from 'lib/wasabi.service'
 import { PrismaService } from 'lib/prisma.service'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
+import { validateFile } from 'utils/file'
 
 @Injectable()
 export class TalentService {
     constructor(
         private readonly response: SendRes,
+        private readonly misc: MiscService,
         private readonly prisma: PrismaService,
         private readonly wasabi: WasabiService,
     ) { }
-
-    private async handleServerError(res: Response, err?: any, msg?: string) {
-        console.error(err)
-        return this.response.sendError(res, StatusCodes.InternalServerError, msg || 'Something went wrong')
-    }
 
     async personalInfo(
         res: Response,
         { sub }: ExpressUser,
         {
+            lastname, playingAge, state,
             nationality, religion, address,
-            gender, idNumber, instagramHandle, idType,
-            xHandle, yearsOfExperience, languages, phone,
+            gender, idType, altPhone, country,
+            dob, fbHandle, igHandle, language,
+            xHandle, phone, username, firstname,
         }: PersonalInfoDto,
         file: Express.Multer.File
     ) {
@@ -39,126 +37,107 @@ export class TalentService {
                     id: sub
                 },
                 include: {
-                    talent: true
+                    talent: {
+                        select: {
+                            personalInfo: true
+                        }
+                    }
                 }
             })
 
-            let talent: Talent | null = user.talent
-            if (!talent) {
-                talent = await this.prisma.talent.create({ data: { user: { connect: { id: sub } } } })
+            const personalInfo = user.talent?.personalInfo
+
+            if (!personalInfo?.proofOfId?.path && !file) {
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Upload your proof of ID')
             }
 
-            let newFile = {} as {
-                url: string
-                path: string
-                type: string
+            if (personalInfo?.proofOfId?.path) {
+                await this.wasabi.deleteS3(personalInfo.proofOfId.path)
             }
 
+            let proofOfId = {} as IFile
             if (file) {
-                const validatedFile = await validateFile(res, file, 4 << 20, 'jpg', 'mp4')
-                const { Key, Location } = await this.wasabi.uploadS3(validatedFile, genFileName())
+                const result = validateFile(file, 5 << 20, 'jpg', 'png')
 
-                newFile = {
-                    url: Location,
+                if (result?.status) {
+                    return this.response.sendError(res, result.status, result.message)
+                }
+
+                const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
+                proofOfId = {
                     path: Key,
+                    url: Location,
                     type: file.mimetype
                 }
             }
 
-            const personalInfoData = {}
-            if (nationality !== undefined) {
-                personalInfoData['nationality'] = nationality
-            }
-            if (address !== undefined) {
-                personalInfoData['address'] = address
-            }
-            if (languages !== undefined) {
-                personalInfoData['languages'] = languages
-            }
-            if (gender !== undefined) {
-                personalInfoData['gender'] = gender as Gender
-            }
-            if (religion !== undefined) {
-                personalInfoData['religion'] = religion
-            }
-            if (phone !== undefined) {
-                personalInfoData['phone'] = phone
-            }
-            if (yearsOfExperience !== undefined) {
-                personalInfoData['yearsOfExperience'] = yearsOfExperience
-            }
-            if (idNumber !== undefined) {
-                personalInfoData['idNumber'] = idNumber
-            }
-            if (idType !== undefined) {
-                personalInfoData['idType'] = idType
-            }
-            if (instagramHandle !== undefined) {
-                personalInfoData['instagramHandle'] = instagramHandle
-            }
-            if (xHandle !== undefined) {
-                personalInfoData['xHandle'] = xHandle
+            if (username && username !== user.username) {
+                if (!this.misc.isValidUsername(username)) {
+                    return this.response.sendError(res, StatusCodes.BadRequest, 'Username is not allowed')
+                }
+
+                const usernameExists = await this.prisma.user.findUnique({
+                    where: { username }
+                })
+
+                if (usernameExists) {
+                    return this.response.sendError(res, StatusCodes.Conflict, 'Username has been taken')
+                }
+            } else {
+                username = user.username
             }
 
-            const personalInfo = await this.prisma.talentPersonalInfo.upsert({
-                where: {
-                    talentId: talent.id,
-                },
-                create: {
-                    idPhoto: newFile,
-                    languages, phone, talent: {
-                        connect: { id: talent.id }
+            if (firstname && user.firstname !== firstname) {
+                firstname = titleName(firstname)
+            } else {
+                firstname = user.firstname
+            }
+
+            if (lastname && user.lastname !== lastname) {
+                lastname = titleName(lastname)
+            } else {
+                lastname = user.lastname
+            }
+
+            const [_, talent] = await this.prisma.$transaction([
+                this.prisma.user.update({
+                    where: {
+                        id: user.id
                     },
-                    nationality, religion, address,
-                    gender, idNumber, instagramHandle,
-                    idType, xHandle, yearsOfExperience,
+                    data: { username, firstname, lastname }
+                }),
+                this.prisma.talent.upsert({
+                    where: { userId: user.id },
+                    create: {
+                        user: { connect: { id: user.id } }
+                    },
+                    update: {}
+                })
+            ])
+
+            const personalInfoData = await this.prisma.talentPersonalInfo.upsert({
+                where: { talentId: talent.id },
+                create: {
+                    fbHandle, igHandle, xHandle,
+                    phone, altPhone, gender, religion, dob,
+                    playingAge, nationality, country, state,
+                    address, idType, proofOfId, language,
+                    talent: { connect: { id: talent.id } }
                 },
-                update: personalInfoData
+                update: {
+                    phone, altPhone, gender, religion, dob,
+                    playingAge, nationality, country, state,
+                    address, idType, proofOfId, language,
+                    fbHandle, igHandle, xHandle
+                }
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: personalInfo,
+                data: personalInfoData,
                 message: "Personal Information has been updated successfully"
             })
         } catch (err) {
-            this.handleServerError(res, err, 'Error saving personal information')
-        }
-    }
-
-    async portfolio(
-        res: Response,
-        action: string,
-        { sub }: ExpressUser,
-        file: Express.Multer.File,
-        resource_type: ResourceType,
-        files: Express.Multer.File[]
-    ) {
-        try {
-            const talent = await this.prisma.talent.findUnique({
-                where: {
-                    userId: sub
-                }
-            })
-
-            if (!talent) {
-                return this.response.sendError(res, StatusCodes.NotFound, 'Add your personal information')
-            }
-
-            const portfolio = await this.prisma.talentPortfolio.findUnique({
-                where: {
-                    talentId: talent.id
-                }
-            })
-
-            if (file) {
-                if (portfolio.video?.path) {
-                    await this.wasabi.deleteS3(portfolio.video.path)
-                }
-            }
-
-
-        } catch (err) {
-            return this.handleServerError(res, err, 'Error uploading portfolio')
+            return this.misc.handleServerError(res, err, 'Error saving personal information')
         }
     }
 }

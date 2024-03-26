@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SendRes } from 'lib/sendRes.service'
 import { JwtModule } from 'src/jwt/jwt.module'
+import { MiscService } from 'lib/misc.service'
 import { TalentService } from './talent.service'
 import { PassportModule } from '@nestjs/passport'
 import { PrismaService } from 'lib/prisma.service'
@@ -13,6 +14,6 @@ import { TalentController } from './talent.controller'
     PassportModule.register({ defaultStrategy: 'jwt' })
   ],
   controllers: [TalentController],
-  providers: [TalentService, PrismaService, SendRes, WasabiService],
+  providers: [TalentService, PrismaService, SendRes, WasabiService, MiscService],
 })
 export class TalentModule { }

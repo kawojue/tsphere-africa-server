@@ -20,7 +20,7 @@ export class TalentController {
 
   @Role('talent')
   @Put('personalInfo')
-  @UseInterceptors(FileInterceptor('id'))
+  @UseInterceptors(FileInterceptor('proof_id'))
   async createPersonalInfo(
     @Req() req: IRequest,
     @Res() res: Response,

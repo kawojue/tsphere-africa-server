@@ -1,24 +1,22 @@
-import { Response } from 'express'
+import StatusCodes from "enums/StatusCodes"
 
-export const validateFile = async (
-    res: Response, file: Express.Multer.File,
+export const validateFile = (
+    file: Express.Multer.File,
     maxSize: number, ...extensions: string[]
 ) => {
     if (maxSize < file.size) {
-        res.status(413).json({
-            success: false,
+        return {
+            status: StatusCodes.PayloadTooLarge,
             message: `${file.originalname} is too large`
-        })
-        return
+        }
     }
 
     if (!extensions.includes(file.originalname.split('.').pop())) {
-        res.status(415).json({
-            success: false,
-            message: `${file.originalname} extension is not allowed`
-        })
-        return
+        return {
+            status: StatusCodes.UnsupportedContent,
+            message: `${file.originalname} extension is not allowed`,
+        }
     }
 
-    return file
+    return { file }
 }

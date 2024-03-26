@@ -1,5 +1,3 @@
-import * as fs from 'fs'
-import * as util from 'util'
 import { S3 } from 'aws-sdk'
 import { Injectable, NotFoundException } from '@nestjs/common'
 
@@ -24,13 +22,10 @@ export class WasabiService {
         const uploadParams: S3.PutObjectRequest = {
             Bucket: this.bucketName,
             Key: key,
-            Body: fs.createReadStream(file.path)
+            Body: file.buffer
         }
 
-        const res = await this.s3.upload(uploadParams).promise()
-        await util.promisify(fs.unlink)(file.path)
-
-        return res
+        return await this.s3.upload(uploadParams).promise()
     }
 
     async deleteS3(key: string): Promise<void> {

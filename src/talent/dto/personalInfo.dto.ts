@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { PersonalInfoDto as CreativePersonalInfoDto } from 'src/creative/dto/personalInfo.dto'
-import { IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator'
+import { Gender } from '@prisma/client'
+import { ApiProperty } from '@nestjs/swagger'
+import { IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, IsUrl } from 'class-validator'
 
 export class PersonalInfoDto {
     @ApiProperty({
@@ -28,42 +28,112 @@ export class PersonalInfoDto {
     username: string
 
     @ApiProperty({
-        example: '10, My Street, Lagos State'
+        example: '+2348131911964'
+    })
+    @IsNotEmpty()
+    @IsOptional()
+    @IsPhoneNumber()
+    phone: string
+
+    @ApiProperty({
+        example: '+2349489289824'
+    })
+    @IsNotEmpty()
+    @IsOptional()
+    @IsPhoneNumber()
+    altPhone: string
+
+    @ApiProperty({
+        example: 'Female'
+    })
+    @IsNotEmpty()
+    @IsOptional()
+    @IsEnum(Gender)
+    gender: Gender
+
+
+    @ApiProperty({
+        example: 'Female'
     })
     @IsString()
     @IsNotEmpty()
+    @IsOptional()
+    religion: string
+
+    @ApiProperty({
+        example: '10/09/2003'
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    dob: Date
+
+    @ApiProperty({
+        example: '18-21 years'
+    })
+    @IsString()
+    @IsOptional()
+    playingAge: string
+
+    @ApiProperty({
+        example: 'Nigerian'
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    nationality: string
+
+    @ApiProperty({
+        example: 'Nigeria'
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    country: string
+
+    @ApiProperty({
+        example: 'Lagos State'
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    state: string
+
+    @ApiProperty({
+        example: '10, Lmao Street, Normal LGA 😏'
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
     address: string
 
     @ApiProperty({
-        example: 4
-    })
-    @IsNumber()
-    @IsNotEmpty()
-    yearsOfExperience: number
-
-    @ApiProperty({
-        examples: ['National Identity Slip', 'BVN', 'National Identity Card', 'Driving License', 'Passport']
+        examples: ['National Identity Slip', 'National Identity Card', 'Driving License', 'Passport']
     })
     @IsString()
     @IsNotEmpty()
     idType: string
 
     @ApiProperty({
-        example: '12309847560'
+        example: 'Chinko'
     })
     @IsString()
     @IsNotEmpty()
-    @MaxLength(15, {
-        message: 'ID number is too long'
+    language: string
+
+    @ApiProperty({
+        example: 'https://www.facebook.com/alwaysappear'
     })
-    idNumber: string
+    @IsUrl()
+    @IsOptional()
+    fbHandle: string
 
     @ApiProperty({
         example: 'https://www.instagram.com/username/'
     })
     @IsUrl()
     @IsOptional()
-    instagramHandle: string
+    igHandle: string
 
     @ApiProperty({
         example: 'https://x.com/kawojue_'
