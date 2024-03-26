@@ -72,7 +72,7 @@ export class CreativeController {
   })
   @ApiConsumes('multipart/formdata', 'audio/mp3', 'audio/wav', 'audio/aac')
   @UseInterceptors(FileInterceptor('images'))
-  @Put('/portfolio/video')
+  @Put('/portfolio/audio')
   async uploadPortfolioAudio(
     @Req() req: IRequest,
     @Res() res: Response,
