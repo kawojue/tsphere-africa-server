@@ -67,7 +67,7 @@ export class ProfileSetupService {
                         }
                         filesArray = []
                     } catch (err) {
-                        return this.misc.handleServerError(res, err, err.message)
+                        this.misc.handleServerError(res, err, err.message)
                     }
                 }
 
@@ -94,7 +94,7 @@ export class ProfileSetupService {
                 this.response.sendSuccess(res, StatusCodes.OK, { data: portfolio })
             }
         } catch (err) {
-            return this.misc.handleServerError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 
@@ -143,7 +143,7 @@ export class ProfileSetupService {
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: portfolio })
         } catch (err) {
-            return this.misc.handleServerError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 
@@ -192,7 +192,7 @@ export class ProfileSetupService {
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: portfolio })
         } catch (err) {
-            return this.misc.handleServerError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 
@@ -208,7 +208,7 @@ export class ProfileSetupService {
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: exp })
         } catch (err) {
-            return this.misc.handleServerError(res, err, 'Error adding experience')
+            this.misc.handleServerError(res, err, 'Error adding experience')
         }
     }
 
@@ -231,7 +231,7 @@ export class ProfileSetupService {
 
             this.response.sendSuccess(res, StatusCodes.OK, {})
         } catch (err) {
-            return this.misc.handleServerError(res, err, 'Error removing experience')
+            this.misc.handleServerError(res, err, 'Error removing experience')
         }
     }
 
@@ -251,7 +251,7 @@ export class ProfileSetupService {
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: details })
         } catch (err) {
-            return this.misc.handleServerError(res, err, 'Error updating bank account')
+            this.misc.handleServerError(res, err, 'Error updating bank account')
         }
     }
 }

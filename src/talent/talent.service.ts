@@ -142,7 +142,7 @@ export class TalentService {
                 message: "Personal Information has been updated successfully"
             })
         } catch (err) {
-            return this.misc.handleServerError(res, err, 'Error saving personal information')
+            this.misc.handleServerError(res, err, 'Error saving personal information')
         }
     }
 
@@ -172,7 +172,7 @@ export class TalentService {
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: bioStat })
         } catch (err) {
-            return this.misc.handleServerError(res, err, 'Error saving Bio and Statistics')
+            this.misc.handleServerError(res, err, 'Error saving Bio and Statistics')
         }
     }
 
@@ -209,7 +209,7 @@ export class TalentService {
                 message: 'Saved'
             })
         } catch (err) {
-            return this.misc.handleServerError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 }

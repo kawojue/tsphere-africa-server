@@ -58,7 +58,7 @@ export class AuthService {
                 message: 'Thanks for subscribing to our news letter!'
             })
         } catch (err) {
-            return this.misc.handleServerError(res, err, "Error subscribing to news letter")
+            this.misc.handleServerError(res, err, "Error subscribing to news letter")
         }
     }
 
@@ -133,7 +133,7 @@ export class AuthService {
                     }
                     filesArray = []
                 } catch (err) {
-                    return this.misc.handleServerError(res, err, err.message)
+                    this.misc.handleServerError(res, err, err.message)
                 }
             }
 
@@ -179,7 +179,7 @@ export class AuthService {
                 message: "A verification link has been sent to your email"
             })
         } catch (err) {
-            return this.misc.handleServerError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 
@@ -245,7 +245,7 @@ export class AuthService {
                 message: "A verification link has been sent to your email"
             })
         } catch (err) {
-            return this.misc.handleServerError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 
@@ -640,7 +640,7 @@ export class AuthService {
                 }
             })
         } catch (err) {
-            return this.misc.handleServerError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 }

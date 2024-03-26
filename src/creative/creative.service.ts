@@ -140,7 +140,7 @@ export class CreativeService {
                 message: "Personal Information has been updated successfully"
             })
         } catch (err) {
-            return this.misc.handleServerError(res, err, 'Error saving personal information')
+            this.misc.handleServerError(res, err, 'Error saving personal information')
         }
     }
 
@@ -171,7 +171,7 @@ export class CreativeService {
                 data: { bio: creative.bio }
             })
         } catch (err) {
-            return this.misc.handleServerError(res, err, 'Error saving Bio')
+            this.misc.handleServerError(res, err, 'Error saving Bio')
         }
     }
 
@@ -208,7 +208,7 @@ export class CreativeService {
                 message: 'Saved'
             })
         } catch (err) {
-            return this.misc.handleServerError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 }
