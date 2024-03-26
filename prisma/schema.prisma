@@ -62,16 +62,12 @@ model Profile {
 }
 
 model Creative {
-    id                 String                @id @default(auto()) @map("_id") @db.ObjectId
-    bio                String?
-    personalInfo       CreativePersonalInfo?
-    skill              CreativeSkill?
-    portfolio          CreativePortfolio?
-    experiences        CreativeExperience[]
-    education          CreativeEducation?
-    rateAndAvailabilty RateAndAvailabilty?
-    user               User                  @relation(references: [id], fields: [userId])
-    userId             String                @unique @db.ObjectId
+    id           String                @id @default(auto()) @map("_id") @db.ObjectId
+    bio          String?
+    personalInfo CreativePersonalInfo?
+    portfolio    CreativePortfolio?
+    user         User                  @relation(references: [id], fields: [userId])
+    userId       String                @unique @db.ObjectId
 }
 
 model CreativePersonalInfo {
@@ -94,67 +90,13 @@ model CreativePersonalInfo {
     creativeId String    @unique @db.ObjectId
 }
 
-model CreativeSkill {
-    id         String             @id @default(auto()) @map("_id") @db.ObjectId
-    skills     String[]
-    level      CreativeSkillLevel
-    creative   Creative           @relation(fields: [creativeId], references: [id])
-    creativeId String             @unique @db.ObjectId
-}
-
-model CreativeExperience {
-    id         String    @id @default(auto()) @map("_id") @db.ObjectId
-    title      String
-    employer   String?
-    startDate  DateTime
-    endDate    DateTime?
-    location   String
-    details    String?
-    creative   Creative  @relation(fields: [creativeId], references: [id])
-    creativeId String    @unique @db.ObjectId
-}
-
-model RateAndAvailabilty {
-    id               String     @id @default(auto()) @map("_id") @db.ObjectId
-    chargeTime       ChargeTime
-    workingDays      String[]
-    chargePerTime    Int
-    workHoursPerTime String
-    creative         Creative   @relation(fields: [creativeId], references: [id])
-    creativeId       String     @unique @db.ObjectId
-}
-
 model CreativePortfolio {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
-    title       String
-    files       File[]
-    description String
-    creative    Creative @relation(fields: [creativeId], references: [id])
-    creativeId  String   @unique @db.ObjectId
-}
-
-model CreativeEducation {
-    id                   String   @id @default(auto()) @map("_id") @db.ObjectId
-    school               String
-    startDate            DateTime
-    endDate              DateTime
-    study                String
-    levelOfCertification String
-    typeOfDegree         String?
-    creative             Creative @relation(fields: [creativeId], references: [id])
-    creativeId           String   @unique @db.ObjectId
-}
-
-enum CreativeSkillLevel {
-    intermidiate
-    beginner
-    professional
-}
-
-enum ChargeTime {
-    Hourly
-    Weekly
-    Monthly
+    id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    video      File?
+    images     File[]
+    audio      File?
+    creative   Creative @relation(fields: [creativeId], references: [id])
+    creativeId String   @unique @db.ObjectId
 }
 
 model Talent {

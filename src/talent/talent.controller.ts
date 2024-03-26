@@ -34,7 +34,6 @@ export class TalentController {
     return await this.talentService.personalInfo(res, req.user, personalInfoDto, file)
   }
 
-
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Images should be images'
   })
