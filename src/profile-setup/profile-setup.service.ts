@@ -8,6 +8,7 @@ import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { WasabiService } from 'lib/wasabi.service'
 import { ExperienceDto } from './dto/experiece.dto'
+import { BankDetailsDto } from './dto/bank-details.dto'
 
 @Injectable()
 export class ProfileSetupService {
@@ -231,6 +232,26 @@ export class ProfileSetupService {
             this.response.sendSuccess(res, StatusCodes.OK, {})
         } catch (err) {
             return this.misc.handleServerError(res, err, 'Error removing experience')
+        }
+    }
+
+    async manageBankDetails(
+        res: Response,
+        { sub }: ExpressUser,
+        bankDetails: BankDetailsDto
+    ) {
+        try {
+            const details = await this.prisma.bankDetails.upsert({
+                where: {
+                    userId: sub
+                },
+                create: { ...bankDetails, user: { connect: { id: sub } } },
+                update: bankDetails
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: details })
+        } catch (err) {
+            return this.misc.handleServerError(res, err, 'Error updating bank account')
         }
     }
 }

@@ -10,6 +10,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ProfileSetupService } from './profile-setup.service'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { BankDetailsDto } from './dto/bank-details.dto'
 
 @ApiTags("Profile Setup")
 @ApiBearerAuth()
@@ -73,7 +74,7 @@ export class ProfileSetupController {
     return await this.profileSetupService.addExperience(res, req.user, experience)
   }
 
-  @Role('talent', 'create')
+  @Role('talent', 'creative')
   @Delete('/experience/:experienceId')
   async removeExperience(
     @Res() res: Response,
@@ -81,5 +82,15 @@ export class ProfileSetupController {
     @Param('experienceId') experienceId: string
   ) {
     return await this.profileSetupService.removeExperience(res, req.user, experienceId)
+  }
+
+  @Role('talent', 'creative')
+  @Put('/bank-details')
+  async manageBankDetails(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() bankDetails: BankDetailsDto
+  ) {
+    return await this.profileSetupService.manageBankDetails(res, req.user, bankDetails)
   }
 }
