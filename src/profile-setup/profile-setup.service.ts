@@ -4,9 +4,10 @@ import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
+import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { WasabiService } from 'lib/wasabi.service'
-import { genFileName } from 'helpers/genFilename'
+import { ExperienceDto } from './experiece.dto'
 
 @Injectable()
 export class ProfileSetupService {
@@ -194,4 +195,42 @@ export class ProfileSetupService {
         }
     }
 
+    async addExperience(
+        res: Response,
+        { sub }: ExpressUser,
+        experience: ExperienceDto
+    ) {
+        try {
+            const exp = await this.prisma.experience.create({
+                data: { ...experience, user: { connect: { id: sub } } }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: exp })
+        } catch (err) {
+            return this.misc.handleServerError(res, err, 'Error adding experience')
+        }
+    }
+
+    async removeExperience(
+        res: Response,
+        { sub }: ExpressUser,
+        experienceId: string
+    ) {
+        try {
+            const experience = await this.prisma.experience.delete({
+                where: {
+                    id: experienceId,
+                    userId: sub
+                }
+            })
+
+            if (!experience) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'Experience not found')
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, {})
+        } catch (err) {
+            return this.misc.handleServerError(res, err, 'Error removing experience')
+        }
+    }
 }

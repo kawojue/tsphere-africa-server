@@ -1,14 +1,15 @@
 import { Response } from 'express'
 import { Role } from 'src/role.decorator'
-import {
-  Controller, Put, Req, Res, UploadedFile,
-  UploadedFiles, UseGuards, UseInterceptors,
-} from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import {
+  Controller, Delete, Param, Post, UseInterceptors, Put,
+  UploadedFiles, UseGuards, Req, Res, Body, UploadedFile,
+} from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ProfileSetupService } from './profile-setup.service'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ExperienceDto } from './experiece.dto'
 
 @ApiTags("Profile Setup")
 @ApiBearerAuth()
@@ -47,10 +48,10 @@ export class ProfileSetupController {
     return await this.profileSetupService.uploadPortfolioVideo(res, req.user, file)
   }
 
+  @Role('talent', 'creatuive')
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Audio should be audio'
   })
-  @Role('talent', 'creatuive')
   @ApiConsumes('multipart/formdata', 'audio/mp3', 'audio/wav', 'audio/aac')
   @UseInterceptors(FileInterceptor('images'))
   @Put('/portfolio/audio')
@@ -60,5 +61,25 @@ export class ProfileSetupController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return await this.profileSetupService.uploadPortfolioAudio(res, req.user, file)
+  }
+
+  @Role('talent', 'creative')
+  @Post('/experience')
+  async addExperience(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() experience: ExperienceDto
+  ) {
+    return await this.profileSetupService.addExperience(res, req.user, experience)
+  }
+
+  @Role('talent', 'create')
+  @Delete('/experience/:experienceId')
+  async removeExperience(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Param('experienceId') experienceId: string
+  ) {
+    return await this.profileSetupService.removeExperience(res, req.user, experienceId)
   }
 }
