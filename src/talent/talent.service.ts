@@ -182,13 +182,13 @@ export class TalentService {
         ratesObj: TalentRatesAvailabilityDto
     ) {
         try {
-            const creative = await this.prisma.creative.findUnique({
+            const talent = await this.prisma.talent.findUnique({
                 where: {
                     userId: sub
                 }
             })
 
-            if (!creative) {
+            if (!talent) {
                 return this.response.sendError(res, StatusCodes.NotFound, 'Add your personal information')
             }
 
@@ -196,11 +196,11 @@ export class TalentService {
                 return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid weekdays')
             }
 
-            const rates = await this.prisma.creativeRatesAndAvailabily.upsert({
+            const rates = await this.prisma.talentRatesAndAvailability.upsert({
                 where: {
-                    creativeId: creative.id
+                    talentId: talent.id
                 },
-                create: { ...ratesObj, creative: { connect: { id: creative.id } } },
+                create: { ...ratesObj, talent: { connect: { id: talent.id } } },
                 update: ratesObj
             })
 

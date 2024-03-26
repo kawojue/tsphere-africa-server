@@ -195,7 +195,7 @@ export class CreativeService {
                 return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid weekdays')
             }
 
-            const rates = await this.prisma.creativeRatesAndAvailabily.upsert({
+            const rates = await this.prisma.creativeRatesAndAvailability.upsert({
                 where: {
                     creativeId: creative.id
                 },
