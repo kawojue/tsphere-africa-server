@@ -7,9 +7,9 @@ import {
 import { AuthGuard } from '@nestjs/passport'
 import { TalentService } from './talent.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger'
 
 @ApiTags('Talent')
 @Controller('talent')
@@ -20,6 +20,7 @@ export class TalentController {
 
   @Role('talent')
   @Put('personalInfo')
+  @ApiConsumes('multipart/formdata', 'image/jpeg', 'image/png')
   @UseInterceptors(FileInterceptor('proof_id'))
   async createPersonalInfo(
     @Req() req: IRequest,

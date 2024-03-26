@@ -1,4 +1,5 @@
 import { Response } from 'express'
+import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
@@ -8,7 +9,6 @@ import { genFileName } from 'helpers/genFilename'
 import { WasabiService } from 'lib/wasabi.service'
 import { PrismaService } from 'lib/prisma.service'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
-import { validateFile } from 'utils/file'
 
 @Injectable()
 export class TalentService {
@@ -124,7 +124,7 @@ export class TalentService {
                     fbHandle, igHandle, xHandle,
                     phone, altPhone, gender, religion, dob,
                     playingAge, nationality, country, state,
-                    proofOfId: proofOfId?.url ? proofOfId : null,
+                    proofOfId: proofOfId?.path ? proofOfId : null,
                     talent: { connect: { id: talent.id } }
                 },
                 update: {

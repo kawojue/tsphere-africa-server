@@ -74,14 +74,23 @@ model Creative {
 }
 
 model CreativePersonalInfo {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
-    phone       String?
-    gender      Gender?
-    languages   String[]
-    nationality String?
-    religion    String?
-    creative    Creative @relation(fields: [creativeId], references: [id])
-    creativeId  String   @unique @db.ObjectId
+    id         String    @id @default(auto()) @map("_id") @db.ObjectId
+    phone      String?
+    altPhone   String?
+    gender     Gender?
+    religion   String?
+    dob        DateTime?
+    country    String?
+    state      String?
+    address    String?
+    idType     String?
+    proofOfId  File?
+    language   String?
+    fbHandle   String?
+    igHandle   String?
+    xHandle    String?
+    creative   Creative  @relation(fields: [creativeId], references: [id])
+    creativeId String    @unique @db.ObjectId
 }
 
 model CreativeSkill {

@@ -51,7 +51,6 @@ export class PersonalInfoDto {
     @IsEnum(Gender)
     gender: Gender
 
-
     @ApiProperty({
         example: 'Female'
     })
