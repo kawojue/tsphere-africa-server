@@ -58,7 +58,7 @@ export class AuthService {
                 message: 'Thanks for subscribing to our news letter!'
             })
         } catch (err) {
-            return this.handleError(res, err, "Error subscribing to news letter")
+            return this.misc.handleServerError(res, err, "Error subscribing to news letter")
         }
     }
 
@@ -133,7 +133,7 @@ export class AuthService {
                     }
                     filesArray = []
                 } catch (err) {
-                    return this.handleError(res, err, err.message)
+                    return this.misc.handleServerError(res, err, err.message)
                 }
             }
 
@@ -179,7 +179,7 @@ export class AuthService {
                 message: "A verification link has been sent to your email"
             })
         } catch (err) {
-            return this.handleError(res, err)
+            return this.misc.handleServerError(res, err)
         }
     }
 
@@ -245,7 +245,7 @@ export class AuthService {
                 message: "A verification link has been sent to your email"
             })
         } catch (err) {
-            return this.handleError(res, err)
+            return this.misc.handleServerError(res, err)
         }
     }
 
@@ -284,7 +284,7 @@ export class AuthService {
                 message: "Your email is now verified"
             })
         } catch (err) {
-            this.handleError(res, err, "Error verifying emaail")
+            this.misc.handleServerError(res, err, "Error verifying emaail")
         }
     }
 
@@ -336,7 +336,7 @@ export class AuthService {
                 message: "New verification link has been sent to your email"
             })
         } catch (err) {
-            this.handleError(res, err, "Error sending verification link")
+            this.misc.handleServerError(res, err, "Error sending verification link")
         }
     }
 
@@ -388,7 +388,7 @@ export class AuthService {
                 message: "Password reseted successfully"
             })
         } catch (err) {
-            this.handleError(res, err, 'Error resetting password')
+            this.misc.handleServerError(res, err, 'Error resetting password')
         }
     }
 
@@ -461,7 +461,7 @@ export class AuthService {
 
             this.response.sendSuccess(res, StatusCodes.Created, { message: "You're now a Moderator!" })
         } catch (err) {
-            this.handleError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 
@@ -490,13 +490,8 @@ export class AuthService {
                 })
             })
         } catch (err) {
-            this.handleError(res, err)
+            this.misc.handleServerError(res, err)
         }
-    }
-
-    handleError(res: Response, err?: any, msg?: string) {
-        console.error(err)
-        return this.response.sendError(res, StatusCodes.InternalServerError, msg || 'Somthing went wrong')
     }
 
     async login(res: Response, { email, password }: LoginDto) {
@@ -560,7 +555,7 @@ export class AuthService {
                 message: "Login Successful"
             })
         } catch (err) {
-            this.handleError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 
@@ -595,7 +590,7 @@ export class AuthService {
                 message: "Password updated successfully"
             })
         } catch (err) {
-            this.handleError(res, err)
+            this.misc.handleServerError(res, err)
         }
     }
 
@@ -645,7 +640,7 @@ export class AuthService {
                 }
             })
         } catch (err) {
-            return this.handleError(res, err)
+            return this.misc.handleServerError(res, err)
         }
     }
 }
