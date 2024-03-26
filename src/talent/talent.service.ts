@@ -47,12 +47,14 @@ export class TalentService {
 
             const personalInfo = user.talent?.personalInfo
 
-            if (!personalInfo?.proofOfId?.path && !file) {
-                return this.response.sendError(res, StatusCodes.BadRequest, 'Upload your proof of ID')
-            }
-
-            if (personalInfo?.proofOfId?.path) {
-                await this.wasabi.deleteS3(personalInfo.proofOfId.path)
+            if (!personalInfo?.proofOfId?.path) {
+                if (!file) {
+                    return this.response.sendError(res, StatusCodes.BadRequest, 'Upload your proof of ID')
+                }
+            } else {
+                if (file) {
+                    return this.response.sendError(res, StatusCodes.Conflict, 'Already uploaded proof of ID')
+                }
             }
 
             let proofOfId = {} as IFile
@@ -118,16 +120,17 @@ export class TalentService {
             const personalInfoData = await this.prisma.talentPersonalInfo.upsert({
                 where: { talentId: talent.id },
                 create: {
+                    address, idType, language,
                     fbHandle, igHandle, xHandle,
                     phone, altPhone, gender, religion, dob,
                     playingAge, nationality, country, state,
-                    address, idType, proofOfId, language,
+                    proofOfId: proofOfId?.url ? proofOfId : null,
                     talent: { connect: { id: talent.id } }
                 },
                 update: {
                     phone, altPhone, gender, religion, dob,
                     playingAge, nationality, country, state,
-                    address, idType, proofOfId, language,
+                    address, idType, language,
                     fbHandle, igHandle, xHandle
                 }
             })

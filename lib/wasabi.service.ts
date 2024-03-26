@@ -37,6 +37,10 @@ export class WasabiService {
         await this.s3.deleteObject(deleteParams).promise()
     }
 
+    async getS3(path: string) {
+        return `${process.env.DIST_DOMAIN!}/${path}`
+    }
+
     async downloadS3(key: string): Promise<Buffer> {
         const downloadParams: S3.GetObjectRequest = {
             Bucket: this.bucketName,
