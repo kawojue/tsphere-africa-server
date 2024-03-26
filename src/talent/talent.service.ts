@@ -1,11 +1,11 @@
 import { Response } from 'express'
-import { BioDto } from './dto/bio.dto'
 import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
+import { BioStatsDto } from './dto/bio-stats.dto'
 import { genFileName } from 'helpers/genFilename'
 import { WasabiService } from 'lib/wasabi.service'
 import { PrismaService } from 'lib/prisma.service'
@@ -147,7 +147,7 @@ export class TalentService {
 
     async bioStats(
         res: Response,
-        bio: BioDto,
+        bio: BioStatsDto,
         { sub }: ExpressUser
     ) {
         try {

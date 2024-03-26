@@ -1,5 +1,4 @@
 import { Response } from 'express'
-import { BioDto } from './dto/bio.dto'
 import {
   UploadedFile, UseInterceptors, Req,
   Controller, Put, UseGuards, Body, Res,
@@ -7,6 +6,7 @@ import {
 import { Role } from 'src/role.decorator'
 import { AuthGuard } from '@nestjs/passport'
 import { TalentService } from './talent.service'
+import { BioStatsDto } from './dto/bio-stats.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
@@ -40,7 +40,7 @@ export class TalentController {
   async bioStats(
     @Res() res: Response,
     @Req() req: IRequest,
-    @Body() bio: BioDto,
+    @Body() bio: BioStatsDto,
   ) {
     return await this.talentService.bioStats(res, bio, req.user)
   }

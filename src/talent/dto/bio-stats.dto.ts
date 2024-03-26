@@ -2,7 +2,7 @@ import { Gender } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 
-export class BioDto {
+export class BioStatsDto {
     @ApiProperty({
         example: '💻 Navigating the digital universe.'
     })
