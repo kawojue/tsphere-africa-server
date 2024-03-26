@@ -8,22 +8,25 @@ generator client {
 }
 
 model User {
-    id             String      @id @default(auto()) @map("_id") @db.ObjectId
-    email          String      @unique
-    username       String      @unique
+    id             String       @id @default(auto()) @map("_id") @db.ObjectId
+    email          String       @unique
+    username       String       @unique
     firstname      String
     lastname       String
     password       String
     skill          String
     under18Kyc     under18Kyc?
     avatar         File?
-    email_verified Boolean     @default(false)
-    role           Role        @default(user)
+    portfolio      Portfolio?
+    email_verified Boolean      @default(false)
+    role           Role         @default(user)
     under18        Boolean
     creative       Creative?
     talent         Talent?
-    subscribed     Boolean     @default(false)
-    createdAt      DateTime    @default(now())
+    bankDetails    BankDetails?
+    experiences    Experience[]
+    subscribed     Boolean      @default(false)
+    createdAt      DateTime     @default(now())
     validation     Validation?
 }
 
@@ -62,23 +65,32 @@ model Profile {
 }
 
 model BankDetails {
-    id            String    @id @default(auto()) @map("_id") @db.ObjectId
+    id            String  @id @default(auto()) @map("_id") @db.ObjectId
     bankName      String
     accountName   String
     accountNumber String
-    creative      Creative? @relation(fields: [creativeId], references: [id])
-    creativeId    String?   @unique @db.ObjectId
-    talent        Talent?   @relation(fields: [talentId], references: [id])
-    talentId      String?   @unique @db.ObjectId
+    sortCode      String?
+    user          User    @relation(fields: [userId], references: [id])
+    userId        String  @unique @db.ObjectId
+}
+
+model Experience {
+    id                String  @id @default(auto()) @map("_id") @db.ObjectId
+    yearsOfExperience String
+    proficiencyLevel  String
+    brandsWorkedWith  String?
+    projectType       String?
+    roleOrPosition    String?
+    projectDuration   String?
+    user              User    @relation(fields: [userId], references: [id])
+    userId            String  @unique @db.ObjectId
 }
 
 model Creative {
     id                  String                      @id @default(auto()) @map("_id") @db.ObjectId
     bio                 String?
     personalInfo        CreativePersonalInfo?
-    portfolio           CreativePortfolio?
     rateAndAvailability CreativeRatesAndAvailabily?
-    bankDetails         BankDetails?
     user                User                        @relation(references: [id], fields: [userId])
     userId              String                      @unique @db.ObjectId
 }
@@ -103,15 +115,6 @@ model CreativePersonalInfo {
     creativeId String    @unique @db.ObjectId
 }
 
-model CreativePortfolio {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
-    video      File?
-    images     File[]
-    audio      File?
-    creative   Creative @relation(fields: [creativeId], references: [id])
-    creativeId String   @unique @db.ObjectId
-}
-
 model CreativeRatesAndAvailabily {
     id           String      @id @default(auto()) @map("_id") @db.ObjectId
     availability Boolean     @default(true)
@@ -126,9 +129,7 @@ model CreativeRatesAndAvailabily {
 model Talent {
     id                  String                    @id @default(auto()) @map("_id") @db.ObjectId
     personalInfo        TalentPersonalInfo?
-    portfolio           TalentPortfolio?
     bio                 TalentBio?
-    bankDetails         BankDetails?
     rateAndAvailability TalentRatesAndAvailabily?
     user                User                      @relation(fields: [userId], references: [id])
     userId              String                    @unique @db.ObjectId
@@ -156,13 +157,13 @@ model TalentPersonalInfo {
     talentId    String    @unique @db.ObjectId
 }
 
-model TalentPortfolio {
-    id       String @id @default(auto()) @map("_id") @db.ObjectId
-    video    File?
-    images   File[]
-    audio    File?
-    talent   Talent @relation(fields: [talentId], references: [id])
-    talentId String @unique @db.ObjectId
+model Portfolio {
+    id     String @id @default(auto()) @map("_id") @db.ObjectId
+    video  File?
+    images File[]
+    audio  File?
+    user   User   @relation(fields: [userId], references: [id])
+    userId String @unique @db.ObjectId
 }
 
 model TalentBio {

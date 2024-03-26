@@ -1,11 +1,11 @@
 import { Response } from 'express'
 import { BioDto } from './dto/bio.dto'
+import {
+  UploadedFile, UseInterceptors, Req,
+  Controller, Put, UseGuards, Body, Res,
+} from '@nestjs/common'
 import { Role } from 'src/role.decorator'
 import { AuthGuard } from '@nestjs/passport'
-import {
-  Body, Controller, Put, Req, Res, UseGuards,
-  UploadedFile, UploadedFiles, UseInterceptors,
-} from '@nestjs/common'
 import { TalentService } from './talent.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
@@ -20,7 +20,7 @@ export class TalentController {
   constructor(private readonly talentService: TalentService) { }
 
   @Role('talent')
-  @Put('personalInfo')
+  @Put('personal-info')
   @ApiOperation({
     summary: 'The formdata key for the Proof of ID should proof_id'
   })
@@ -36,54 +36,12 @@ export class TalentController {
   }
 
   @Role('talent')
-  @Put('bio')
-  async bio(
+  @Put('bio-stats')
+  async bioStats(
     @Res() res: Response,
     @Req() req: IRequest,
     @Body() bio: BioDto,
   ) {
-    return await this.talentService.bio(res, bio, req.user)
-  }
-
-  @ApiOperation({
-    summary: 'The formdata key for the Portfolio Images should be images'
-  })
-  @ApiConsumes('multipart/formdata', 'image/jpeg', 'image/png')
-  @UseInterceptors(FileInterceptor('images'))
-  @Put('/portfolio/images')
-  async uploadPortfolioImages(
-    @Req() req: IRequest,
-    @Res() res: Response,
-    @UploadedFiles() files: Express.Multer.File[],
-  ) {
-    return await this.talentService.uploadPortfolioImages(res, req.user, files)
-  }
-
-  @ApiOperation({
-    summary: 'The formdata key for the Portfolio Video should be video'
-  })
-  @ApiConsumes('multipart/formdata', 'video/mp4')
-  @UseInterceptors(FileInterceptor('images'))
-  @Put('/portfolio/video')
-  async uploadPortfolioVideo(
-    @Req() req: IRequest,
-    @Res() res: Response,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    return await this.talentService.uploadPortfolioVideo(res, req.user, file)
-  }
-
-  @ApiOperation({
-    summary: 'The formdata key for the Portfolio Audio should be audio'
-  })
-  @ApiConsumes('multipart/formdata', 'audio/mp3', 'audio/wav', 'audio/aac')
-  @UseInterceptors(FileInterceptor('images'))
-  @Put('/portfolio/audio')
-  async uploadPortfolioAudio(
-    @Req() req: IRequest,
-    @Res() res: Response,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    return await this.talentService.uploadPortfolioAudio(res, req.user, file)
+    return await this.talentService.bioStats(res, bio, req.user)
   }
 }

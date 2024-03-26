@@ -11,6 +11,7 @@ import { WasabiService } from 'lib/wasabi.service'
 import { PrismaService } from 'lib/prisma.service'
 import { TalentModule } from './talent/talent.module'
 import { CreativeModule } from './creative/creative.module'
+import { ProfileSetupModule } from './profile-setup/profile-setup.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CreativeModule } from './creative/creative.module'
     FileModule,
     TalentModule,
     CreativeModule,
+    ProfileSetupModule,
   ],
   controllers: [AppController],
   providers: [
