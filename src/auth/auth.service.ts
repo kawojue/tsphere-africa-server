@@ -1,16 +1,12 @@
 import { Response } from 'express'
-import { JwtService } from '@nestjs/jwt'
 import { validateFile } from 'utils/file'
-import { USER_REGEX } from 'utils/regExp'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
-import { genToken } from 'helpers/genToken'
-import { Validation } from '@prisma/client'
 import { SendRes } from 'lib/sendRes.service'
+import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
 import { PlunkService } from 'lib/plunk.service'
 import { genFileName } from 'helpers/genFilename'
-import { genRandomCode } from 'helpers/genRandStr'
 import { PrismaService } from 'lib/prisma.service'
 import { WasabiService } from 'lib/wasabi.service'
 import { EncryptionService } from 'lib/encryption.service'
@@ -21,48 +17,13 @@ import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dt
 @Injectable()
 export class AuthService {
     constructor(
-        private jwtService: JwtService,
+        private misc: MiscService,
         private readonly response: SendRes,
         private readonly plunk: PlunkService,
         private readonly prisma: PrismaService,
         private readonly wasabi: WasabiService,
         private readonly encryption: EncryptionService,
     ) { }
-
-    private async generateAccessToken({ sub, role }: JwtPayload) {
-        return await this.jwtService.signAsync({ sub, role })
-    }
-
-    private isValidUsername(username: string) {
-        return USER_REGEX.test(username)
-    }
-
-    private async validateToken(recv_token: string, validation: Validation) {
-        const decodedToken = atob(recv_token)
-        const token = genToken(validation?.userId, validation?.randomCode)
-
-        return token.token === decodedToken
-    }
-
-    private genenerateToken(id: string) {
-        const randomCode = genRandomCode()
-        const tk = genToken(id, randomCode)
-        const token = Buffer.from(tk.token).toString('base64')
-
-        return {
-            token,
-            randomCode,
-            token_expiry: tk.token_expiry
-        }
-    }
-
-    private async sendVerificationEmail(email: string, token: string) {
-        await this.plunk.sendPlunkEmail({
-            to: email,
-            subject: "Verify your email",
-            body: `${process.env.CLIENT_URL}/verify-email?token=${token}&token_type=email`
-        })
-    }
 
     async subscribeToNewsletter(
         res: Response,
@@ -122,7 +83,7 @@ export class AuthService {
                 return this.response.sendError(res, StatusCodes.PayloadTooLarge, "Images shouldn't be greater than 2")
             }
 
-            if (!this.isValidUsername(username)) {
+            if (!this.misc.isValidUsername(username)) {
                 return this.response.sendError(res, StatusCodes.BadRequest, "Username is not allowed")
             }
 
@@ -195,7 +156,7 @@ export class AuthService {
             })
 
 
-            const token = this.genenerateToken(user.id)
+            const token = this.misc.genenerateToken(user.id)
             await this.prisma.validation.create({
                 data: {
                     ...token,
@@ -206,7 +167,7 @@ export class AuthService {
                     }
                 }
             })
-            await this.sendVerificationEmail(email, token.token)
+            await this.plunk.sendVerificationEmail(email, token.token)
 
             await this.prisma.isSubscribed(email)
 
@@ -229,7 +190,7 @@ export class AuthService {
             last_name = titleName(last_name)
             first_name = titleName(first_name)
 
-            if (!this.isValidUsername(username)) {
+            if (!this.misc.isValidUsername(username)) {
                 this.response.sendError(res, StatusCodes.BadRequest, "Username is not allowed")
                 return
             }
@@ -261,7 +222,7 @@ export class AuthService {
                 }
             })
 
-            const token = this.genenerateToken(newUser.id)
+            const token = this.misc.genenerateToken(newUser.id)
             await this.prisma.validation.create({
                 data: {
                     ...token,
@@ -272,7 +233,7 @@ export class AuthService {
                     }
                 }
             })
-            await this.sendVerificationEmail(email, token.token)
+            await this.plunk.sendVerificationEmail(email, token.token)
 
             await this.prisma.isSubscribed(email)
 
@@ -289,7 +250,7 @@ export class AuthService {
             const validation = await this.prisma.validation.findUnique({
                 where: { token }
             })
-            const isMatch = this.validateToken(token, validation)
+            const isMatch = this.prisma.validateToken(token, validation)
 
             if (!validation || !isMatch) {
                 this.response.sendError(res, StatusCodes.Unauthorized, 'Token does not match')
@@ -337,10 +298,10 @@ export class AuthService {
                 return
             }
 
-            const token = this.genenerateToken(user.id)
+            const token = this.misc.genenerateToken(user.id)
 
             if (token_type === 'email') {
-                await this.sendVerificationEmail(email, token.token)
+                await this.plunk.sendVerificationEmail(email, token.token)
             } else if (token_type === 'password') {
                 await this.plunk.sendPlunkEmail({
                     to: email,
@@ -394,7 +355,7 @@ export class AuthService {
             const validation = await this.prisma.validation.findUnique({
                 where: { token }
             })
-            const isMatch = this.validateToken(token, validation)
+            const isMatch = this.prisma.validateToken(token, validation)
 
             if (!validation || !isMatch) {
                 this.response.sendError(res, StatusCodes.Unauthorized, 'Token does not match')
@@ -441,7 +402,7 @@ export class AuthService {
     }
 
     async usernameExists(res: Response, username: string) {
-        if (!this.isValidUsername(username)) {
+        if (!this.misc.isValidUsername(username)) {
             this.response.sendError(res, StatusCodes.BadRequest, "Username is not allowed")
             return
         }
@@ -519,7 +480,7 @@ export class AuthService {
             }
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                access_token: await this.generateAccessToken({
+                access_token: await this.misc.generateAccessToken({
                     role: admin.role,
                     sub: admin.id,
                 })
@@ -556,7 +517,7 @@ export class AuthService {
             }
 
             if (!user.email_verified) {
-                const token = this.genenerateToken(user.id)
+                const token = this.misc.genenerateToken(user.id)
                 let expired = user.validation ? new Date() > user.validation.token_expiry : false
                 if ((!expired && !user.validation) || (expired && user.validation)) {
                     await this.prisma.validation.upsert({
@@ -573,11 +534,11 @@ export class AuthService {
                         },
                         update: { ...token }
                     })
-                    await this.sendVerificationEmail(user.email, token.token)
+                    await this.plunk.sendVerificationEmail(user.email, token.token)
                 }
             }
 
-            const accessToken = await this.generateAccessToken({
+            const accessToken = await this.misc.generateAccessToken({
                 sub: user.id,
                 role: user.role,
             })

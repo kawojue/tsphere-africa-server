@@ -2,7 +2,31 @@ import { ApiProperty } from '@nestjs/swagger';
 import { PersonalInfoDto as CreativePersonalInfoDto } from 'src/creative/dto/personalInfo.dto'
 import { IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator'
 
-export class PersonalInfoDto extends CreativePersonalInfoDto {
+export class PersonalInfoDto {
+    @ApiProperty({
+        example: 'Raheem'
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    firstname: string
+
+    @ApiProperty({
+        example: 'Kawojue'
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    lastname: string
+
+    @ApiProperty({
+        example: 'Kawojue'
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    username: string
+
     @ApiProperty({
         example: '10, My Street, Lagos State'
     })

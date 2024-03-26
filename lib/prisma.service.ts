@@ -1,3 +1,4 @@
+import { genToken } from 'helpers/genToken'
 import { PrismaClient, Validation } from '@prisma/client'
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
 
@@ -40,5 +41,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         }
 
         return false
+    }
+
+    async validateToken(recv_token: string, validation: Validation) {
+        const decodedToken = atob(recv_token)
+        const token = genToken(validation?.userId, validation?.randomCode)
+
+        return token.token === decodedToken
     }
 }

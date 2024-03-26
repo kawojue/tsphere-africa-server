@@ -17,4 +17,12 @@ export class PlunkService {
             throw err
         }
     }
+
+    async sendVerificationEmail(email: string, token: string) {
+        await this.sendPlunkEmail({
+            to: email,
+            subject: "Verify your email",
+            body: `${process.env.CLIENT_URL}/verify-email?token=${token}&token_type=email`
+        })
+    }
 }

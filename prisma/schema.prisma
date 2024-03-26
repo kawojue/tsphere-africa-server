@@ -57,6 +57,10 @@ model SubscribedEmails {
     email String @unique
 }
 
+model Profile {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+}
+
 model Creative {
     id                 String                @id @default(auto()) @map("_id") @db.ObjectId
     personalInfo       CreativePersonalInfo?
@@ -174,6 +178,7 @@ model TalentPortfolio {
     id       String @id @default(auto()) @map("_id") @db.ObjectId
     video    File?
     images   File[]
+    audio    File?
     talent   Talent @relation(fields: [talentId], references: [id])
     talentId String @unique @db.ObjectId
 }
