@@ -11,7 +11,7 @@ import { CreativeService } from './creative.service'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { RatesAvailabilityDto } from './dto/rates-availability.dto'
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -22,6 +22,9 @@ export class CreativeController {
 
   @Role('talent')
   @Put('personal-info')
+  @ApiOperation({
+    summary: 'The formdata key for the Proof of ID should proof_id'
+  })
   @ApiConsumes('multipart/formdata', 'image/jpeg', 'image/png')
   @UseInterceptors(FileInterceptor('proof_id'))
   async createPersonalInfo(
