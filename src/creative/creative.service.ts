@@ -148,4 +148,35 @@ export class CreativeService {
             return this.misc.handleServerError(res, err, 'Error saving personal information')
         }
     }
+
+    async bio(
+        res: Response,
+        bio: string,
+        { sub }: ExpressUser
+    ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    id: sub
+                },
+                include: {
+                    creative: true
+                }
+            })
+
+            const creative = await this.prisma.creative.upsert({
+                where: {
+                    userId: user.id
+                },
+                create: { bio, user: { connect: { id: user.id } } },
+                update: { bio }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: { bio: creative.bio }
+            })
+        } catch (err) {
+            return this.misc.handleServerError(res, err, 'Error saving Bio')
+        }
+    }
 }

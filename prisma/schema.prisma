@@ -63,6 +63,7 @@ model Profile {
 
 model Creative {
     id                 String                @id @default(auto()) @map("_id") @db.ObjectId
+    bio                String?
     personalInfo       CreativePersonalInfo?
     skill              CreativeSkill?
     portfolio          CreativePortfolio?
