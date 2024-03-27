@@ -74,6 +74,7 @@ export class AuthService {
         try {
             last_name = titleName(last_name)
             first_name = titleName(first_name)
+            username = username.trim().toLowerCase()
 
             if (files.length === 0) {
                 return this.response.sendError(res, StatusCodes.BadRequest, "ID is required")
@@ -193,6 +194,7 @@ export class AuthService {
         try {
             last_name = titleName(last_name)
             first_name = titleName(first_name)
+            username = username.trim().toLowerCase()
 
             if (!this.misc.isValidUsername(username)) {
                 this.response.sendError(res, StatusCodes.BadRequest, "Username is not allowed")
