@@ -32,7 +32,7 @@ export class AuthController {
     return await this.authService.verifyEmail(res, token)
   }
 
-  @Get('request-token')
+  @Post('request-token')
   async requestToken(@Res() res: Response, @Body() body: RequestTokenDto) {
     return await this.authService.requestToken(res, body)
   }
