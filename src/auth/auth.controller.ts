@@ -96,6 +96,7 @@ export class AuthController {
     return await this.authService.uploadAvatar(res, req.user, file)
   }
 
+  @ApiBearerAuth()
   @Post('/update-password')
   async updatePassword(
     @Res() res: Response,
