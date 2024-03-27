@@ -33,8 +33,8 @@ export class AuthController {
   }
 
   @Get('request-token')
-  async requestToken(@Res() res: Response, @Query() query: RequestTokenDto) {
-    return await this.authService.requestToken(res, query)
+  async requestToken(@Res() res: Response, @Body() body: RequestTokenDto) {
+    return await this.authService.requestToken(res, body)
   }
 
   @Patch('/reset-password')
