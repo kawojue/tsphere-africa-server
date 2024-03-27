@@ -1,3 +1,4 @@
+import * as express from 'express'
 import { AppModule } from './app.module'
 import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
@@ -20,6 +21,7 @@ async function bootstrap() {
     credentials: true
   })
   expressApp.set('trust proxy', true)
+  app.use(express.json({ limit: 50 << 20 }))
   app.useGlobalPipes(new ValidationPipe())
 
   const swaggerOptions = new DocumentBuilder()

@@ -91,6 +91,10 @@ model Experience {
     userId            String  @unique @db.ObjectId
 }
 
+model Skills {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+}
+
 model Creative {
     id                   String                        @id @default(auto()) @map("_id") @db.ObjectId
     bio                  String?

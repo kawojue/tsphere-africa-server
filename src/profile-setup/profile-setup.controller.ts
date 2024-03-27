@@ -22,7 +22,7 @@ export class ProfileSetupController {
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Images should be images'
   })
-  @Role('talent', 'creatuive')
+  @Role('talent', 'creative')
   @ApiConsumes('multipart/formdata', 'image/jpeg', 'image/png')
   @UseInterceptors(FileInterceptor('images'))
   @Put('/portfolio/images')
@@ -37,7 +37,7 @@ export class ProfileSetupController {
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Video should be video'
   })
-  @Role('talent', 'creatuive')
+  @Role('talent', 'creative')
   @ApiConsumes('multipart/formdata', 'video/mp4')
   @UseInterceptors(FileInterceptor('images'))
   @Put('/portfolio/video')
@@ -49,7 +49,7 @@ export class ProfileSetupController {
     return await this.profileSetupService.uploadPortfolioVideo(res, req.user, file)
   }
 
-  @Role('talent', 'creatuive')
+  @Role('talent', 'creative')
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Audio should be audio'
   })

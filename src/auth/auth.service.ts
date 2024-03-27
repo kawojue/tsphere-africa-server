@@ -531,7 +531,7 @@ export class AuthService {
                                 }
                             }
                         },
-                        update: { ...token }
+                        update: token
                     })
                     await this.plunk.sendVerificationEmail(user.email, token.token)
                 }
@@ -544,12 +544,12 @@ export class AuthService {
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 data: {
+                    role: user.role,
                     email: user.email,
                     avatar: user.avatar,
                     lastname: user.lastname,
                     username: user.username,
                     firstname: user.firstname,
-                    role: user.role,
                 },
                 access_token: accessToken,
                 message: "Login Successful"
