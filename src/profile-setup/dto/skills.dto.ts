@@ -27,10 +27,13 @@ export class SkillDto {
     @IsString()
     yearsOfExperience: string
 
-    @ApiProperty({ enum: ChargeTime })
+    @ApiProperty({
+        enum: ChargeTime,
+        example: 'Weekly'
+    })
     @IsEnum(ChargeTime)
     @IsOptional()
-    rates: 'Daily' | 'Monthly' | 'Weekly'
+    chargeTime: ChargeTime
 
     @ApiProperty({
         example: 2500
@@ -39,13 +42,6 @@ export class SkillDto {
     @Min(8)
     @IsOptional()
     charge: number
-
-    @ApiProperty({
-        type: 'string',
-        format: 'binary',
-    })
-    @IsOptional()
-    attachment: any
 }
 
 export class SkillsDto {

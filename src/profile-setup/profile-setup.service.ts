@@ -9,6 +9,8 @@ import { PrismaService } from 'lib/prisma.service'
 import { WasabiService } from 'lib/wasabi.service'
 import { ExperienceDto } from './dto/experiece.dto'
 import { BankDetailsDto } from './dto/bank-details.dto'
+import { SkillsDto } from './dto/skills.dto'
+import { Skill } from '@prisma/client'
 
 @Injectable()
 export class ProfileSetupService {
@@ -252,6 +254,103 @@ export class ProfileSetupService {
             this.response.sendSuccess(res, StatusCodes.OK, { data: details })
         } catch (err) {
             this.misc.handleServerError(res, err, 'Error updating bank account')
+        }
+    }
+
+    async addSkills(
+        res: Response,
+        { sub }: ExpressUser,
+        { skills }: SkillsDto,
+        attachments: Express.Multer.File[],
+    ) {
+        try {
+            if (attachments.length > 3) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "Attachments shouldn't more than three")
+            }
+
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    id: sub
+                },
+                include: {
+                    skills: true
+                }
+            })
+
+            const userSkillAttachments = user?.skillAttachments || []
+            if (userSkillAttachments.length > 0) {
+                for (const userSkillAttachment of userSkillAttachments) {
+                    if (userSkillAttachment?.path) {
+                        await this.wasabi.deleteS3(userSkillAttachment.path)
+                    }
+                }
+            }
+
+            let filesArray = [] as IFile[]
+            if (attachments.length > 0) {
+                try {
+                    const results = await Promise.all(attachments.map(async (file) => {
+                        const result = validateFile(file, 10 << 20, 'jpg', 'png')
+                        if (result.status) {
+                            return this.response.sendError(res, result.status, result.message)
+                        }
+
+                        const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
+                        return {
+                            path: Key,
+                            url: Location,
+                            type: file.mimetype
+                        }
+                    }))
+
+                    filesArray = results.filter((result): result is IFile => !!result)
+                } catch {
+                    try {
+                        if (filesArray.length > 0) {
+                            for (const file of filesArray) {
+                                if (file?.path) {
+                                    await this.wasabi.deleteS3(file.path)
+                                }
+                            }
+                        }
+                        filesArray = []
+                    } catch (err) {
+                        this.misc.handleServerError(res, err, err.message)
+                    }
+                }
+            }
+
+            const newUserSkills = [] as Skill[]
+            for (const skill of skills) {
+                const newSkill = await this.prisma.skill.create({
+                    data: {
+                        category: skill.category,
+                        subSkills: skill.subSkills,
+                        yearsOfExperience: skill.yearsOfExperience,
+                        charge: skill.charge,
+                        chargeTime: skill.chargeTime,
+                        user: {
+                            connect: {
+                                id: user.id
+                            }
+                        }
+                    }
+                })
+                newUserSkills.push(newSkill)
+            }
+
+            await this.prisma.user.update({
+                where: {
+                    id: user.id
+                },
+                data: {
+                    skillAttachments: filesArray
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: newUserSkills })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error saving skills")
         }
     }
 }

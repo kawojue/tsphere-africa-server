@@ -11,6 +11,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ProfileSetupService } from './profile-setup.service'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { SkillsDto } from './dto/skills.dto'
 
 @ApiTags("Profile Setup")
 @ApiBearerAuth()
@@ -92,5 +93,21 @@ export class ProfileSetupController {
     @Body() bankDetails: BankDetailsDto
   ) {
     return await this.profileSetupService.manageBankDetails(res, req.user, bankDetails)
+  }
+
+  @Role('talent', 'creative')
+  @Put('/skills')
+  @UseInterceptors(FileInterceptor('attachments'))
+  @ApiConsumes(
+    'multipart/formdata', 'image/jpeg', 'video/mp4',
+    'audio/mp3', 'audio/wav', 'audio/aac', 'png/image', 'image/png',
+  )
+  async addSkills(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() skills: SkillsDto,
+    @UploadedFiles() attachments: Express.Multer.File[]
+  ) {
+    return await this.profileSetupService.addSkills(res, req.user, skills, attachments)
   }
 }
