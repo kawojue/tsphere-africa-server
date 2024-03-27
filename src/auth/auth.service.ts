@@ -204,6 +204,7 @@ export class AuthService {
             })
             if (usernameExists) {
                 this.response.sendError(res, StatusCodes.Conflict, "Username has been taken")
+                return
             }
 
             const user = await this.prisma.user.findUnique({

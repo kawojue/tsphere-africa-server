@@ -8,7 +8,7 @@ import { titleName } from 'helpers/formatTexts'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { WasabiService } from 'lib/wasabi.service'
-import { PersonalInfoDto } from './dto/personalInfo.dto'
+import { PersonalInfoDto } from './dto/personal-info.dto'
 import { CreativeRatesAvailabilityDto } from './dto/rates-availability.dto'
 
 @Injectable()

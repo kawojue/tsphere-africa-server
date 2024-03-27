@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { ChargeTime, Weekday } from '@prisma/client'
-import { IsOptional, IsEnum, IsNumber, MinLength, IsBoolean } from 'class-validator'
+import { IsOptional, IsEnum, IsNumber, IsBoolean, Min } from 'class-validator'
 
 export class TalentRatesAvailabilityDto {
   @ApiProperty({
@@ -20,7 +20,7 @@ export class TalentRatesAvailabilityDto {
     example: 9
   })
   @IsNumber()
-  @MinLength(8)
+  @Min(8)
   charge: number
 
   @ApiProperty({

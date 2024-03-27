@@ -44,7 +44,8 @@ export class PersonalInfoDto {
     altPhone: string
 
     @ApiProperty({
-        example: 'Male'
+        example: 'Male',
+        enum: Gender
     })
     @IsNotEmpty()
     @IsOptional()
