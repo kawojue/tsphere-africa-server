@@ -5,7 +5,7 @@ import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
-import { PlunkService } from 'lib/plunk.service'
+import { BrevoService } from 'lib/brevo.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { WasabiService } from 'lib/wasabi.service'
@@ -19,7 +19,7 @@ export class AuthService {
     constructor(
         private misc: MiscService,
         private readonly response: SendRes,
-        private readonly plunk: PlunkService,
+        private readonly brevo: BrevoService,
         private readonly prisma: PrismaService,
         private readonly wasabi: WasabiService,
         private readonly encryption: EncryptionService,
@@ -171,8 +171,8 @@ export class AuthService {
                     }
                 }
             })
-            await this.plunk.sendVerificationEmail(email, token.token)
 
+            await this.brevo.sendVerificationEmail(email, token.token)
             await this.prisma.isSubscribed(email)
 
             this.response.sendSuccess(res, StatusCodes.Created, {
@@ -238,8 +238,8 @@ export class AuthService {
                     }
                 }
             })
-            await this.plunk.sendVerificationEmail(email, token.token)
 
+            await this.brevo.sendVerificationEmail(email, token.token)
             await this.prisma.isSubscribed(email)
 
             this.response.sendSuccess(res, StatusCodes.Created, {
@@ -306,9 +306,9 @@ export class AuthService {
             const token = this.misc.genenerateToken(user.id)
 
             if (token_type === 'email') {
-                await this.plunk.sendVerificationEmail(email, token.token)
+                await this.brevo.sendVerificationEmail(email, token.token)
             } else if (token_type === 'password') {
-                await this.plunk.sendPlunkEmail({
+                await this.brevo.sendTransactionalEmail({
                     to: email,
                     subject: "Reset Password",
                     body: `${process.env.CLIENT_URL}/reset-password?token=${token.token}&token_type=password`
@@ -534,7 +534,7 @@ export class AuthService {
                         },
                         update: token
                     })
-                    await this.plunk.sendVerificationEmail(user.email, token.token)
+                    await this.brevo.sendVerificationEmail(user.email, token.token)
                 }
             }
 
