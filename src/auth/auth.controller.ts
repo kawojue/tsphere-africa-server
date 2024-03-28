@@ -57,6 +57,7 @@ export class AuthController {
   }
 
   @Post('/signup-under18')
+  @ApiConsumes('multipart/form-data', 'image/jpeg', 'image/png')
   @UseInterceptors(FileInterceptor('kyc'))
   @ApiOperation({
     summary: 'The ID photo(s) key/fieldname should be kyc in the formdata'
