@@ -1,20 +1,20 @@
 import { Response } from 'express'
 import StatusCodes from 'enums/StatusCodes'
+import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
-import { WasabiService } from 'lib/wasabi.service'
 import { Injectable, NotFoundException } from '@nestjs/common'
 
 @Injectable()
 export class FileService {
     constructor(
+        private readonly aws: AwsService,
         private readonly response: SendRes,
-        private readonly wasabiService: WasabiService
     ) { }
 
-    async downloadFile(res: Response, key: string) {
+    async downloadFile(res: Response, path: string) {
         try {
-            const fileBuffer = await this.wasabiService.downloadS3(key)
-            res.setHeader('Content-Disposition', `attachment; filename=${key}`)
+            const fileBuffer = await this.aws.downloadS3(path)
+            res.setHeader('Content-Disposition', `attachment; filename=${path}`)
             res.setHeader('Content-Type', 'application/octet-stream')
             res.send(fileBuffer)
         } catch (err) {
