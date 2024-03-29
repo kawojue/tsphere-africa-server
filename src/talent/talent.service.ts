@@ -2,12 +2,12 @@ import { Response } from 'express'
 import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
+import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
 import { BioStatsDto } from './dto/bio-stats.dto'
 import { genFileName } from 'helpers/genFilename'
-import { WasabiService } from 'lib/wasabi.service'
 import { PrismaService } from 'lib/prisma.service'
 import { PersonalInfoDto } from './dto/personalInfo.dto'
 import { TalentRatesAvailabilityDto } from './dto/rates-availability.dto'
@@ -18,7 +18,7 @@ export class TalentService {
         private readonly response: SendRes,
         private readonly misc: MiscService,
         private readonly prisma: PrismaService,
-        private readonly wasabi: WasabiService,
+        private readonly aws: AwsService,
     ) { }
 
     async personalInfo(
@@ -67,11 +67,12 @@ export class TalentService {
                     return this.response.sendError(res, result.status, result.message)
                 }
 
-                const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
+                const path = `${sub}/${genFileName()}`
+                await this.aws.uploadS3(result.file, path)
                 proofOfId = {
-                    path: Key,
-                    url: Location,
-                    type: file.mimetype
+                    path,
+                    type: file.mimetype,
+                    url: this.aws.getS3(path)
                 }
             }
 

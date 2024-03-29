@@ -2,13 +2,13 @@ import { Response } from 'express'
 import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
+import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
 import { BrevoService } from 'lib/brevo.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
-import { WasabiService } from 'lib/wasabi.service'
 import { EncryptionService } from 'lib/encryption.service'
 import { LoginAdminDto, RegisterAdminDto } from './dto/admin.dto'
 import { RequestTokenDto, LoginDto, EmailDto, SignupDto, SignupUnder18Dto } from './dto/auth.dto'
@@ -18,10 +18,10 @@ import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dt
 export class AuthService {
     constructor(
         private misc: MiscService,
+        private readonly aws: AwsService,
         private readonly response: SendRes,
         private readonly brevo: BrevoService,
         private readonly prisma: PrismaService,
-        private readonly wasabi: WasabiService,
         private readonly encryption: EncryptionService,
     ) { }
 
@@ -114,11 +114,12 @@ export class AuthService {
                         return this.response.sendError(res, result.status, result.message)
                     }
 
-                    const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
+                    const path = `${user.id}/${genFileName()}`
+                    await this.aws.uploadS3(result.file, path)
                     return {
-                        path: Key,
-                        url: Location,
-                        type: file.mimetype
+                        path,
+                        url: this.aws.getS3(path),
+                        type: result.file.mimetype,
                     }
                 }))
 
@@ -128,7 +129,7 @@ export class AuthService {
                     if (filesArray.length > 0) {
                         for (const file of filesArray) {
                             if (file?.path) {
-                                await this.wasabi.deleteS3(file.path)
+                                await this.aws.deleteS3(file.path)
                             }
                         }
                     }
@@ -159,7 +160,6 @@ export class AuthService {
                     }
                 }
             })
-
 
             const token = this.misc.genenerateToken(user.id)
             await this.prisma.validation.create({
@@ -614,14 +614,17 @@ export class AuthService {
             })
 
             if (user.avatar?.path) {
-                await this.wasabi.deleteS3(user.avatar.path)
+                await this.aws.deleteS3(user.avatar.path)
             }
 
             const result = validateFile(file, 5 << 20, 'jpg', 'png')
             if (result?.status) {
                 return this.response.sendError(res, result.status, result.message)
             }
-            const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
+
+            const path = `${user.id}/${genFileName()}`
+            await this.aws.uploadS3(result.file, path)
+            const url = this.aws.getS3(path)
 
             await this.prisma.user.update({
                 where: {
@@ -629,8 +632,8 @@ export class AuthService {
                 },
                 data: {
                     avatar: {
-                        path: Key,
-                        url: Location,
+                        url,
+                        path,
                         type: result.file.mimetype,
                     }
                 }
@@ -638,9 +641,7 @@ export class AuthService {
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 message: "Profile photo has been updated successfully",
-                data: {
-                    url: Location
-                }
+                data: { url }
             })
         } catch (err) {
             this.misc.handleServerError(res, err)

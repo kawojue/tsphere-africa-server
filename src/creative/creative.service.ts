@@ -2,21 +2,21 @@ import { Response } from 'express'
 import { validateFile } from 'utils/file'
 import StatusCodes from 'enums/StatusCodes'
 import { Injectable, } from '@nestjs/common'
+import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
-import { WasabiService } from 'lib/wasabi.service'
 import { PersonalInfoDto } from './dto/personal-info.dto'
 import { CreativeRatesAvailabilityDto } from './dto/rates-availability.dto'
 
 @Injectable()
 export class CreativeService {
     constructor(
+        private readonly aws: AwsService,
         private readonly response: SendRes,
         private readonly misc: MiscService,
-        private readonly wasabi: WasabiService,
         private readonly prisma: PrismaService,
     ) { }
 
@@ -65,11 +65,12 @@ export class CreativeService {
                     return this.response.sendError(res, result.status, result.message)
                 }
 
-                const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
+                const path = `${sub}/${genFileName()}`
+                await this.aws.uploadS3(result.file, path)
                 proofOfId = {
-                    path: Key,
-                    url: Location,
-                    type: file.mimetype
+                    path,
+                    type: file.mimetype,
+                    url: this.aws.getS3(path)
                 }
             }
 

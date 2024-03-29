@@ -6,6 +6,7 @@ import {
   UseInterceptors, Post, Query, Res, Body,
   Patch, Req, Controller, Get, UploadedFiles,
   UseGuards,
+  UploadedFile,
 } from '@nestjs/common'
 import {
   UsernameDto, LoginDto, SignupDto, TokenDto,
@@ -67,7 +68,7 @@ export class AuthController {
     @Body() signupUnder18Dto: SignupUnder18Dto,
     @UploadedFiles() files: Express.Multer.File[]
   ) {
-    return await this.authService.signupUnder18(res, files, signupUnder18Dto)
+    return await this.authService.signupUnder18(res, files || [], signupUnder18Dto)
   }
 
   @Post('/signup-over18')
@@ -92,7 +93,7 @@ export class AuthController {
   async uploadAvatar(
     @Res() res: Response,
     @Req() req: IRequest,
-    @UploadedFiles() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File
   ) {
     return await this.authService.uploadAvatar(res, req.user, file)
   }

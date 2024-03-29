@@ -1,24 +1,24 @@
 import { Response } from 'express'
+import { Skill } from '@prisma/client'
 import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
+import { AwsService } from 'lib/aws.service'
+import { SkillsDto } from './dto/skills.dto'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
-import { WasabiService } from 'lib/wasabi.service'
 import { ExperienceDto } from './dto/experiece.dto'
 import { BankDetailsDto } from './dto/bank-details.dto'
-import { SkillsDto } from './dto/skills.dto'
-import { Skill } from '@prisma/client'
 
 @Injectable()
 export class ProfileSetupService {
     constructor(
+        private readonly aws: AwsService,
         private readonly response: SendRes,
         private readonly misc: MiscService,
         private readonly prisma: PrismaService,
-        private readonly wasabi: WasabiService,
     ) { }
 
     async uploadPortfolioImages(
@@ -49,11 +49,12 @@ export class ProfileSetupService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
+                        const path = `${user.id}/${genFileName()}`
+                        await this.aws.uploadS3(result.file, path)
                         return {
-                            path: Key,
-                            url: Location,
-                            type: file.mimetype
+                            path,
+                            type: file.mimetype,
+                            url: this.aws.getS3(path),
                         }
                     }))
 
@@ -63,7 +64,7 @@ export class ProfileSetupService {
                         if (filesArray.length > 0) {
                             for (const file of filesArray) {
                                 if (file?.path) {
-                                    await this.wasabi.deleteS3(file.path)
+                                    await this.aws.deleteS3(file.path)
                                 }
                             }
                         }
@@ -77,7 +78,7 @@ export class ProfileSetupService {
                 if (images.length > 0) {
                     for (const img of images) {
                         if (img?.path) {
-                            await this.wasabi.deleteS3(img.path)
+                            await this.aws.deleteS3(img.path)
                         }
                     }
                 }
@@ -124,15 +125,16 @@ export class ProfileSetupService {
                 return this.response.sendError(res, result.status, result.message)
             }
 
-            const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
+            const path = `${user.id}/${genFileName()}`
+            await this.aws.uploadS3(result.file, path)
             const video = {
-                url: Location,
-                path: Key,
-                type: result.file.mimetype
+                path,
+                url: this.aws.getS3(path),
+                type: result.file.mimetype,
             }
 
             if (user?.portfolio?.video?.path) {
-                await this.wasabi.deleteS3(user.portfolio.video.path)
+                await this.aws.deleteS3(user.portfolio.video.path)
             }
 
             const portfolio = await this.prisma.portfolio.upsert({
@@ -173,15 +175,16 @@ export class ProfileSetupService {
                 return this.response.sendError(res, result.status, result.message)
             }
 
-            const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
+            const path = `${user.id}/${genFileName()}`
+            await this.aws.uploadS3(result.file, path)
             const audio = {
-                url: Location,
-                path: Key,
-                type: result.file.mimetype
+                path,
+                url: this.aws.getS3(path),
+                type: result.file.mimetype,
             }
 
             if (user?.portfolio?.audio?.path) {
-                await this.wasabi.deleteS3(user.portfolio.audio.path)
+                await this.aws.deleteS3(user.portfolio.audio.path)
             }
 
             const portfolio = await this.prisma.portfolio.upsert({
@@ -281,7 +284,7 @@ export class ProfileSetupService {
             if (userSkillAttachments.length > 0) {
                 for (const userSkillAttachment of userSkillAttachments) {
                     if (userSkillAttachment?.path) {
-                        await this.wasabi.deleteS3(userSkillAttachment.path)
+                        await this.aws.deleteS3(userSkillAttachment.path)
                     }
                 }
             }
@@ -295,11 +298,12 @@ export class ProfileSetupService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const { Key, Location } = await this.wasabi.uploadS3(result.file, genFileName())
+                        const path = `${user.id}/${genFileName()}`
+                        await this.aws.uploadS3(result.file, path)
                         return {
-                            path: Key,
-                            url: Location,
-                            type: file.mimetype
+                            path,
+                            url: this.aws.getS3(path),
+                            type: result.file.mimetype,
                         }
                     }))
 
@@ -309,7 +313,7 @@ export class ProfileSetupService {
                         if (filesArray.length > 0) {
                             for (const file of filesArray) {
                                 if (file?.path) {
-                                    await this.wasabi.deleteS3(file.path)
+                                    await this.aws.deleteS3(file.path)
                                 }
                             }
                         }
