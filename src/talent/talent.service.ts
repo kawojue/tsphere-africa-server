@@ -9,7 +9,7 @@ import { titleName } from 'helpers/formatTexts'
 import { BioStatsDto } from './dto/bio-stats.dto'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
-import { PersonalInfoDto } from './dto/personalInfo.dto'
+import { TalentPersonalInfoDto } from './dto/personalInfo.dto'
 import { TalentRatesAvailabilityDto } from './dto/rates-availability.dto'
 
 @Injectable()
@@ -30,7 +30,7 @@ export class TalentService {
             gender, idType, altPhone, country,
             dob, fbHandle, igHandle, language,
             xHandle, phone, username, firstname,
-        }: PersonalInfoDto,
+        }: TalentPersonalInfoDto,
         file: Express.Multer.File
     ) {
         try {
