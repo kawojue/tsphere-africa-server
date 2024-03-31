@@ -3,18 +3,15 @@ import { Role } from 'src/role.decorator'
 import { AuthService } from './auth.service'
 import { AuthGuard } from '@nestjs/passport'
 import {
-  UseInterceptors, Post, Query, Res, Body,
-  Patch, Req, Controller, Get, UploadedFiles,
-  UseGuards,
-  UploadedFile,
-} from '@nestjs/common'
-import {
   UsernameDto, LoginDto, SignupDto, TokenDto,
   SignupUnder18Dto, EmailDto, RequestTokenDto,
 } from './dto/auth.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import {
+  UseInterceptors, Post, Query, Res, Body, Patch, Req,
+  Controller, Get, UploadedFiles, UseGuards, UploadedFile,
+} from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { LoginAdminDto, RegisterAdminDto } from './dto/admin.dto'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dto/reset-password.dto'
 
@@ -106,15 +103,5 @@ export class AuthController {
     @Body() body: UpdatePasswordDto
   ) {
     return await this.authService.updatePassword(res, req.user, body)
-  }
-
-  @Post('/admin-register')
-  async registerAdmin(@Res() res: Response, @Body() adminDto: RegisterAdminDto) {
-    return await this.authService.registerAdmin(res, adminDto)
-  }
-
-  @Post('/admin-login')
-  async loginAdmin(@Res() res: Response, @Body() adminDto: LoginAdminDto) {
-    return await this.authService.loginAdmin(res, adminDto)
   }
 }

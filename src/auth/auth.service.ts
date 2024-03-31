@@ -10,7 +10,6 @@ import { BrevoService } from 'lib/brevo.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { EncryptionService } from 'lib/encryption.service'
-import { LoginAdminDto, RegisterAdminDto } from './dto/admin.dto'
 import { RequestTokenDto, LoginDto, EmailDto, SignupDto, SignupUnder18Dto } from './dto/auth.dto'
 import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dto/reset-password.dto'
 
@@ -424,77 +423,6 @@ export class AuthService {
             isExist: user ? true : false,
             message: user ? "Username has been taken" : "Username is valid"
         })
-    }
-
-    async registerAdmin(
-        res: Response,
-        {
-            password, fullName,
-            email, registrationKey,
-        }: RegisterAdminDto
-    ) {
-        try {
-            fullName = titleName(fullName)
-            const decodedKey = atob(registrationKey as string)
-            if (decodedKey !== process.env.ADMIN_REGISTRATION_KEY) {
-                this.response.sendError(res, StatusCodes.Unauthorized, 'Invalid registration key')
-                return
-            }
-
-            const admins = await this.prisma.admin.count()
-            if (admins === 10) {
-                this.response.sendError(res, StatusCodes.Forbidden, "Maximum moderators reached.")
-                return
-            }
-
-            const admin = await this.prisma.admin.findUnique({
-                where: { email }
-            })
-
-            if (admin) {
-                this.response.sendError(res, StatusCodes.Conflict, `Warning! Existing ${admin.role}`)
-                return
-            }
-
-            password = await this.encryption.hashAsync(password)
-
-            await this.prisma.admin.create({
-                data: { email, fullName, password }
-            })
-
-            this.response.sendSuccess(res, StatusCodes.Created, { message: "You're now a Moderator!" })
-        } catch (err) {
-            this.misc.handleServerError(res, err)
-        }
-    }
-
-    async loginAdmin(
-        res: Response,
-        { email, password }: LoginAdminDto
-    ) {
-        try {
-            const admin = await this.prisma.admin.findUnique({ where: { email } })
-            if (!admin) {
-                this.response.sendError(res, StatusCodes.NotFound, 'Warning! Invalid email or password')
-                return
-            }
-
-            const isMatch = await this.encryption.compareAsync(password, admin.password)
-
-            if (!isMatch) {
-                this.response.sendError(res, StatusCodes.Unauthorized, 'Incorrect Password')
-                return
-            }
-
-            this.response.sendSuccess(res, StatusCodes.OK, {
-                access_token: await this.misc.generateAccessToken({
-                    role: admin.role,
-                    sub: admin.id,
-                })
-            })
-        } catch (err) {
-            this.misc.handleServerError(res, err)
-        }
     }
 
     async login(res: Response, { email, password }: LoginDto) {

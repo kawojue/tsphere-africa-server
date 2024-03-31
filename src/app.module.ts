@@ -11,6 +11,7 @@ import { PlunkService } from 'lib/plunk.service'
 import { BrevoService } from 'lib/brevo.service'
 import { PrismaService } from 'lib/prisma.service'
 import { TalentModule } from './talent/talent.module'
+import { ModminModule } from './modmin/modmin.module'
 import { CreativeModule } from './creative/creative.module'
 import { ProfileSetupModule } from './profile-setup/profile-setup.module';
 
@@ -19,6 +20,7 @@ import { ProfileSetupModule } from './profile-setup/profile-setup.module';
     AuthModule,
     FileModule,
     TalentModule,
+    ModminModule,
     CreativeModule,
     ProfileSetupModule,
   ],
