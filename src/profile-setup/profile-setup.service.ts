@@ -45,7 +45,7 @@ export class ProfileSetupService {
                 try {
                     const results = await Promise.all(files.map(async (file) => {
                         const result = validateFile(file, 5 << 20, 'jpg', 'png')
-                        if (result.status) {
+                        if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
