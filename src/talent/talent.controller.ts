@@ -8,8 +8,8 @@ import { AuthGuard } from '@nestjs/passport'
 import { TalentService } from './talent.service'
 import { BioStatsDto } from './dto/bio-stats.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
-import { PersonalInfoDto } from './dto/personalInfo.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
+import { TalentPersonalInfoDto } from './dto/personalInfo.dto'
 import { TalentRatesAvailabilityDto } from './dto/rates-availability.dto'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 
@@ -30,7 +30,7 @@ export class TalentController {
   async createPersonalInfo(
     @Req() req: IRequest,
     @Res() res: Response,
-    @Body() personalInfoDto: PersonalInfoDto,
+    @Body() personalInfoDto: TalentPersonalInfoDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return await this.talentService.personalInfo(res, req.user, personalInfoDto, file)
