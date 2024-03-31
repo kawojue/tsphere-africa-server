@@ -2,7 +2,7 @@ import { Gender } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, IsUrl } from 'class-validator'
 
-export class PersonalInfoDto {
+export class TalentPersonalInfoDto {
     @ApiProperty({
         example: 'Raheem'
     })
