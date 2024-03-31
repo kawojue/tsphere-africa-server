@@ -6,6 +6,7 @@ import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { AuthModule } from './auth/auth.module'
 import { FileModule } from './file/file.module'
+import { UserModule } from './user/user.module'
 import { AppController } from './app.controller'
 import { PlunkService } from 'lib/plunk.service'
 import { BrevoService } from 'lib/brevo.service'
@@ -13,7 +14,7 @@ import { PrismaService } from 'lib/prisma.service'
 import { TalentModule } from './talent/talent.module'
 import { ModminModule } from './modmin/modmin.module'
 import { CreativeModule } from './creative/creative.module'
-import { ProfileSetupModule } from './profile-setup/profile-setup.module';
+import { ProfileSetupModule } from './profile-setup/profile-setup.module'
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ProfileSetupModule } from './profile-setup/profile-setup.module';
     ModminModule,
     CreativeModule,
     ProfileSetupModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [
