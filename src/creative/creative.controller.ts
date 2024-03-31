@@ -8,8 +8,8 @@ import {
 import { AuthGuard } from '@nestjs/passport'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { CreativeService } from './creative.service'
-import { PersonalInfoDto } from './dto/personal-info.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
+import { CreativePersonalInfoDto } from './dto/personal-info.dto'
 import { CreativeRatesAvailabilityDto } from './dto/rates-availability.dto'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 
@@ -30,7 +30,7 @@ export class CreativeController {
   async createPersonalInfo(
     @Req() req: IRequest,
     @Res() res: Response,
-    @Body() personalInfoDto: PersonalInfoDto,
+    @Body() personalInfoDto: CreativePersonalInfoDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return await this.creativeService.personalInfo(res, req.user, personalInfoDto, file)

@@ -6,10 +6,10 @@ import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
-import { BioStatsDto } from './dto/bio-stats.dto'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
-import { TalentPersonalInfoDto } from './dto/personalInfo.dto'
+import { TalentBioStatsDto } from './dto/bio-stats.dto'
+import { TalentPersonalInfoDto } from './dto/personal-info.dto'
 import { TalentRatesAvailabilityDto } from './dto/rates-availability.dto'
 
 @Injectable()
@@ -149,7 +149,7 @@ export class TalentService {
 
     async bioStats(
         res: Response,
-        bio: BioStatsDto,
+        bio: TalentBioStatsDto,
         { sub }: ExpressUser
     ) {
         try {

@@ -280,15 +280,6 @@ export class ProfileSetupService {
                 }
             })
 
-            const userSkillAttachments = user?.skillAttachments || []
-            if (userSkillAttachments.length > 0) {
-                for (const userSkillAttachment of userSkillAttachments) {
-                    if (userSkillAttachment?.path) {
-                        await this.aws.deleteS3(userSkillAttachment.path)
-                    }
-                }
-            }
-
             let filesArray = [] as IFile[]
             if (attachments.length > 0) {
                 try {
@@ -320,6 +311,15 @@ export class ProfileSetupService {
                         filesArray = []
                     } catch (err) {
                         this.misc.handleServerError(res, err, err.message)
+                    }
+                }
+            }
+
+            const userSkillAttachments = user?.skillAttachments || []
+            if (userSkillAttachments.length > 0) {
+                for (const userSkillAttachment of userSkillAttachments) {
+                    if (userSkillAttachment?.path) {
+                        await this.aws.deleteS3(userSkillAttachment.path)
                     }
                 }
             }

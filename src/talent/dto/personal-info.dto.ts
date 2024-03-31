@@ -66,7 +66,7 @@ export class TalentPersonalInfoDto {
     @IsString()
     @IsNotEmpty()
     @IsOptional()
-    dob: Date
+    dob: string
 
     @ApiProperty({
         example: '18-21 years'

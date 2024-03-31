@@ -1,4 +1,4 @@
-import { Profile } from 'enums/base.enum'
+import { UserRole } from 'enums/base.enum'
 import { ApiProperty } from '@nestjs/swagger'
 import { IsEnum, IsOptional, IsString } from 'class-validator'
 
@@ -27,8 +27,8 @@ export class InfiniteScrollDto extends SearchDto {
 
 export class FetchProfilesDto extends InfiniteScrollDto {
     @ApiProperty({
-        enum: Profile
+        enum: UserRole
     })
-    @IsEnum(Profile)
-    profile: Profile
+    @IsEnum(UserRole)
+    role: UserRole
 }

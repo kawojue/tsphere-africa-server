@@ -17,7 +17,7 @@ export class UserService {
     async fetchProfiles(
         res: Response,
         {
-            profile, search = '',
+            role, search = '',
             limit = 100, page = 1,
         }: FetchProfilesDto
     ) {
@@ -33,10 +33,13 @@ export class UserService {
                         { lastname: { contains: search, mode: 'insensitive' } },
                         { firstname: { contains: search, mode: 'insensitive' } },
                     ],
-                    role: profile,
+                    role,
                 },
                 take: limit,
                 skip: offset,
+                orderBy: {
+                    createdAt: 'desc'
+                }
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: users })

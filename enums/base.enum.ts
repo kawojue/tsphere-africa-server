@@ -3,7 +3,7 @@ export enum TokenEnum {
   password = 'password'
 }
 
-export enum Profile {
+export enum UserRole {
   talent = 'talent',
   creative = 'creative'
 }

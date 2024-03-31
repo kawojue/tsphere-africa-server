@@ -6,10 +6,10 @@ import {
 import { Role } from 'src/role.decorator'
 import { AuthGuard } from '@nestjs/passport'
 import { TalentService } from './talent.service'
-import { BioStatsDto } from './dto/bio-stats.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { TalentBioStatsDto } from './dto/bio-stats.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { TalentPersonalInfoDto } from './dto/personalInfo.dto'
+import { TalentPersonalInfoDto } from './dto/personal-info.dto'
 import { TalentRatesAvailabilityDto } from './dto/rates-availability.dto'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 
@@ -41,7 +41,7 @@ export class TalentController {
   async bioStats(
     @Res() res: Response,
     @Req() req: IRequest,
-    @Body() bio: BioStatsDto,
+    @Body() bio: TalentBioStatsDto,
   ) {
     return await this.talentService.bioStats(res, bio, req.user)
   }

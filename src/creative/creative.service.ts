@@ -8,7 +8,7 @@ import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
-import { PersonalInfoDto } from './dto/personal-info.dto'
+import { CreativePersonalInfoDto } from './dto/personal-info.dto'
 import { CreativeRatesAvailabilityDto } from './dto/rates-availability.dto'
 
 @Injectable()
@@ -28,7 +28,7 @@ export class CreativeService {
             gender, idType, altPhone, country,
             dob, fbHandle, igHandle, language,
             xHandle, phone, username, firstname,
-        }: PersonalInfoDto,
+        }: CreativePersonalInfoDto,
         file: Express.Multer.File
     ) {
         try {
