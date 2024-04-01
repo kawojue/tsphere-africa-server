@@ -1,6 +1,8 @@
 import { Response } from 'express'
 import { Role } from 'src/role.decorator'
 import { AuthGuard } from '@nestjs/passport'
+import { SkillsDto } from './dto/skills.dto'
+import { Role as UserRole } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ExperienceDto } from './dto/experiece.dto'
 import { BankDetailsDto } from './dto/bank-details.dto'
@@ -11,7 +13,6 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ProfileSetupService } from './profile-setup.service'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { SkillsDto } from './dto/skills.dto'
 
 @ApiTags("Profile Setup")
 @ApiBearerAuth()
@@ -23,7 +24,7 @@ export class ProfileSetupController {
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Images should be images'
   })
-  @Role('talent', 'creative')
+  @Role(UserRole.talent, UserRole.creative)
   @ApiConsumes('multipart/formdata', 'image/jpeg', 'image/png')
   @UseInterceptors(FileInterceptor('images'))
   @Put('/portfolio/images')
@@ -32,15 +33,15 @@ export class ProfileSetupController {
     @Res() res: Response,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return await this.profileSetupService.uploadPortfolioImages(res, req.user, files)
+    return await this.profileSetupService.uploadPortfolioImages(res, req.user, files || [])
   }
 
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Video should be video'
   })
-  @Role('talent', 'creative')
+  @Role(UserRole.talent, UserRole.creative)
   @ApiConsumes('multipart/formdata', 'video/mp4')
-  @UseInterceptors(FileInterceptor('images'))
+  @UseInterceptors(FileInterceptor('video'))
   @Put('/portfolio/video')
   async uploadPortfolioVideo(
     @Req() req: IRequest,
@@ -50,12 +51,12 @@ export class ProfileSetupController {
     return await this.profileSetupService.uploadPortfolioVideo(res, req.user, file)
   }
 
-  @Role('talent', 'creative')
+  @Role(UserRole.talent, UserRole.creative)
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Audio should be audio'
   })
   @ApiConsumes('multipart/formdata', 'audio/mp3', 'audio/wav', 'audio/aac')
-  @UseInterceptors(FileInterceptor('images'))
+  @UseInterceptors(FileInterceptor('audio'))
   @Put('/portfolio/audio')
   async uploadPortfolioAudio(
     @Req() req: IRequest,
@@ -65,7 +66,7 @@ export class ProfileSetupController {
     return await this.profileSetupService.uploadPortfolioAudio(res, req.user, file)
   }
 
-  @Role('talent', 'creative')
+  @Role(UserRole.talent, UserRole.creative)
   @Post('/experience')
   async addExperience(
     @Res() res: Response,
@@ -75,7 +76,7 @@ export class ProfileSetupController {
     return await this.profileSetupService.addExperience(res, req.user, experience)
   }
 
-  @Role('talent', 'creative')
+  @Role(UserRole.talent, UserRole.creative)
   @Delete('/experience/:experienceId')
   async removeExperience(
     @Res() res: Response,
@@ -85,7 +86,7 @@ export class ProfileSetupController {
     return await this.profileSetupService.removeExperience(res, req.user, experienceId)
   }
 
-  @Role('talent', 'creative')
+  @Role(UserRole.talent, UserRole.creative)
   @Put('/bank-details')
   async manageBankDetails(
     @Res() res: Response,
@@ -95,7 +96,7 @@ export class ProfileSetupController {
     return await this.profileSetupService.manageBankDetails(res, req.user, bankDetails)
   }
 
-  @Role('talent', 'creative')
+  @Role(UserRole.talent, UserRole.creative)
   @Put('/skills')
   @UseInterceptors(FileInterceptor('attachments'))
   @ApiConsumes(
@@ -108,6 +109,6 @@ export class ProfileSetupController {
     @Body() skills: SkillsDto,
     @UploadedFiles() attachments: Express.Multer.File[]
   ) {
-    return await this.profileSetupService.addSkills(res, req.user, skills, attachments)
+    return await this.profileSetupService.addSkills(res, req.user, skills, attachments || [])
   }
 }

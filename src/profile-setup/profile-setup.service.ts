@@ -44,7 +44,7 @@ export class ProfileSetupService {
                 let filesArray = [] as IFile[]
                 try {
                     const results = await Promise.all(files.map(async (file) => {
-                        const result = validateFile(file, 5 << 20, 'jpg', 'png')
+                        const result = validateFile(file, 10 << 20, 'jpg', 'png')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
                         }
@@ -120,7 +120,7 @@ export class ProfileSetupService {
                 }
             })
 
-            const result = validateFile(file, 5 << 20, 'mp4')
+            const result = validateFile(file, 30 << 20, 'mp4')
             if (result?.status) {
                 return this.response.sendError(res, result.status, result.message)
             }
@@ -170,7 +170,7 @@ export class ProfileSetupService {
                 }
             })
 
-            const result = validateFile(file, 5 << 20, 'wav', 'mp3', 'aac')
+            const result = validateFile(file, 3 << 20, 'wav', 'mp3', 'aac')
             if (result?.status) {
                 return this.response.sendError(res, result.status, result.message)
             }
@@ -326,8 +326,11 @@ export class ProfileSetupService {
 
             const newUserSkills = [] as Skill[]
             for (const skill of skills) {
-                const newSkill = await this.prisma.skill.create({
-                    data: {
+                const newSkill = await this.prisma.skill.upsert({
+                    where: {
+                        userId: user.id
+                    },
+                    create: {
                         category: skill.category,
                         subSkills: skill.subSkills,
                         yearsOfExperience: skill.yearsOfExperience,
@@ -338,6 +341,13 @@ export class ProfileSetupService {
                                 id: user.id
                             }
                         }
+                    },
+                    update: {
+                        category: skill.category,
+                        subSkills: skill.subSkills,
+                        yearsOfExperience: skill.yearsOfExperience,
+                        charge: skill.charge,
+                        chargeTime: skill.chargeTime,
                     }
                 })
                 newUserSkills.push(newSkill)

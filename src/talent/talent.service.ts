@@ -25,11 +25,9 @@ export class TalentService {
         res: Response,
         { sub }: ExpressUser,
         {
-            lastname, playingAge, state,
-            nationality, religion, address,
-            gender, idType, altPhone, country,
-            dob, fbHandle, igHandle, language,
-            xHandle, phone, username, firstname,
+            gender, idType, altPhone, country, dob, fbHandle, igHandle,
+            lastname, playingAge, state, nationality, religion, address,
+            language, xHandle, phone, username, firstname, workingTitle,
         }: TalentPersonalInfoDto,
         file: Express.Multer.File
     ) {
@@ -123,18 +121,14 @@ export class TalentService {
             const personalInfoData = await this.prisma.talentPersonalInfo.upsert({
                 where: { talentId: talent.id },
                 create: {
-                    address, idType, language,
-                    fbHandle, igHandle, xHandle,
-                    phone, altPhone, gender, religion, dob,
-                    playingAge, nationality, country, state,
-                    proofOfId: proofOfId?.path ? proofOfId : null,
+                    phone, altPhone, gender, religion, dob, playingAge, nationality,
+                    country, state, proofOfId: proofOfId?.path ? proofOfId : personalInfo?.proofOfId,
+                    address, idType, language, fbHandle, igHandle, xHandle, workingTitle,
                     talent: { connect: { id: talent.id } }
                 },
                 update: {
-                    phone, altPhone, gender, religion, dob,
-                    playingAge, nationality, country, state,
-                    address, idType, language,
-                    fbHandle, igHandle, xHandle
+                    phone, altPhone, gender, religion, dob, playingAge, nationality, country,
+                    state, address, idType, language, workingTitle, fbHandle, igHandle, xHandle
                 }
             })
 
@@ -155,7 +149,7 @@ export class TalentService {
         try {
             const talent = await this.prisma.talent.findUnique({
                 where: {
-                    id: sub
+                    userId: sub
                 }
             })
 

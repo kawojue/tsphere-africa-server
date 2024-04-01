@@ -14,6 +14,8 @@ async function bootstrap() {
       'http://localhost:3000',
       'https://talentsphereafrica.co',
       'https://talentsphereafrica.com',
+      'https://www.talentsphereafrica.co',
+      'https://www.talentsphereafrica.com',
       'https://api.talentsphereafrica.co',
       'https://api.talentsphereafrica.com',
     ],

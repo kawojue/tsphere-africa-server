@@ -122,6 +122,14 @@ export class TalentPersonalInfoDto {
     language: string
 
     @ApiProperty({
+        example: 'Engineer'
+    })
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty()
+    workingTitle: string
+
+    @ApiProperty({
         example: 'https://www.facebook.com/alwaysappear'
     })
     @IsUrl()

@@ -24,10 +24,8 @@ export class CreativeService {
         res: Response,
         { sub }: ExpressUser,
         {
-            lastname, state, religion, address,
-            gender, idType, altPhone, country,
-            dob, fbHandle, igHandle, language,
-            xHandle, phone, username, firstname,
+            lastname, state, religion, address, gender, idType, altPhone, country,
+            dob, fbHandle, igHandle, language, xHandle, phone, username, firstname,
         }: CreativePersonalInfoDto,
         file: Express.Multer.File
     ) {
@@ -121,18 +119,14 @@ export class CreativeService {
             const personalInfoData = await this.prisma.creativePersonalInfo.upsert({
                 where: { creativeId: creative.id },
                 create: {
-                    country, state, religion,
-                    address, idType, language,
-                    fbHandle, igHandle, xHandle,
-                    phone, altPhone, gender, dob,
+                    country, state, religion, address, idType, language,
+                    fbHandle, igHandle, xHandle, phone, altPhone, gender, dob,
+                    proofOfId: proofOfId?.path ? proofOfId : personalInfo?.proofOfId,
                     creative: { connect: { id: creative.id } },
-                    proofOfId: proofOfId?.path ? proofOfId : null,
                 },
                 update: {
-                    phone, altPhone, gender, religion, dob,
-                    country, state,
-                    address, idType, language,
-                    fbHandle, igHandle, xHandle
+                    phone, altPhone, gender, religion, dob, country, state,
+                    address, idType, language, fbHandle, igHandle, xHandle,
                 }
             })
 
