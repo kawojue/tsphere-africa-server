@@ -119,7 +119,7 @@ model CreativePersonalInfo {
     altPhone   String?
     gender     Gender?
     religion   String?
-    dob        DateTime?
+    dob        String?
     country    String?
     state      String?
     address    String?
