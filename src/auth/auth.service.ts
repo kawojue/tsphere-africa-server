@@ -16,9 +16,9 @@ import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dt
 @Injectable()
 export class AuthService {
     constructor(
-        private misc: MiscService,
         private readonly aws: AwsService,
         private readonly response: SendRes,
+        private readonly misc: MiscService,
         private readonly brevo: BrevoService,
         private readonly prisma: PrismaService,
         private readonly encryption: EncryptionService,

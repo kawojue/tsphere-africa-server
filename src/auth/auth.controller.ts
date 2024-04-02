@@ -97,6 +97,8 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Post('/update-password')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role('user', 'client', 'creative', 'talent')
   async updatePassword(
     @Res() res: Response,
     @Req() req: IRequest,
