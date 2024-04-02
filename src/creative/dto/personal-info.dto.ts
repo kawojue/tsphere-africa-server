@@ -66,7 +66,7 @@ export class CreativePersonalInfoDto {
     @IsString()
     @IsNotEmpty()
     @IsOptional()
-    dob: sring
+    dob: string
 
     @ApiProperty({
         example: 'Nigeria'
