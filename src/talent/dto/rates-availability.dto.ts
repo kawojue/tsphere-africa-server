@@ -11,7 +11,7 @@ export class TalentRatesAvailabilityDto {
   availability: boolean
 
   @ApiProperty({
-    example: 'Daily'
+    enum: ChargeTime
   })
   @IsEnum(ChargeTime)
   chargeTime: ChargeTime
