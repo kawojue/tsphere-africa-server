@@ -31,7 +31,7 @@ export class TalentBioStatsDto {
     })
     @IsString()
     @IsOptional()
-    bodyType: string
+    bloodType: string
 
     @ApiProperty({
         example: 'Black'

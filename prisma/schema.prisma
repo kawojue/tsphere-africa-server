@@ -180,7 +180,7 @@ model TalentBio {
     bio       String?
     height    String?
     weight    String?
-    bodyType  String?
+    bloodType String?
     hairColor String?
     eyeColor  String?
     gender    Gender?
