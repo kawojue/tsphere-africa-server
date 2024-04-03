@@ -47,4 +47,37 @@ export class UserService {
             this.misc.handleServerError(res, err)
         }
     }
+    async fetchProfile(
+        res: Response,
+        { role, sub }: ExpressUser,
+    ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    role,
+                    id: sub,
+                },
+                include: {
+                    creative: {
+                        select: {
+                            bio: true,
+                            personalInfo: true,
+                            ratesAndAvailability: true,
+                        }
+                    },
+                    talent: {
+                        select: {
+                            bio: true,
+                            personalInfo: true,
+                            ratesAndAvailability: true,
+                        }
+                    }
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: user })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
 }
