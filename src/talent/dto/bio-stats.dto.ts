@@ -27,13 +27,6 @@ export class TalentBioStatsDto {
     weight: string
 
     @ApiProperty({
-        example: 'N/A'
-    })
-    @IsString()
-    @IsOptional()
-    bloodType: string
-
-    @ApiProperty({
         example: 'Black'
     })
     @IsString()

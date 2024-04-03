@@ -157,7 +157,7 @@ export class TalentService {
                 return this.response.sendError(res, StatusCodes.NotFound, 'Add your personal information')
             }
 
-            const bioStat = await this.prisma.talentBio.upsert({
+            const bioStat = await this.prisma.talentBioStats.upsert({
                 where: {
                     talentId: talent.id
                 },
