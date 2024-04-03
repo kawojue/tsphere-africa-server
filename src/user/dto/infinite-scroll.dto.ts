@@ -8,7 +8,7 @@ export class SearchDto {
     })
     @IsString()
     @IsOptional()
-    search: string
+    search?: string
 }
 
 export class InfiniteScrollDto extends SearchDto {
@@ -16,13 +16,13 @@ export class InfiniteScrollDto extends SearchDto {
         example: 1
     })
     @IsOptional()
-    page: number
+    page?: number
 
     @ApiProperty({
         example: 30
     })
     @IsOptional()
-    limit: number
+    limit?: number
 }
 
 export class FetchProfilesDto extends InfiniteScrollDto {

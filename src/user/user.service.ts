@@ -39,6 +39,16 @@ export class UserService {
                 skip: offset,
                 orderBy: {
                     createdAt: 'desc'
+                },
+                select: {
+                    id: true,
+                    role: true,
+                    skill: true,
+                    email: true,
+                    avatar: true,
+                    username: true,
+                    lastname: true,
+                    firstname: true,
                 }
             })
 
