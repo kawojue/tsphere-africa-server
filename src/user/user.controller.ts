@@ -1,12 +1,12 @@
 import { Response } from 'express'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
-import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common'
-import { UserService } from './user.service'
-import { FetchProfilesDto } from './dto/infinite-scroll.dto'
-import { AuthGuard } from '@nestjs/passport'
-import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { Role } from 'src/role.decorator'
+import { UserService } from './user.service'
+import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
+import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { FetchProfilesDto } from './dto/infinite-scroll.dto'
+import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common'
 
 @ApiTags("User")
 @Controller('user')

@@ -57,7 +57,21 @@ export class UserService {
                     role,
                     id: sub,
                 },
-                include: {
+                select: {
+                    id: true,
+                    role: true,
+                    skill: true,
+                    email: true,
+                    skills: true,
+                    avatar: true,
+                    username: true,
+                    lastname: true,
+                    firstname: true,
+                    portfolio: true,
+                    createdAt: true,
+                    bankDetails: true,
+                    experiences: true,
+                    skillAttachments: true,
                     creative: {
                         select: {
                             bio: true,
