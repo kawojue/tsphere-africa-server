@@ -121,11 +121,12 @@ model CreativePersonalInfo {
     religion   String?
     dob        String?
     country    String?
+    localGovt  String?
     state      String?
     address    String?
     idType     String?
     proofOfId  File?
-    language   String?
+    languages  String[]
     fbHandle   String?
     igHandle   String?
     xHandle    String?
@@ -153,26 +154,28 @@ model Talent {
 }
 
 model TalentPersonalInfo {
-    id           String  @id @default(auto()) @map("_id") @db.ObjectId
-    phone        String?
-    altPhone     String?
-    gender       Gender?
-    religion     String?
-    dob          String?
-    playingAge   String?
-    nationality  String?
-    workingTitle String?
-    country      String?
-    state        String?
-    address      String?
-    idType       String
-    proofOfId    File?
-    language     String?
-    fbHandle     String?
-    igHandle     String?
-    xHandle      String?
-    talent       Talent  @relation(fields: [talentId], references: [id])
-    talentId     String  @unique @db.ObjectId
+    id            String   @id @default(auto()) @map("_id") @db.ObjectId
+    phone         String?
+    altPhone      String?
+    gender        Gender?
+    religion      String?
+    dob           String?
+    playingMaxAge String?
+    playingMinAge String?
+    nationality   String?
+    workingTitle  String?
+    localGovt     String?
+    country       String?
+    state         String?
+    address       String?
+    idType        String
+    proofOfId     File?
+    languages     String[]
+    fbHandle      String?
+    igHandle      String?
+    xHandle       String?
+    talent        Talent   @relation(fields: [talentId], references: [id])
+    talentId      String   @unique @db.ObjectId
 }
 
 model talentBioStats {

@@ -100,6 +100,8 @@ export class CreativeService {
                 lastname = user.lastname
             }
 
+            const languages = JSON.parse(language.replace(/'/g, '"')) as Array<string>
+
             const [_, creative] = await this.prisma.$transaction([
                 this.prisma.user.update({
                     where: {
@@ -119,14 +121,14 @@ export class CreativeService {
             const personalInfoData = await this.prisma.creativePersonalInfo.upsert({
                 where: { creativeId: creative.id },
                 create: {
-                    country, state, religion, address, idType, language,
+                    country, state, religion, address, idType, languages,
                     fbHandle, igHandle, xHandle, phone, altPhone, gender, dob,
                     proofOfId: proofOfId?.path ? proofOfId : personalInfo?.proofOfId,
                     creative: { connect: { id: creative.id } },
                 },
                 update: {
                     phone, altPhone, gender, religion, dob, country, state,
-                    address, idType, language, fbHandle, igHandle, xHandle,
+                    address, idType, languages, fbHandle, igHandle, xHandle,
                 }
             })
 

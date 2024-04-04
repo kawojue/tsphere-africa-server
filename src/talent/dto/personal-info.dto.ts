@@ -69,11 +69,18 @@ export class TalentPersonalInfoDto {
     dob: string
 
     @ApiProperty({
-        example: '18-21 years'
+        example: '21 years'
     })
     @IsString()
     @IsOptional()
-    playingAge: string
+    playingMaxAge: string
+
+    @ApiProperty({
+        example: '18 years'
+    })
+    @IsString()
+    @IsOptional()
+    playingMinAge: string
 
     @ApiProperty({
         example: 'Nigerian'
@@ -100,12 +107,20 @@ export class TalentPersonalInfoDto {
     state: string
 
     @ApiProperty({
-        example: '10, Lmao Street, Normal LGA 😏'
+        example: '10, Lmao Street 😏'
     })
     @IsString()
     @IsNotEmpty()
     @IsOptional()
     address: string
+
+    @ApiProperty({
+        example: 'My Normal Local Govt.'
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    localGovt: string
 
     @ApiProperty({
         examples: ['National Identity Slip', 'National Identity Card', 'Driving License', 'Passport']

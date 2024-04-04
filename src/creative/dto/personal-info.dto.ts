@@ -85,7 +85,15 @@ export class CreativePersonalInfoDto {
     state: string
 
     @ApiProperty({
-        example: '10, Lmao Street, Normal LGA 😏'
+        example: 'My Normal Local Govt.'
+    })
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    localGovt: string
+
+    @ApiProperty({
+        example: '10, Lmao Street 😏'
     })
     @IsString()
     @IsNotEmpty()
@@ -100,10 +108,8 @@ export class CreativePersonalInfoDto {
     idType: string
 
     @ApiProperty({
-        example: 'Chinko'
+        example: ['English', 'Mathematics']
     })
-    @IsString()
-    @IsNotEmpty()
     language: string
 
     @ApiProperty({
