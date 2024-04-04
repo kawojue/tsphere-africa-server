@@ -15,6 +15,7 @@ model User {
     lastname         String
     password         String
     skill            String
+    userStatus       UserStatus   @default(active)
     skills           Skill[]
     skillAttachments File[]
     under18Kyc       under18Kyc?
@@ -239,4 +240,9 @@ enum Role {
     talent
     creative
     client
+}
+
+enum UserStatus {
+    active
+    suspended
 }

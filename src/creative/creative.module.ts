@@ -13,7 +13,7 @@ import { CreativeController } from './creative.controller'
     JwtModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
-  providers: [CreativeService, AwsService, PrismaService, SendRes, MiscService],
   controllers: [CreativeController],
+  providers: [CreativeService, AwsService, PrismaService, SendRes, MiscService],
 })
 export class CreativeModule { }

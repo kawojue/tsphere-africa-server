@@ -13,6 +13,7 @@ import { BrevoService } from 'lib/brevo.service'
 import { PrismaService } from 'lib/prisma.service'
 import { TalentModule } from './talent/talent.module'
 import { ModminModule } from './modmin/modmin.module'
+import { EncryptionService } from 'lib/encryption.service'
 import { CreativeModule } from './creative/creative.module'
 import { ProfileSetupModule } from './profile-setup/profile-setup.module'
 
@@ -20,16 +21,17 @@ import { ProfileSetupModule } from './profile-setup/profile-setup.module'
   imports: [
     AuthModule,
     FileModule,
+    UserModule,
     TalentModule,
     ModminModule,
     CreativeModule,
     ProfileSetupModule,
-    UserModule,
   ],
   controllers: [AppController],
   providers: [
-    AppService, MiscService, PlunkService, AwsService,
-    JwtService, PrismaService, SendRes, BrevoService,
-  ]
+    AppService, MiscService, PlunkService, AwsService, SendRes,
+    JwtService, PrismaService, BrevoService, EncryptionService,
+  ],
+  exports: [PrismaService]
 })
 export class AppModule { }

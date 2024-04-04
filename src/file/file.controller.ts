@@ -1,5 +1,4 @@
 import { Response } from 'express'
-import { Role } from 'src/role.decorator'
 import { AuthGuard } from '@nestjs/passport'
 import { FileService } from './file.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
@@ -14,7 +13,6 @@ export class FileController {
   constructor(private readonly fileService: FileService) { }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Role()
   @Get('/download/:path')
   async downloadFile(@Res() res: Response, @Param('path') path: string) {
     return await this.fileService.downloadFile(res, path)

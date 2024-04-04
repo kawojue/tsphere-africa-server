@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { JwtStrategy } from './jwt.strategy'
+import { PrismaService } from 'lib/prisma.service'
 import { JwtModule as NestJwtModule } from '@nestjs/jwt'
 
 @Module({
@@ -10,7 +11,7 @@ import { JwtModule as NestJwtModule } from '@nestjs/jwt'
             global: true,
         }),
     ],
-    providers: [JwtStrategy],
+    providers: [JwtStrategy, PrismaService],
     exports: [NestJwtModule],
 })
 export class JwtModule { }

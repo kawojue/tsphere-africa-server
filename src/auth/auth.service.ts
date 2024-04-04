@@ -471,6 +471,7 @@ export class AuthService {
             const accessToken = await this.misc.generateAccessToken({
                 sub: user.id,
                 role: user.role,
+                userStatus: user.userStatus
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, {

@@ -15,8 +15,8 @@ export class MiscService {
         private readonly jwtService: JwtService,
     ) { }
 
-    async generateAccessToken({ sub, role }: JwtPayload) {
-        return await this.jwtService.signAsync({ sub, role })
+    async generateAccessToken({ sub, role, userStatus }: JwtPayload) {
+        return await this.jwtService.signAsync({ sub, role, userStatus })
     }
 
     isValidUsername(username: string) {
