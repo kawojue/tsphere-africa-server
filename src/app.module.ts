@@ -16,6 +16,7 @@ import { ModminModule } from './modmin/modmin.module'
 import { EncryptionService } from 'lib/encryption.service'
 import { CreativeModule } from './creative/creative.module'
 import { ProfileSetupModule } from './profile-setup/profile-setup.module'
+import { JobModule } from './job/job.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ProfileSetupModule } from './profile-setup/profile-setup.module'
     ModminModule,
     CreativeModule,
     ProfileSetupModule,
+    JobModule,
   ],
   controllers: [AppController],
   providers: [

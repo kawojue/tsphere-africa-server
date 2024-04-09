@@ -7,6 +7,7 @@ import { titleName } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
 import { EncryptionService } from 'lib/encryption.service'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
+import { AnalyticsDto, UserSuspensionDto } from './dto/user.dto'
 
 @Injectable()
 export class ModminService {
@@ -87,4 +88,69 @@ export class ModminService {
             this.misc.handleServerError(res, err)
         }
     }
+
+    async analytics(res: Response, { role }: AnalyticsDto) {
+        try {
+            let total: number
+
+            if (role === "talent") {
+                total = await this.prisma.user.count({
+                    where: {
+                        role: 'talent'
+                    }
+                })
+            } else if (role === "creative") {
+                total = await this.prisma.user.count({
+                    where: {
+                        role: 'creative'
+                    }
+                })
+            } else if (role === "client") {
+                total = await this.prisma.user.count({
+                    where: {
+                        role: 'client'
+                    }
+                })
+            } else {
+                total = await this.prisma.user.count()
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: { total } })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async toggleUserSuspension(
+        res: Response,
+        userId: string,
+        { action }: UserSuspensionDto
+    ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    id: userId
+                }
+            })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'User not found')
+            }
+
+            await this.prisma.user.update({
+                where: {
+                    id: userId
+                },
+                data: {
+                    userStatus: action === 'active' ? 'active' : 'suspended'
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { message: "Successful" })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+
 }

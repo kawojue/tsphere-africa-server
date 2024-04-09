@@ -49,6 +49,22 @@ export class UserService {
                     username: true,
                     lastname: true,
                     firstname: true,
+                    creative: {
+                        select: {
+                            bio: true,
+                        }
+                    },
+                    talent: {
+                        select: {
+                            bio: true
+                        }
+                    },
+                    skills: {
+                        select: {
+                            subSkills: true
+                        }
+                    },
+
                 }
             })
 

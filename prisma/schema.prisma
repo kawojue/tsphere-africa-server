@@ -28,6 +28,7 @@ model User {
     talent           Talent?
     bankDetails      BankDetails?
     experiences      Experience[]
+    jobs             Job[]
     subscribed       Boolean      @default(false)
     createdAt        DateTime     @default(now())
     validation       Validation?
@@ -52,6 +53,7 @@ model Admin {
     password String
     email    String @unique
     role     Role   @default(admin)
+    job      Job[]
 }
 
 model Validation {
@@ -204,6 +206,25 @@ model TalentRatesAndAvailability {
     to           Weekday
     talent       Talent     @relation(fields: [talentId], references: [id])
     talentId     String     @unique @db.ObjectId
+}
+
+model Job {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    title       String
+    location    String
+    rate        Float?
+    gender      Gender?
+    playingAge  String?
+    experience  String
+    description String
+    attachments File[]
+    duration    String?
+    expiry      DateTime
+    postedAt    DateTime @default(now())
+    user        User     @relation(fields: [userId], references: [id])
+    admin       Admin?   @relation(fields: [adminId], references: [id])
+    userId      String   @unique @db.ObjectId
+    adminId     String   @unique @db.ObjectId
 }
 
 enum Gender {
