@@ -1,7 +1,7 @@
 import {
+    GetObjectAclCommandInput, GetObjectCommand,
     DeleteObjectCommand, DeleteObjectCommandInput,
-    GetObjectCommand,
-    PutObjectCommand, PutObjectCommandInput, S3Client
+    S3Client, PutObjectCommand, PutObjectCommandInput,
 } from '@aws-sdk/client-s3'
 import { Injectable, NotFoundException } from '@nestjs/common'
 
@@ -25,8 +25,8 @@ export class AwsService {
         const params: PutObjectCommandInput = {
             Key: path,
             Body: file.buffer,
-            ContentType: file.mimetype,
             Bucket: this.bucketName,
+            ContentType: file.mimetype,
         }
         const command: PutObjectCommand = new PutObjectCommand(params)
         await this.s3.send(command)
@@ -46,9 +46,9 @@ export class AwsService {
     }
 
     async downloadS3(path: string): Promise<Buffer> {
-        const params = {
-            Bucket: this.bucketName,
+        const params: GetObjectAclCommandInput = {
             Key: path,
+            Bucket: this.bucketName,
         }
 
         try {
