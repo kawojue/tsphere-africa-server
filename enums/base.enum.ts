@@ -8,8 +8,15 @@ export enum UserRole {
   creative = 'creative'
 }
 
-export enum RoleEnum {
+export enum Analytics {
+  job = 'job',
+  user = 'user',
   client = 'client',
   talent = 'talent',
   creative = 'creative'
+}
+
+export enum SortUser {
+  date = "date",
+  name = "name"
 }

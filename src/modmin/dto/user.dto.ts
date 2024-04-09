@@ -1,6 +1,6 @@
-import { RoleEnum } from 'enums/base.enum'
 import { UserStatus } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
+import { Analytics, SortUser } from 'enums/base.enum'
 import { IsEnum, IsOptional } from 'class-validator'
 
 export class UserSuspensionDto {
@@ -13,9 +13,39 @@ export class UserSuspensionDto {
 
 export class AnalyticsDto {
     @ApiProperty({
-        enum: RoleEnum
+        enum: Analytics
     })
-    @IsEnum(RoleEnum)
+    @IsEnum(Analytics)
+    q: Analytics
+}
+
+export class InfiniteScroll {
+    @ApiProperty({
+        example: 1
+    })
     @IsOptional()
-    role: RoleEnum
+    page?: number
+
+    @ApiProperty({
+        example: 9
+    })
+    @IsOptional()
+    limit?: number
+}
+
+export class SearchDto extends InfiniteScroll {
+    @ApiProperty({
+        example: ''
+    })
+    @IsOptional()
+    s: string
+}
+
+export class SortUserDto extends SearchDto {
+    @ApiProperty({
+        enum: SortUser
+    })
+    @IsEnum(SortUser)
+    @IsOptional()
+    q: SortUser
 }

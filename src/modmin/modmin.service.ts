@@ -7,7 +7,7 @@ import { titleName } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
 import { EncryptionService } from 'lib/encryption.service'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
-import { AnalyticsDto, UserSuspensionDto } from './dto/user.dto'
+import { AnalyticsDto, SortUserDto, UserSuspensionDto } from './dto/user.dto'
 
 @Injectable()
 export class ModminService {
@@ -89,33 +89,37 @@ export class ModminService {
         }
     }
 
-    async analytics(res: Response, { role }: AnalyticsDto) {
+    async analytics(res: Response, { q }: AnalyticsDto) {
         try {
             let total: number
 
-            if (role === "talent") {
+            if (q === "talent") {
                 total = await this.prisma.user.count({
                     where: {
                         role: 'talent'
                     }
                 })
-            } else if (role === "creative") {
+            } else if (q === "creative") {
                 total = await this.prisma.user.count({
                     where: {
                         role: 'creative'
                     }
                 })
-            } else if (role === "client") {
+            } else if (q === "client") {
                 total = await this.prisma.user.count({
                     where: {
                         role: 'client'
                     }
                 })
-            } else {
+            } else if (q === "job") {
+                total = await this.prisma.job.count()
+            } else if (q === "user") {
                 total = await this.prisma.user.count()
+            } else {
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Query is required')
             }
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: { total } })
+            this.response.sendSuccess(res, StatusCodes.OK, { data: { [`${q}s`]: total } })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
@@ -152,5 +156,102 @@ export class ModminService {
         }
     }
 
+    async fetchAllUsers(
+        res: Response,
+        { q, s = "", page = 1, limit = 50 }: SortUserDto,
+    ) {
+        try {
+            let users
 
+            page = Number(page)
+            limit = Number(limit)
+            const offset = (page - 1) * limit
+
+            const OR: ({
+                firstname: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            } | {
+                username: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            } | {
+                lastname: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            } | {
+                email: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            })[] = [
+                    { firstname: { contains: s, mode: 'insensitive' } },
+                    { username: { contains: s, mode: 'insensitive' } },
+                    { lastname: { contains: s, mode: 'insensitive' } },
+                    { email: { contains: s, mode: 'insensitive' } }
+                ]
+
+            const select: {
+                id: true
+                role: true
+                skill: true
+                email: true
+                avatar: true
+                username: true
+                lastname: true
+                firstname: true,
+                createdAt: true,
+                skills: {
+                    select: {
+                        subSkills: true
+                    }
+                }
+            } = {
+                id: true,
+                role: true,
+                skill: true,
+                email: true,
+                avatar: true,
+                username: true,
+                lastname: true,
+                firstname: true,
+                createdAt: true,
+                skills: {
+                    select: {
+                        subSkills: true
+                    }
+                },
+            }
+
+            if (q === "date") {
+                users = await this.prisma.user.findMany({
+                    where: { OR },
+                    orderBy: {
+                        createdAt: 'desc'
+                    },
+                    take: limit,
+                    skip: offset,
+                    select,
+                })
+            } else {
+                users = await this.prisma.user.findMany({
+                    where: { OR },
+                    orderBy: [
+                        { firstname: 'desc' },
+                        { lastname: 'desc' },
+                    ],
+                    take: limit,
+                    skip: offset,
+                    select,
+                })
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: users })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
 }
