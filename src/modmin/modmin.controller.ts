@@ -57,4 +57,12 @@ export class ModminController {
   ) {
     return await this.modminService.fetchAllUsers(res, query)
   }
+
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('/users/chart')
+  async chart(@Res() res: Response) {
+    return await this.modminService.chart(res)
+  }
 }

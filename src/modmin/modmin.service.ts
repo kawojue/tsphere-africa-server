@@ -254,4 +254,47 @@ export class ModminService {
             this.misc.handleServerError(res, err)
         }
     }
+
+    async chart(res: Response) {
+        try {
+            const currentYear = new Date().getFullYear()
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ]
+
+            const userCounts = []
+
+            for (let i = 0; i < monthNames.length; i++) {
+                const startDate = new Date(currentYear, i, 1)
+                let endMonth = i + 1
+                let endYear = currentYear
+
+                if (endMonth === 12) {
+                    endMonth = 1
+                    endYear = currentYear + 1
+                } else {
+                    endMonth++
+                }
+
+                const endDate = new Date(endYear, endMonth - 1, 1)
+
+                const count = await this.prisma.user.count({
+                    where: {
+                        AND: [
+                            { createdAt: { gte: startDate } },
+                            { createdAt: { lt: endDate } }
+                        ]
+                    }
+                })
+
+                userCounts.push({ monthName: monthNames[i], count })
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: userCounts })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error caching chart")
+        }
+    }
+
 }
