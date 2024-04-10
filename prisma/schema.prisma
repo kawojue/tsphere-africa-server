@@ -8,31 +8,31 @@ generator client {
 }
 
 model User {
-    id               String            @id @default(auto()) @map("_id") @db.ObjectId
-    email            String            @unique
-    username         String            @unique
+    id               String           @id @default(auto()) @map("_id") @db.ObjectId
+    email            String           @unique
+    username         String           @unique
     firstname        String
     lastname         String
     password         String
     skill            String
-    userStatus       UserStatus        @default(active)
+    userStatus       UserStatus       @default(active)
     skills           Skill[]
     skillAttachments File[]
     under18Kyc       under18Kyc?
     avatar           File?
     portfolio        Portfolio?
-    email_verified   Boolean           @default(false)
-    role             Role              @default(user)
+    email_verified   Boolean          @default(false)
+    role             Role             @default(user)
     under18          Boolean
     creative         Creative?
     talent           Talent?
     bankDetails      BankDetails?
     experiences      Experience[]
-    subscribed       Boolean           @default(false)
-    createdAt        DateTime          @default(now())
+    subscribed       Boolean          @default(false)
+    createdAt        DateTime         @default(now())
     validation       Validation?
     jobs             Job[]
-    jobApplications  JobApplications[]
+    jobApplications  JobApplication[]
 }
 
 model SubscribedEmails {
@@ -210,29 +210,29 @@ model TalentRatesAndAvailability {
 }
 
 model Job {
-    id              String            @id @default(auto()) @map("_id") @db.ObjectId
+    id              String           @id @default(auto()) @map("_id") @db.ObjectId
     type            String
     title           String
     role            String
     playingAge      String?
     description     String
-    duration        String?
+    duration        DateTime?
     app_deadline    DateTime
     requirement     String
     experience      String
     gender          Gender?
-    rate            String
+    rate            Float?
     attachments     File[]
     status          JobStatus
-    postedAt        DateTime          @default(now())
-    jobApplications JobApplications[]
-    admin           Admin?            @relation(fields: [adminId], references: [id])
-    user            User?             @relation(fields: [userId], references: [id])
-    adminId         String            @unique @db.ObjectId
-    userId          String            @unique @db.ObjectId
+    postedAt        DateTime         @default(now())
+    jobApplications JobApplication[]
+    admin           Admin?           @relation(fields: [adminId], references: [id])
+    user            User?            @relation(fields: [userId], references: [id])
+    adminId         String?          @unique @db.ObjectId
+    userId          String?          @unique @db.ObjectId
 }
 
-model JobApplications {
+model JobApplication {
     id     String @id @default(auto()) @map("_id") @db.ObjectId
     job    Job    @relation(fields: [jobId], references: [id])
     user   User   @relation(fields: [userId], references: [id])

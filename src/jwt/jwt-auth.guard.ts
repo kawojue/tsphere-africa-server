@@ -23,7 +23,12 @@ export class RolesGuard implements CanActivate {
 
         try {
             const decoded = this.jwtService.verify(token)
-            if (decoded?.sub && decoded.role === 'user') {
+            if (
+                decoded?.sub && (
+                    decoded.role === 'user' || decoded.role === 'client' ||
+                    decoded.role === 'creative' || decoded.role === 'talent'
+                )
+            ) {
                 return this.prisma.user.findUnique({
                     where: {
                         id: decoded.sub
