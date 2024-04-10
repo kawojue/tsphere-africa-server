@@ -1,7 +1,7 @@
 import { Response } from 'express'
 import {
-  Patch, Post, Req, Res, UseGuards,
   Body, Controller, Delete, Get, Param,
+  Patch, Post, Req, Res, UseGuards, Put,
 } from '@nestjs/common'
 import { Role } from 'src/role.decorator'
 import { JobService } from './job.service'
@@ -47,7 +47,7 @@ export class JobController {
     return await this.jobService.approveJob(res, jobId)
   }
 
-  @Post('/apply-job/:jobId')
+  @Put('/apply-job/:jobId')
   @Role(Roles.creative, Roles.creative, Roles.user)
   async applyJob(
     @Res() res: Response,
