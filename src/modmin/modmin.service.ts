@@ -291,7 +291,12 @@ export class ModminService {
                 userCounts.push({ monthName: monthNames[i], count })
             }
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: userCounts })
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: {
+                    chart: userCounts,
+                    total: await this.prisma.user.count()
+                }
+            })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error caching chart")
         }

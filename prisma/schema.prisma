@@ -8,30 +8,31 @@ generator client {
 }
 
 model User {
-    id               String       @id @default(auto()) @map("_id") @db.ObjectId
-    email            String       @unique
-    username         String       @unique
+    id               String            @id @default(auto()) @map("_id") @db.ObjectId
+    email            String            @unique
+    username         String            @unique
     firstname        String
     lastname         String
     password         String
     skill            String
-    userStatus       UserStatus   @default(active)
+    userStatus       UserStatus        @default(active)
     skills           Skill[]
     skillAttachments File[]
     under18Kyc       under18Kyc?
     avatar           File?
     portfolio        Portfolio?
-    email_verified   Boolean      @default(false)
-    role             Role         @default(user)
+    email_verified   Boolean           @default(false)
+    role             Role              @default(user)
     under18          Boolean
     creative         Creative?
     talent           Talent?
     bankDetails      BankDetails?
     experiences      Experience[]
-    jobs             Job[]
-    subscribed       Boolean      @default(false)
-    createdAt        DateTime     @default(now())
+    subscribed       Boolean           @default(false)
+    createdAt        DateTime          @default(now())
     validation       Validation?
+    jobs             Job[]
+    jobApplications  JobApplications[]
 }
 
 model SubscribedEmails {
@@ -209,22 +210,36 @@ model TalentRatesAndAvailability {
 }
 
 model Job {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
-    title       String
-    location    String
-    rate        Float?
-    gender      Gender?
-    playingAge  String?
-    experience  String
-    description String
-    attachments File[]
-    duration    String?
-    expiry      DateTime
-    postedAt    DateTime @default(now())
-    user        User     @relation(fields: [userId], references: [id])
-    admin       Admin?   @relation(fields: [adminId], references: [id])
-    userId      String   @unique @db.ObjectId
-    adminId     String   @unique @db.ObjectId
+    id              String            @id @default(auto()) @map("_id") @db.ObjectId
+    type            String
+    title           String
+    role            String
+    playingAge      String?
+    description     String
+    duration        String?
+    app_deadline    DateTime
+    requirement     String
+    experience      String
+    gender          Gender?
+    rate            String
+    attachments     File[]
+    status          JobStatus
+    postedAt        DateTime          @default(now())
+    jobApplications JobApplications[]
+    admin           Admin?            @relation(fields: [adminId], references: [id])
+    user            User?             @relation(fields: [userId], references: [id])
+    adminId         String            @unique @db.ObjectId
+    userId          String            @unique @db.ObjectId
+}
+
+model JobApplications {
+    id     String @id @default(auto()) @map("_id") @db.ObjectId
+    job    Job    @relation(fields: [jobId], references: [id])
+    user   User   @relation(fields: [userId], references: [id])
+    jobId  String @db.ObjectId
+    userId String @db.ObjectId
+
+    @@unique([userId, jobId])
 }
 
 enum Gender {
@@ -253,6 +268,11 @@ type File {
     url  String
     path String
     type String?
+}
+
+enum JobStatus {
+    PENDING
+    APPROVED
 }
 
 enum Role {
