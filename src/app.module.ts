@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { AppService } from './app.service'
 import { AwsService } from 'lib/aws.service'
+import { JobModule } from './job/job.module'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { AuthModule } from './auth/auth.module'
@@ -13,10 +14,10 @@ import { BrevoService } from 'lib/brevo.service'
 import { PrismaService } from 'lib/prisma.service'
 import { TalentModule } from './talent/talent.module'
 import { ModminModule } from './modmin/modmin.module'
+import { ContactModule } from './contact/contact.module'
 import { EncryptionService } from 'lib/encryption.service'
 import { CreativeModule } from './creative/creative.module'
 import { ProfileSetupModule } from './profile-setup/profile-setup.module'
-import { JobModule } from './job/job.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { JobModule } from './job/job.module';
     CreativeModule,
     ProfileSetupModule,
     JobModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [

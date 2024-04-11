@@ -40,6 +40,13 @@ model SubscribedEmails {
     email String @unique
 }
 
+model Contact {
+    id          String @id @default(auto()) @map("_id") @db.ObjectId
+    email       String
+    fullname    String
+    messageBody String
+}
+
 model under18Kyc {
     id             String @id @default(auto()) @map("_id") @db.ObjectId
     issuingCountry String
