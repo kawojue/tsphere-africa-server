@@ -108,6 +108,11 @@ export class ContactService {
                 body: messageBody
             })
 
+            await this.prisma.contact.update({
+                where: { id: contactId },
+                data: { replied: true, repliedAt: new Date() }
+            })
+
             this.response.sendSuccess(res, StatusCodes.OK, { message: "Message sent!" })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error replying contact")
