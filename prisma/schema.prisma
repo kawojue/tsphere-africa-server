@@ -232,7 +232,7 @@ model Job {
     location        String
     experience      String
     gender          Gender?
-    rate            Float?
+    rate            String?
     attachments     File[]
     status          JobStatus
     postedAt        DateTime         @default(now())

@@ -79,7 +79,7 @@ export class PostJobDto {
     gender: Gender
 
     @ApiProperty({
-        example: 23.67
+        example: "12-15"
     })
-    rate: number
+    rate: string
 }
