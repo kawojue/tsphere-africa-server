@@ -54,7 +54,7 @@ export class ModminService {
                 data: { email, fullName, password }
             })
 
-            this.response.sendSuccess(res, StatusCodes.Created, { message: "You're now a Moderator!" })
+            this.response.sendSuccess(res, StatusCodes.Created, { message: "You're now an Admin!" })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }

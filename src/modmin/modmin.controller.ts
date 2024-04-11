@@ -14,10 +14,10 @@ import { Body, Controller, Get, Param, Post, Query, Res, UseGuards } from '@nest
 export class ModminController {
   constructor(private readonly modminService: ModminService) { }
 
-  // @Post('/register')
-  // async registerAdmin(@Res() res: Response, @Body() adminDto: RegisterAdminDto) {
-  //   return await this.modminService.registerAdmin(res, adminDto)
-  // }
+  @Post('/register')
+  async registerAdmin(@Res() res: Response, @Body() adminDto: RegisterAdminDto) {
+    return await this.modminService.registerAdmin(res, adminDto)
+  }
 
   @Post('/login')
   async loginAdmin(@Res() res: Response, @Body() adminDto: LoginAdminDto) {
