@@ -180,4 +180,27 @@ export class JobService {
 
         this.response.sendSuccess(res, StatusCodes.OK, { data: jobs })
     }
+
+    async jobList(res: Response) {
+        const jobs = await this.prisma.job.findMany({
+            where: {
+                status: 'APPROVED'
+            },
+            orderBy: { approvedAt: 'desc' }
+        })
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: jobs })
+    }
+
+    async getJob(res: Response, jobId: string) {
+        const job = await this.prisma.job.findUnique({
+            where: { id: jobId }
+        })
+
+        if (!job) {
+            return this.response.sendError(res, StatusCodes.NotFound, 'Job not found')
+        }
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: job })
+    }
 }

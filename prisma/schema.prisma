@@ -41,10 +41,13 @@ model SubscribedEmails {
 }
 
 model Contact {
-    id          String @id @default(auto()) @map("_id") @db.ObjectId
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
     email       String
     fullname    String
     messageBody String
+    replied     Boolean   @default(false)
+    sentAt      DateTime  @default(now())
+    repliedAt   DateTime?
 }
 
 model under18Kyc {

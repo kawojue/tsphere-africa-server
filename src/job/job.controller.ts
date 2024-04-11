@@ -13,12 +13,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 @ApiTags("Job")
 @Controller('job')
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), RolesGuard)
 export class JobController {
   constructor(private readonly jobService: JobService) { }
 
   @Post('/post')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.admin, Roles.client)
   async postJob(
     @Res() res: Response,
@@ -29,6 +29,8 @@ export class JobController {
   }
 
   @Delete('/remove/:jobId')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.admin, Roles.client)
   async removeJob(
     @Res() res: Response,
@@ -39,6 +41,8 @@ export class JobController {
   }
 
   @Patch('/approve-job/:jobId')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.admin)
   async approveJob(
     @Res() res: Response,
@@ -48,6 +52,8 @@ export class JobController {
   }
 
   @Put('/apply-job/:jobId')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.creative, Roles.creative, Roles.user)
   async applyJob(
     @Res() res: Response,
@@ -58,11 +64,23 @@ export class JobController {
   }
 
   @Get('/fetch')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.admin, Roles.client)
   async fetchJobs(
     @Res() res: Response,
     @Req() req: IRequest,
   ) {
     return await this.jobService.fetchJobs(res, req.user)
+  }
+
+  @Get('/job-list')
+  async jobList(@Res() res: Response) {
+    return await this.jobService.jobList(res)
+  }
+
+  @Get('/job-list/:jobId')
+  async getJob(@Res() res: Response, @Param('jobId') jobId: string) {
+    return await this.jobService.getJob(res, jobId)
   }
 }
