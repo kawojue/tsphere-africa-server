@@ -56,7 +56,7 @@ export class UserService {
                     },
                     talent: {
                         select: {
-                            bio: true
+                            bioStats: true
                         }
                     },
                     skills: {
@@ -107,7 +107,7 @@ export class UserService {
                     },
                     talent: {
                         select: {
-                            bio: true,
+                            bioStats: true,
                             personalInfo: true,
                             ratesAndAvailability: true,
                         }

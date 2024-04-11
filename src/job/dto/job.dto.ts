@@ -58,6 +58,13 @@ export class PostJobDto {
     requirement: string
 
     @ApiProperty({
+        example: 'Lagos'
+    })
+    @IsString()
+    @MaxLength(50)
+    location: string
+
+    @ApiProperty({
         example: 'Beginner'
     })
     @IsString()

@@ -1,15 +1,17 @@
-import { Response } from 'express'
 import {
   Body, Controller, Delete, Get, Param,
   Patch, Post, Req, Res, UseGuards, Put,
+  Query,
 } from '@nestjs/common'
 import { Role } from 'src/role.decorator'
 import { JobService } from './job.service'
 import { PostJobDto } from './dto/job.dto'
+import { Request, Response } from 'express'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
 
 @ApiTags("Job")
 @Controller('job')
@@ -75,8 +77,12 @@ export class JobController {
   }
 
   @Get('/job-list')
-  async jobList(@Res() res: Response) {
-    return await this.jobService.jobList(res)
+  async jobList(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Query() query: InfiniteScrollDto,
+  ) {
+    return await this.jobService.jobList(req, res, query)
   }
 
   @Get('/job-list/:jobId')
