@@ -72,7 +72,7 @@ export class ContactService {
         this.response.sendSuccess(res, StatusCodes.OK, { data: contact })
     }
 
-    async deleteContact(res: Response, contactId: string) {
+    async removeContact(res: Response, contactId: string) {
         const contact = await this.prisma.contact.findUnique({
             where: { id: contactId }
         })

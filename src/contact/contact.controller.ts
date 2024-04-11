@@ -7,7 +7,9 @@ import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { ContactDto, ReplyContactDto } from './dto/contact.dto'
 import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
-import { Body, Controller, Get, Param, Post, Query, Res, UseGuards } from '@nestjs/common'
+import {
+  Body, Controller, Delete, Get, Param, Post, Query, Res, UseGuards
+} from '@nestjs/common'
 
 @ApiTags("Contact")
 @Controller('contact')
@@ -33,6 +35,14 @@ export class ContactController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async getContact(@Res() res: Response, @Param('contactId') contactId: string) {
     return await this.contactService.getContact(res, contactId)
+  }
+
+  @Delete('/remove/:contactId')
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async removeContact(@Res() res: Response, @Param('contactId') contactId: string) {
+    return await this.contactService.removeContact(res, contactId)
   }
 
   @Get('/reply/:contactId')
