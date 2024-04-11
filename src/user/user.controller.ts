@@ -31,4 +31,9 @@ export class UserController {
   ) {
     return await this.userService.fetchProfile(res, req.user)
   }
+
+  @Get('/job-list')
+  async jobList(@Res() res: Response) {
+    return await this.userService.jobList(res)
+  }
 }

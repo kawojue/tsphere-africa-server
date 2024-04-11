@@ -120,4 +120,15 @@ export class UserService {
             this.misc.handleServerError(res, err)
         }
     }
+
+    async jobList(res: Response) {
+        const jobs = await this.prisma.job.findMany({
+            where: {
+                status: 'APPROVED'
+            },
+            orderBy: { approvedAt: 'desc' }
+        })
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: jobs })
+    }
 }

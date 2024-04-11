@@ -29,12 +29,12 @@ export class JobService {
             if (role === "admin") {
                 job = await this.prisma.job.create({
                     data: {
-                        role: job_role, type: job_type,
-                        app_deadline: applicaion_deadline,
-                        title: job_title, playingAge, rate,
-                        gender, requirement, description, experience,
+                        type: job_type, title: job_title, playingAge, rate,
+                        role: job_role, app_deadline: applicaion_deadline,
                         duration: duration ? new Date(duration) : null,
-                        admin: { connect: { id: sub } }, status: 'APPROVED'
+                        gender, requirement, description, experience,
+                        approvedAt: new Date(), status: 'APPROVED',
+                        admin: { connect: { id: sub } }
                     }
                 })
             } else {
@@ -111,7 +111,7 @@ export class JobService {
 
             await this.prisma.job.update({
                 where: { id: jobId },
-                data: { status: 'APPROVED' }
+                data: { status: 'APPROVED', approvedAt: new Date() }
             })
             this.response.sendSuccess(res, StatusCodes.OK, { message: "Job removed successfully" })
         } catch (err) {

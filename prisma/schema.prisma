@@ -225,6 +225,7 @@ model Job {
     attachments     File[]
     status          JobStatus
     postedAt        DateTime         @default(now())
+    approvedAt      DateTime?
     jobApplications JobApplication[]
     admin           Admin?           @relation(fields: [adminId], references: [id])
     user            User?            @relation(fields: [userId], references: [id])
@@ -233,13 +234,19 @@ model Job {
 }
 
 model JobApplication {
-    id     String @id @default(auto()) @map("_id") @db.ObjectId
-    job    Job    @relation(fields: [jobId], references: [id])
-    user   User   @relation(fields: [userId], references: [id])
-    jobId  String @db.ObjectId
-    userId String @db.ObjectId
+    id     String          @id @default(auto()) @map("_id") @db.ObjectId
+    status ApplicantStatus @default(PENDING)
+    job    Job             @relation(fields: [jobId], references: [id])
+    user   User            @relation(fields: [userId], references: [id])
+    jobId  String          @db.ObjectId
+    userId String          @db.ObjectId
 
     @@unique([userId, jobId])
+}
+
+enum ApplicantStatus {
+    HIRED
+    PENDING
 }
 
 enum Gender {
