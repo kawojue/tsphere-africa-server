@@ -8,6 +8,7 @@ import { MiscService } from 'lib/misc.service'
 import { AuthModule } from './auth/auth.module'
 import { FileModule } from './file/file.module'
 import { UserModule } from './user/user.module'
+import { BlogModule } from './blog/blog.module'
 import { AppController } from './app.controller'
 import { PlunkService } from 'lib/plunk.service'
 import { BrevoService } from 'lib/brevo.service'
@@ -30,6 +31,7 @@ import { ProfileSetupModule } from './profile-setup/profile-setup.module'
     ProfileSetupModule,
     JobModule,
     ContactModule,
+    BlogModule,
   ],
   controllers: [AppController],
   providers: [
