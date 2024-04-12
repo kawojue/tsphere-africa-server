@@ -130,11 +130,12 @@ model Skill {
 }
 
 model Creative {
-    id           String                @id @default(auto()) @map("_id") @db.ObjectId
-    bio          String?
-    personalInfo CreativePersonalInfo?
-    user         User                  @relation(references: [id], fields: [userId])
-    userId       String                @unique @db.ObjectId
+    id             String                  @id @default(auto()) @map("_id") @db.ObjectId
+    bio            String?
+    personalInfo   CreativePersonalInfo?
+    certifications CreativeCertification[]
+    user           User                    @relation(references: [id], fields: [userId])
+    userId         String                  @unique @db.ObjectId
 }
 
 model CreativePersonalInfo {
@@ -154,6 +155,18 @@ model CreativePersonalInfo {
     fbHandle   String?
     igHandle   String?
     xHandle    String?
+    creative   Creative @relation(fields: [creativeId], references: [id])
+    creativeId String   @unique @db.ObjectId
+}
+
+model CreativeCertification {
+    id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    school     String
+    startDate  String
+    endDate    String
+    study      String
+    level      String?
+    level_type String?
     creative   Creative @relation(fields: [creativeId], references: [id])
     creativeId String   @unique @db.ObjectId
 }

@@ -8,6 +8,7 @@ import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { CertificationDto } from './dto/certification.dto'
 import { CreativePersonalInfoDto } from './dto/personal-info.dto'
 
 @Injectable()
@@ -168,6 +169,52 @@ export class CreativeService {
             })
         } catch (err) {
             this.misc.handleServerError(res, err, 'Error saving Bio')
+        }
+    }
+
+    async addCertification(
+        res: Response,
+        { sub }: ExpressUser,
+        certification: CertificationDto
+    ) {
+        try {
+            const creative = await this.prisma.creative.findUnique({
+                where: { userId: sub }
+            })
+
+            if (!creative) {
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Add your personal information')
+            }
+
+            const data = await this.prisma.creativeCertification.create({
+                data: { ...certification, creative: { connect: { id: creative.id } } }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data, message: "Saved!" })
+        } catch (err) {
+            this.misc.handleServerError(res, err, 'Encountered an error while saving certification')
+        }
+    }
+
+    async removeCertification(
+        res: Response,
+        { sub }: ExpressUser,
+        certificateId: string,
+    ) {
+        try {
+            const where = { userId: sub, id: certificateId }
+
+            const certification = await this.prisma.creative.findUnique({ where })
+
+            if (!certification) {
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Certification not found')
+            }
+
+            await this.prisma.creativeCertification.delete({ where })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { message: "Certification removed!" })
+        } catch (err) {
+            this.misc.handleServerError(res, err, 'Encountered an error while saving certification')
         }
     }
 }

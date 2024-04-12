@@ -1,13 +1,14 @@
 import { Response } from 'express'
 import { BioDto } from './dto/bio.dto'
 import { Role } from 'src/role.decorator'
-import {
-  Body, Controller, Put, UseInterceptors,
-  Req, Res, UseGuards, UploadedFile, Patch,
-} from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import {
+  Body, Controller, Put, UseInterceptors, Param,
+  Req, Res, UseGuards, UploadedFile, Patch, Delete,
+} from '@nestjs/common'
 import { CreativeService } from './creative.service'
+import { CertificationDto } from './dto/certification.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { CreativePersonalInfoDto } from './dto/personal-info.dto'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
@@ -43,5 +44,25 @@ export class CreativeController {
     @Body() { bio }: BioDto,
   ) {
     return await this.creativeService.bio(res, bio, req.user)
+  }
+
+  @Role('creative')
+  @Put('/certification')
+  async addCertification(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() body: CertificationDto,
+  ) {
+    return await this.creativeService.addCertification(res, req.user, body)
+  }
+
+  @Role('creative')
+  @Delete('/certification/:certificationId')
+  async removeCertification(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Param('certificationId') certificationId: string,
+  ) {
+    return await this.creativeService.removeCertification(res, req.user, certificationId)
   }
 }
