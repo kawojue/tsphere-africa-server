@@ -305,4 +305,85 @@ export class JobService {
 
         this.response.sendSuccess(res, StatusCodes.OK, { data: job })
     }
+
+    async fetchJobApplicants(
+        res: Response,
+        jobId: string,
+        { role, sub }: ExpressUser,
+    ) {
+        try {
+            let job: Job
+            let applicants = []
+
+            if (role === "client") {
+                let job = await this.prisma.job.findUnique({
+                    where: { id: jobId, userId: sub }
+                })
+
+                if (!job) {
+                    return this.response.sendError(res, StatusCodes.NotFound, 'Job not found')
+                }
+            } else if (role === "admin") {
+                let job = await this.prisma.job.findUnique({
+                    where: { id: jobId }
+                })
+
+                if (!job) {
+                    return this.response.sendError(res, StatusCodes.NotFound, 'Job not found')
+                }
+            } else {
+                return this.response.sendError(res, StatusCodes.Forbidden, "Invalid role")
+            }
+
+            if (job) {
+                applicants = await this.prisma.jobApplication.findMany({
+                    where: { jobId: job.id },
+                    include: {
+                        job: true,
+                        user: {
+                            select: {
+                                role: true,
+                                skill: true,
+                                email: true,
+                                avatar: true,
+                                username: true,
+                                lastname: true,
+                                firstname: true,
+                                email_verified: true,
+                                rateAndAvailability: true,
+                            }
+                        }
+                    }
+                })
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: applicants })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async fetchAllJobApplicants(res: Response) {
+        const applicants = await this.prisma.jobApplication.findMany({
+            include: {
+                job: true,
+                user: {
+                    select: {
+                        role: true,
+                        skill: true,
+                        email: true,
+                        avatar: true,
+                        username: true,
+                        lastname: true,
+                        firstname: true,
+                        email_verified: true,
+                        rateAndAvailability: true,
+                    }
+                }
+            },
+            orderBy: { appliedAt: 'desc' }
+        })
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: applicants })
+    }
 }

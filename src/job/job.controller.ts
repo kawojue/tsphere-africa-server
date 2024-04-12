@@ -89,4 +89,25 @@ export class JobController {
   async getJob(@Res() res: Response, @Param('jobId') jobId: string) {
     return await this.jobService.getJob(res, jobId)
   }
+
+
+  @Get('/job-applicants/:jobId')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.admin, Roles.client)
+  async fetchJobApplicants(
+    @Req() req: IRequest,
+    @Res() res: Response,
+    @Param('jobId') jobId: string
+  ) {
+    return await this.jobService.fetchJobApplicants(res, jobId, req.user)
+  }
+
+  @Get('/all-job-applicants')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.admin)
+  async fetchAllJobApplicants(@Res() res: Response) {
+    return await this.jobService.fetchAllJobApplicants(res)
+  }
 }
