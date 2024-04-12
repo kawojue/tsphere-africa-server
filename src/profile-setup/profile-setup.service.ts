@@ -11,6 +11,7 @@ import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { ExperienceDto } from './dto/experiece.dto'
 import { BankDetailsDto } from './dto/bank-details.dto'
+import { RateAndAvailabilityDto } from './dto/rate-availability.dto'
 
 @Injectable()
 export class ProfileSetupService {
@@ -365,6 +366,49 @@ export class ProfileSetupService {
             this.response.sendSuccess(res, StatusCodes.OK, { data: newUserSkills })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error saving skills")
+        }
+    }
+
+    async rateAndAvailability(
+        res: Response,
+        { sub }: ExpressUser,
+        {
+            availability, charge,
+            weekday, chargeTime,
+        }: RateAndAvailabilityDto
+    ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: sub }
+            })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'User not found')
+            }
+
+            let weekdays = []
+            if (weekday) {
+                weekdays = JSON.parse(weekday.replace(/'/g, '"')) as Array<string>
+            }
+
+            const rates = await this.prisma.rateAndAvailability.upsert({
+                where: { userId: sub },
+                create: {
+                    charge, chargeTime, weekdays,
+                    availability, user: { connect: { id: sub } }
+                },
+                update: {
+                    availability, charge,
+                    weekdays, chargeTime,
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: rates,
+                message: 'Saved'
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
         }
     }
 }

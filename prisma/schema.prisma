@@ -8,31 +8,32 @@ generator client {
 }
 
 model User {
-    id               String           @id @default(auto()) @map("_id") @db.ObjectId
-    email            String           @unique
-    username         String           @unique
-    firstname        String
-    lastname         String
-    password         String
-    skill            String
-    userStatus       UserStatus       @default(active)
-    skills           Skill[]
-    skillAttachments File[]
-    under18Kyc       under18Kyc?
-    avatar           File?
-    portfolio        Portfolio?
-    email_verified   Boolean          @default(false)
-    role             Role             @default(user)
-    under18          Boolean
-    creative         Creative?
-    talent           Talent?
-    bankDetails      BankDetails?
-    experiences      Experience[]
-    subscribed       Boolean          @default(false)
-    createdAt        DateTime         @default(now())
-    validation       Validation?
-    jobs             Job[]
-    jobApplications  JobApplication[]
+    id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+    email               String               @unique
+    username            String               @unique
+    firstname           String
+    lastname            String
+    password            String
+    skill               String
+    userStatus          UserStatus           @default(active)
+    skills              Skill[]
+    skillAttachments    File[]
+    under18Kyc          under18Kyc?
+    avatar              File?
+    portfolio           Portfolio?
+    email_verified      Boolean              @default(false)
+    role                Role                 @default(user)
+    under18             Boolean
+    creative            Creative?
+    talent              Talent?
+    bankDetails         BankDetails?
+    experiences         Experience[]
+    rateAndAvailability RateAndAvailability?
+    subscribed          Boolean              @default(false)
+    createdAt           DateTime             @default(now())
+    validation          Validation?
+    jobs                Job[]
+    jobApplications     JobApplication[]
 }
 
 model SubscribedEmails {
@@ -107,6 +108,16 @@ model Experience {
     userId            String  @unique @db.ObjectId
 }
 
+model RateAndAvailability {
+    id           String     @id @default(auto()) @map("_id") @db.ObjectId
+    availability Boolean    @default(true)
+    chargeTime   ChargeTime
+    charge       Float
+    weekdays     String[]
+    user         User       @relation(fields: [userId], references: [id])
+    userId       String     @unique @db.ObjectId
+}
+
 model Skill {
     id                String      @id @default(auto()) @map("_id") @db.ObjectId
     category          String
@@ -119,12 +130,11 @@ model Skill {
 }
 
 model Creative {
-    id                   String                        @id @default(auto()) @map("_id") @db.ObjectId
-    bio                  String?
-    personalInfo         CreativePersonalInfo?
-    ratesAndAvailability creativeRatesAndAvailability?
-    user                 User                          @relation(references: [id], fields: [userId])
-    userId               String                        @unique @db.ObjectId
+    id           String                @id @default(auto()) @map("_id") @db.ObjectId
+    bio          String?
+    personalInfo CreativePersonalInfo?
+    user         User                  @relation(references: [id], fields: [userId])
+    userId       String                @unique @db.ObjectId
 }
 
 model CreativePersonalInfo {
@@ -148,23 +158,12 @@ model CreativePersonalInfo {
     creativeId String   @unique @db.ObjectId
 }
 
-model creativeRatesAndAvailability {
-    id           String   @id @default(auto()) @map("_id") @db.ObjectId
-    availability Boolean  @default(true)
-    charge       Float
-    from         Weekday
-    to           Weekday
-    creative     Creative @relation(fields: [creativeId], references: [id])
-    creativeId   String   @unique @db.ObjectId
-}
-
 model Talent {
-    id                   String                      @id @default(auto()) @map("_id") @db.ObjectId
-    personalInfo         TalentPersonalInfo?
-    bioStats             talentBioStats?
-    ratesAndAvailability TalentRatesAndAvailability?
-    user                 User                        @relation(fields: [userId], references: [id])
-    userId               String                      @unique @db.ObjectId
+    id           String              @id @default(auto()) @map("_id") @db.ObjectId
+    personalInfo TalentPersonalInfo?
+    bioStats     talentBioStats?
+    user         User                @relation(fields: [userId], references: [id])
+    userId       String              @unique @db.ObjectId
 }
 
 model TalentPersonalInfo {
@@ -208,17 +207,6 @@ model talentBioStats {
     talentId  String  @unique @db.ObjectId
 }
 
-model TalentRatesAndAvailability {
-    id           String     @id @default(auto()) @map("_id") @db.ObjectId
-    availability Boolean    @default(true)
-    chargeTime   ChargeTime
-    charge       Float
-    from         Weekday
-    to           Weekday
-    talent       Talent     @relation(fields: [talentId], references: [id])
-    talentId     String     @unique @db.ObjectId
-}
-
 model Job {
     id              String           @id @default(auto()) @map("_id") @db.ObjectId
     type            String
@@ -245,12 +233,13 @@ model Job {
 }
 
 model JobApplication {
-    id     String          @id @default(auto()) @map("_id") @db.ObjectId
-    status ApplicantStatus @default(PENDING)
-    job    Job             @relation(fields: [jobId], references: [id])
-    user   User            @relation(fields: [userId], references: [id])
-    jobId  String          @db.ObjectId
-    userId String          @db.ObjectId
+    id        String          @id @default(auto()) @map("_id") @db.ObjectId
+    status    ApplicantStatus @default(PENDING)
+    appliedAt DateTime        @default(now())
+    job       Job             @relation(fields: [jobId], references: [id])
+    user      User            @relation(fields: [userId], references: [id])
+    jobId     String          @db.ObjectId
+    userId    String          @db.ObjectId
 
     @@unique([userId, jobId])
 }
@@ -258,6 +247,7 @@ model JobApplication {
 enum ApplicantStatus {
     HIRED
     PENDING
+    REJECTED
 }
 
 enum Gender {
@@ -269,16 +259,6 @@ enum ChargeTime {
     Daily
     Weekly
     Monthly
-}
-
-enum Weekday {
-    Sunday
-    Monday
-    Tuesday
-    Wednesday
-    Thursday
-    Friday
-    Saturday
 }
 
 type File {

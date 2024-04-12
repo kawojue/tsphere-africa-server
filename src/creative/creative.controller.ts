@@ -10,7 +10,6 @@ import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { CreativeService } from './creative.service'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { CreativePersonalInfoDto } from './dto/personal-info.dto'
-import { CreativeRatesAvailabilityDto } from './dto/rates-availability.dto'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 
 @ApiBearerAuth()
@@ -44,15 +43,5 @@ export class CreativeController {
     @Body() { bio }: BioDto,
   ) {
     return await this.creativeService.bio(res, bio, req.user)
-  }
-
-  @Role('creative')
-  @Put('rates-availability')
-  async ratesAndAvailability(
-    @Res() res: Response,
-    @Req() req: IRequest,
-    @Body() body: CreativeRatesAvailabilityDto,
-  ) {
-    return await this.creativeService.ratesAndAvailability(res, req.user, body)
   }
 }

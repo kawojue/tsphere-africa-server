@@ -197,7 +197,7 @@ export class JobService {
             limit = Number(limit)
             const offset = (page - 1) * limit
 
-            let jobs = []
+            let jobs: Job[] = []
 
             if (userId) {
                 const user = await this.prisma.user.findUnique({

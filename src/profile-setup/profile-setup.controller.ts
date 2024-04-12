@@ -13,6 +13,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ProfileSetupService } from './profile-setup.service'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { RateAndAvailabilityDto } from './dto/rate-availability.dto'
 
 @ApiTags("Profile Setup")
 @ApiBearerAuth()
@@ -96,6 +97,9 @@ export class ProfileSetupController {
     return await this.profileSetupService.manageBankDetails(res, req.user, bankDetails)
   }
 
+  @ApiOperation({
+    summary: 'The formdata key for the attachments should be attachments'
+  })
   @Role(UserRole.talent, UserRole.creative)
   @Put('/skills')
   @UseInterceptors(FileInterceptor('attachments'))
@@ -110,5 +114,15 @@ export class ProfileSetupController {
     @UploadedFiles() attachments: Express.Multer.File[]
   ) {
     return await this.profileSetupService.addSkills(res, req.user, skills, attachments || [])
+  }
+
+  @Role(UserRole.talent, UserRole.creative)
+  @Put('/rate-and-availability')
+  async rateAndAvailability(
+    @Req() req: IRequest,
+    @Res() res: Response,
+    @Body() body: RateAndAvailabilityDto
+  ) {
+    return await this.profileSetupService.rateAndAvailability(res, req.user, body)
   }
 }

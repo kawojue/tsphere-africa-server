@@ -98,18 +98,17 @@ export class UserService {
                     bankDetails: true,
                     experiences: true,
                     skillAttachments: true,
+                    rateAndAvailability: true,
                     creative: {
                         select: {
                             bio: true,
                             personalInfo: true,
-                            ratesAndAvailability: true,
                         }
                     },
                     talent: {
                         select: {
                             bioStats: true,
                             personalInfo: true,
-                            ratesAndAvailability: true,
                         }
                     }
                 }

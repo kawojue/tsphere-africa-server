@@ -10,7 +10,6 @@ import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { TalentBioStatsDto } from './dto/bio-stats.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { TalentPersonalInfoDto } from './dto/personal-info.dto'
-import { TalentRatesAvailabilityDto } from './dto/rates-availability.dto'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 
 @ApiTags('Talent')
@@ -44,15 +43,5 @@ export class TalentController {
     @Body() bio: TalentBioStatsDto,
   ) {
     return await this.talentService.bioStats(res, bio, req.user)
-  }
-
-  @Role('talent')
-  @Put('rates-availability')
-  async ratesAndAvailability(
-    @Res() res: Response,
-    @Req() req: IRequest,
-    @Body() body: TalentRatesAvailabilityDto,
-  ) {
-    return await this.talentService.ratesAndAvailability(res, req.user, body)
   }
 }
