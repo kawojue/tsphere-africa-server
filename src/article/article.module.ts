@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common'
 import { AwsService } from 'lib/aws.service'
-import { BlogService } from './blog.service'
 import { SendRes } from 'lib/sendRes.service'
-import { MiscService } from 'lib/misc.service'
 import { JwtModule } from 'src/jwt/jwt.module'
+import { MiscService } from 'lib/misc.service'
 import { PassportModule } from '@nestjs/passport'
-import { BlogController } from './blog.controller'
 import { PrismaService } from 'lib/prisma.service'
+import { ArticleService } from './article.service'
+import { ArticleController } from './article.controller'
 
 @Module({
   imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule],
-  controllers: [BlogController],
-  providers: [BlogService, SendRes, MiscService, PrismaService, AwsService],
+  controllers: [ArticleController],
+  providers: [ArticleService, MiscService, AwsService, PrismaService, SendRes],
 })
-export class BlogModule { }
+export class ArticleModule { }

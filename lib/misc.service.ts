@@ -34,6 +34,23 @@ export class MiscService {
         }
     }
 
+    async calculateReadingTime(content: string) {
+        const base64Pattern: RegExp = /data:image\/[^]+base64[^'"]*/g
+        const cleanedContent: string = content.replace(base64Pattern, '')
+        const words: string[] = cleanedContent.split(/\s+/).filter(word => word !== '')
+        const wordCount: number = words.length
+        const wordPerMinute = 200 as const
+        const readingTime: number = Math.ceil(wordCount / wordPerMinute)
+
+        if (readingTime <= 1) {
+            return '1 Min Read'
+        } else if (readingTime >= 60) {
+            return `${Math.round(readingTime / 60)} Hr Read`
+        } else {
+            return `${readingTime} Mins Read`
+        }
+    }
+
     async handleServerError(res: Response, err?: any, msg?: string) {
         console.error(err)
         return this.response.sendError(res, StatusCodes.InternalServerError, msg || 'Something went wrong')

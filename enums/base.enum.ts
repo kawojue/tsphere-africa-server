@@ -20,3 +20,9 @@ export enum SortUser {
   date = "date",
   name = "name"
 }
+
+export enum ArticleStatus {
+  all = "all",
+  pending = "pending",
+  approved = "approved"
+}

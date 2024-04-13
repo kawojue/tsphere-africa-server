@@ -90,7 +90,6 @@ export class JobController {
     return await this.jobService.getJob(res, jobId)
   }
 
-
   @Get('/job-applicants/:jobId')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
