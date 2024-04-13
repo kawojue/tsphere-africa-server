@@ -47,13 +47,13 @@ export class AppModule implements NestModule {
     consumer
       .apply(CustomAuthMiddlware)
       .forRoutes(
-        { path: 'job/job-list', method: RequestMethod.GET }
+        { path: 'job/job-list', method: RequestMethod.GET },
+        { path: 'article/fetch', method: RequestMethod.GET },
       )
 
     consumer
       .apply(ArticleMiddlware)
       .forRoutes(
-        { path: 'article/fetch', method: RequestMethod.GET },
         { path: 'article/fetch/:articleId', method: RequestMethod.GET }
       )
   }
