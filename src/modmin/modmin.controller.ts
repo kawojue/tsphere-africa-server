@@ -35,6 +35,14 @@ export class ModminController {
     return await this.modminService.analytics(res, query)
   }
 
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('/article/analytics')
+  async articleAnalytics(@Res() res: Response,) {
+    return await this.modminService.articleAnalytics(res)
+  }
+
   @Get('/user/totggle-suspension/:userId')
   @ApiBearerAuth()
   @Role(Roles.admin)

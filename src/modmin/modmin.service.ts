@@ -301,4 +301,27 @@ export class ModminService {
             this.misc.handleServerError(res, err, "Error caching chart")
         }
     }
+
+    async articleAnalytics(res: Response) {
+        try {
+            const overallEngagements = await this.prisma.article.aggregate({
+                _sum: {
+                    views: true,
+                    shares: true,
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: {
+                    overallViewsCount: overallEngagements._sum.views,
+                    overallSharesCount: overallEngagements._sum.shares,
+                    overallLikesCount: await this.prisma.like.count(),
+                    overallCommentsCount: await this.prisma.comment.count(),
+                    overallArticlesCount: await this.prisma.article.count(),
+                }
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
 }
