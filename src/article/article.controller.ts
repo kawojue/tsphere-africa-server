@@ -119,7 +119,7 @@ export class ArticleController {
     return await this.articleService.fetchComments(res, articleId, query)
   }
 
-  @Get('/shares/:articleId')
+  @Get('/share/:articleId')
   async incrementShares(
     @Req() req: Request,
     @Res() res: Response,
