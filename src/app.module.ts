@@ -18,9 +18,9 @@ import { ArticleModule } from './article/article.module'
 import { EncryptionService } from 'lib/encryption.service'
 import { CreativeModule } from './creative/creative.module'
 import { CustomAuthMiddlware } from './middlewares/auth.middleware'
+import { ArticleMiddlware } from './middlewares/article.middleware'
 import { ProfileSetupModule } from './profile-setup/profile-setup.module'
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common'
-import { ArticleMiddlware } from './middlewares/article.middleware'
 
 @Module({
   imports: [

@@ -114,6 +114,7 @@ export class JobService {
                 where: { id: jobId },
                 data: { status: 'APPROVED', approvedAt: new Date() }
             })
+
             this.response.sendSuccess(res, StatusCodes.OK, { message: "Job removed successfully" })
         } catch (err) {
             this.misc.handleServerError(res, err)
@@ -233,23 +234,22 @@ export class JobService {
 
                 if (user) {
                     const personalInfo = role === "creative" ? user.creative?.personalInfo : user.talent?.personalInfo
-                    const bio = role === "creative" ? user.creative?.bio : user.talent?.bioStats.bio
+                    const bio = role === "creative" ? user.creative?.bio : user.talent?.bioStats?.bio
 
                     if (personalInfo && bio) {
                         jobs = await this.prisma.job.findMany({
                             where: {
                                 status: 'APPROVED',
                                 OR: [
-                                    { gender: { equals: personalInfo.gender } },
-                                    { role: { contains: user.role || '', mode: 'insensitive' } },
-                                    { role: { contains: user.skill || '', mode: 'insensitive' } },
+                                    { role: { contains: user?.role || '', mode: 'insensitive' } },
+                                    { role: { contains: user?.skill || '', mode: 'insensitive' } },
                                     { requirement: { contains: bio || '', mode: 'insensitive' } },
                                     { description: { contains: bio || '', mode: 'insensitive' } },
-                                    { requirement: { contains: user.role || '', mode: 'insensitive' } },
-                                    { description: { contains: user.skill || '', mode: 'insensitive' } },
-                                    { location: { contains: personalInfo.state || '', mode: 'insensitive' } },
-                                    { location: { contains: personalInfo.country || '', mode: 'insensitive' } },
-                                    { location: { contains: personalInfo.localGovt || '', mode: 'insensitive' } },
+                                    { requirement: { contains: user?.role || '', mode: 'insensitive' } },
+                                    { description: { contains: user?.skill || '', mode: 'insensitive' } },
+                                    { location: { contains: personalInfo?.state || '', mode: 'insensitive' } },
+                                    { location: { contains: personalInfo?.country || '', mode: 'insensitive' } },
+                                    { location: { contains: personalInfo?.localGovt || '', mode: 'insensitive' } },
                                 ]
                             },
                             orderBy: { approvedAt: 'desc' },
@@ -258,7 +258,9 @@ export class JobService {
                         })
                     }
                 }
-            } else if (search) {
+            }
+
+            if (jobs.length === 0 || search) {
                 jobs = await this.prisma.job.findMany({
                     where: {
                         status: 'APPROVED',
@@ -274,13 +276,6 @@ export class JobService {
                             { description: { contains: search, mode: 'insensitive' } },
                         ]
                     },
-                    orderBy: { approvedAt: 'desc' },
-                    skip: offset,
-                    take: limit,
-                })
-            } else {
-                jobs = await this.prisma.job.findMany({
-                    where: { status: 'APPROVED' },
                     orderBy: { approvedAt: 'desc' },
                     skip: offset,
                     take: limit,
