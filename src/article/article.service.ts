@@ -490,12 +490,42 @@ export class ArticleService {
         const offset = (Number(page) - 1) * limit
 
         this.response.sendSuccess(res, StatusCodes.OK, {
-            data: await this.prisma.comment.findMany({
-                take: limit,
-                skip: offset,
-                where: { id: articleId },
-                orderBy: { commentedAt: 'desc' }
-            })
+            data: {
+                comments: await this.prisma.comment.findMany({
+                    take: limit,
+                    skip: offset,
+                    where: { id: articleId },
+                    orderBy: { commentedAt: 'desc' }
+                }),
+                totalComments: await this.prisma.comment.count({ where: { id: articleId } })
+            }
+        })
+    }
+
+    async incrementShares(
+        req: Request,
+        res: Response,
+        articleId: string,
+    ) {
+        const article = await this.prisma.article.findUnique({
+            where: { id: articleId }
+        })
+
+        if (!article) {
+            return this.response.sendError(res, StatusCodes.NotFound, 'Article not found')
+        }
+
+        res.on('finish', async () => {
+            const userAgent = req.headers['user-agent'] ?? ''
+
+            if (userAgent) {
+                await this.prisma.article.update({
+                    where: { id: articleId },
+                    data: { shares: { increment: 1 } }
+                })
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, {})
         })
     }
 }

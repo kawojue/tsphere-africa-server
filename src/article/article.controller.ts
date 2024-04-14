@@ -118,4 +118,13 @@ export class ArticleController {
   ) {
     return await this.articleService.fetchComments(res, articleId, query)
   }
+
+  @Get('/shares/:articleId')
+  async incrementShares(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Param('articleId') articleId: string,
+  ) {
+    return await this.articleService.incrementShares(req, res, articleId)
+  }
 }

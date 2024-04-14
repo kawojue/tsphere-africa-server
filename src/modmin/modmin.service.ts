@@ -301,5 +301,4 @@ export class ModminService {
             this.misc.handleServerError(res, err, "Error caching chart")
         }
     }
-
 }
