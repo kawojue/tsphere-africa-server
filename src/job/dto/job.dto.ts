@@ -1,6 +1,6 @@
 import { Gender } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator'
+import { IsEnum, IsOptional, IsString, Matches, MaxLength } from 'class-validator'
 
 export class PostJobDto {
     @ApiProperty({
@@ -25,11 +25,11 @@ export class PostJobDto {
     job_role: string
 
     @ApiProperty({
-        example: '18 - 21 years'
+        example: '18-21'
     })
+    @Matches(/^\d+-\d+$/, { message: 'Playing age must be in the format number-number (e.g., 18-21)' })
     @IsString()
     @IsOptional()
-    @MaxLength(10)
     playingAge: string
 
     @ApiProperty({
@@ -83,5 +83,6 @@ export class PostJobDto {
     @ApiProperty({
         example: "12-15"
     })
+    @Matches(/^\d+-\d+$/, { message: 'Rate must be in the format digit-digit (e.g., 215-317)' })
     rate: string
 }
