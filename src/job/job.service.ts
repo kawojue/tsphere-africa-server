@@ -27,11 +27,16 @@ export class JobService {
     ) {
         try {
             let job: Job
+
+            if (new Date(applicaion_deadline) < new Date()) {
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid deadline date')
+            }
+
             if (role === "admin") {
                 job = await this.prisma.job.create({
                     data: {
+                        role: job_role, app_deadline: new Date(applicaion_deadline),
                         type: job_type, title: job_title, playingAge, rate,
-                        role: job_role, app_deadline: applicaion_deadline,
                         duration: duration ? new Date(duration) : null,
                         gender, requirement, description, experience,
                         approvedAt: new Date(), status: 'APPROVED',
@@ -42,7 +47,7 @@ export class JobService {
                 job = await this.prisma.job.create({
                     data: {
                         role: job_role, type: job_type,
-                        app_deadline: applicaion_deadline,
+                        app_deadline: new Date(applicaion_deadline),
                         title: job_title, playingAge, rate, location,
                         gender, requirement, description, experience,
                         duration: duration ? new Date(duration) : null,
@@ -53,7 +58,7 @@ export class JobService {
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 data: job,
-                message: "Job has been posted"
+                message: `${role === "admin" ? 'Job has been posted' : 'Posted but pending approval'}`
             })
         } catch (err) {
             this.misc.handleServerError(res, err, "Encountered an error while posting job")
@@ -240,6 +245,7 @@ export class JobService {
                         jobs = await this.prisma.job.findMany({
                             where: {
                                 status: 'APPROVED',
+                                app_deadline: { gte: new Date() },
                                 OR: [
                                     { role: { contains: user?.role || '', mode: 'insensitive' } },
                                     { role: { contains: user?.skill || '', mode: 'insensitive' } },
@@ -264,6 +270,7 @@ export class JobService {
                 jobs = await this.prisma.job.findMany({
                     where: {
                         status: 'APPROVED',
+                        app_deadline: { gte: new Date() },
                         OR: [
                             { role: { contains: search, mode: 'insensitive' } },
                             { role: { contains: search, mode: 'insensitive' } },
