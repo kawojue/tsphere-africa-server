@@ -1,6 +1,6 @@
 import { Job } from '@prisma/client'
-import { Request, Response } from 'express'
 import { PostJobDto } from './dto/job.dto'
+import { Request, Response } from 'express'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
@@ -198,7 +198,9 @@ export class JobService {
             const role = req.user?.role
             // @ts-ignore
             const userId = req.user?.sub
-            const offset = (Number(page) - 1) * Number(limit)
+
+            limit = Number(limit)
+            const offset = (Number(page) - 1) * limit
 
             let jobs: Job[] = await this.prisma.job.findMany({
                 where: {
