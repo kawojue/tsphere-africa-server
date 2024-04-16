@@ -437,13 +437,12 @@ export class AuthService {
             })
 
             if (!user) {
-                this.response.sendError(res, StatusCodes.NotFound, 'Invalid email or password')
-                return
+                return this.response.sendError(res, StatusCodes.NotFound, 'Invalid email or password')
             }
 
             const isMatch = await this.encryption.compareAsync(password, user.password)
             if (!isMatch) {
-                this.response.sendError(res, StatusCodes.Unauthorized, 'Incorrect Password')
+                return this.response.sendError(res, StatusCodes.Unauthorized, 'Incorrect Password')
             }
 
             if (!user.email_verified) {
@@ -570,7 +569,7 @@ export class AuthService {
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 message: "Profile photo has been updated successfully",
-                data: { url }
+                data: { data: { url } }
             })
         } catch (err) {
             this.misc.handleServerError(res, err)
