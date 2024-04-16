@@ -515,6 +515,8 @@ export class ArticleService {
             return this.response.sendError(res, StatusCodes.NotFound, 'Article not found')
         }
 
+        this.response.sendSuccess(res, StatusCodes.OK, {})
+
         res.on('finish', async () => {
             const userAgent = req.headers['user-agent'] ?? ''
 
@@ -524,8 +526,6 @@ export class ArticleService {
                     data: { shares: { increment: 1 } }
                 })
             }
-
-            this.response.sendSuccess(res, StatusCodes.OK, {})
         })
     }
 }
