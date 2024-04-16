@@ -198,95 +198,63 @@ export class JobService {
             const role = req.user?.role
             // @ts-ignore
             const userId = req.user?.sub
+            const offset = (Number(page) - 1) * Number(limit)
 
-            page = Number(page)
-            limit = Number(limit)
-            const offset = (page - 1) * limit
-
-            let jobs: Job[] = []
+            let jobs: Job[] = await this.prisma.job.findMany({
+                where: {
+                    status: 'APPROVED',
+                    app_deadline: { gte: new Date() },
+                    OR: [
+                        { rate: { contains: search } },
+                        { playingAge: { contains: search } },
+                        { role: { contains: search, mode: 'insensitive' } },
+                        { location: { contains: search, mode: 'insensitive' } },
+                        { experience: { contains: search, mode: 'insensitive' } },
+                        { requirement: { contains: search, mode: 'insensitive' } },
+                        { description: { contains: search, mode: 'insensitive' } }
+                    ]
+                },
+                orderBy: { approvedAt: 'desc' },
+                skip: offset,
+                take: limit,
+            })
 
             if (userId) {
                 const user = await this.prisma.user.findUnique({
                     where: { id: userId },
                     include: {
-                        talent: {
-                            include: {
-                                bioStats: true,
-                                personalInfo: {
-                                    select: {
-                                        state: true,
-                                        gender: true,
-                                        country: true,
-                                        localGovt: true,
-                                    }
-                                },
-                            }
-                        },
-                        creative: {
-                            include: {
-                                personalInfo: {
-                                    select: {
-                                        state: true,
-                                        gender: true,
-                                        country: true,
-                                        localGovt: true,
-                                    }
-                                }
-                            }
-                        }
+                        talent: { include: { bioStats: true, personalInfo: true } },
+                        creative: { include: { personalInfo: true } }
                     }
                 })
 
                 if (user) {
-                    const personalInfo = role === "creative" ? user.creative?.personalInfo : user.talent?.personalInfo
-                    const bio = role === "creative" ? user.creative?.bio : user.talent?.bioStats?.bio
+                    const personalInfo = user[role]?.personalInfo
+                    const bio = user[role]?.bioStats?.bio
 
                     if (personalInfo && bio) {
-                        jobs = await this.prisma.job.findMany({
+                        const recommendedJobs = await this.prisma.job.findMany({
                             where: {
                                 status: 'APPROVED',
                                 app_deadline: { gte: new Date() },
                                 OR: [
-                                    { role: { contains: user?.role || '', mode: 'insensitive' } },
-                                    { role: { contains: user?.skill || '', mode: 'insensitive' } },
-                                    { requirement: { contains: bio || '', mode: 'insensitive' } },
-                                    { description: { contains: bio || '', mode: 'insensitive' } },
-                                    { requirement: { contains: user?.role || '', mode: 'insensitive' } },
-                                    { description: { contains: user?.skill || '', mode: 'insensitive' } },
-                                    { location: { contains: personalInfo?.state || '', mode: 'insensitive' } },
-                                    { location: { contains: personalInfo?.country || '', mode: 'insensitive' } },
-                                    { location: { contains: personalInfo?.localGovt || '', mode: 'insensitive' } },
+                                    { role: { contains: user.role || '', mode: 'insensitive' } },
+                                    { requirement: { contains: bio, mode: 'insensitive' } },
+                                    { description: { contains: bio, mode: 'insensitive' } },
+                                    { location: { contains: personalInfo.state || '', mode: 'insensitive' } },
+                                    { location: { contains: personalInfo.country || '', mode: 'insensitive' } },
+                                    { location: { contains: personalInfo.localGovt || '', mode: 'insensitive' } }
                                 ]
                             },
                             orderBy: { approvedAt: 'desc' },
                             skip: offset,
                             take: limit,
+                            distinct: ['id']
                         })
+
+                        jobs = recommendedJobs.concat(jobs).slice(0, limit)
                     }
                 }
-            }
-
-            if (jobs.length === 0 || search) {
-                jobs = await this.prisma.job.findMany({
-                    where: {
-                        status: 'APPROVED',
-                        app_deadline: { gte: new Date() },
-                        OR: [
-                            { role: { contains: search, mode: 'insensitive' } },
-                            { role: { contains: search, mode: 'insensitive' } },
-                            { location: { contains: search, mode: 'insensitive' } },
-                            { location: { contains: search, mode: 'insensitive' } },
-                            { location: { contains: search, mode: 'insensitive' } },
-                            { requirement: { contains: search, mode: 'insensitive' } },
-                            { description: { contains: search, mode: 'insensitive' } },
-                            { requirement: { contains: search, mode: 'insensitive' } },
-                            { description: { contains: search, mode: 'insensitive' } },
-                        ]
-                    },
-                    orderBy: { approvedAt: 'desc' },
-                    skip: offset,
-                    take: limit,
-                })
             }
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: jobs })
@@ -294,7 +262,6 @@ export class JobService {
             this.misc.handleServerError(res, err, "Error listing jobs")
         }
     }
-
 
     async getJob(res: Response, jobId: string) {
         const job = await this.prisma.job.findUnique({
