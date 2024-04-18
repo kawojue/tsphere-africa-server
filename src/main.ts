@@ -20,7 +20,7 @@ async function bootstrap() {
       'https://api.talentsphereafrica.com',
     ],
     credentials: true,
-    optionsSuccessStatus: 2000,
+    optionsSuccessStatus: 200,
     methods: 'GET,PATCH,POST,PUT,DELETE',
   })
   app.use(express.json({ limit: 50 << 20 }))
