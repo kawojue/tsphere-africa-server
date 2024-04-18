@@ -43,12 +43,12 @@ export class UserService {
                 select: {
                     id: true,
                     role: true,
-                    skill: true,
                     email: true,
                     avatar: true,
                     username: true,
                     lastname: true,
                     firstname: true,
+                    primarySkill: true,
                     creative: {
                         select: {
                             bio: true,
@@ -86,7 +86,6 @@ export class UserService {
                 select: {
                     id: true,
                     role: true,
-                    skill: true,
                     email: true,
                     skills: true,
                     avatar: true,
@@ -97,6 +96,7 @@ export class UserService {
                     createdAt: true,
                     bankDetails: true,
                     experiences: true,
+                    primarySkill: true,
                     skillAttachments: true,
                     rateAndAvailability: true,
                     creative: {

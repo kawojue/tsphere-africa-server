@@ -314,12 +314,12 @@ export class JobService {
                         user: {
                             select: {
                                 role: true,
-                                skill: true,
                                 email: true,
                                 avatar: true,
                                 username: true,
                                 lastname: true,
                                 firstname: true,
+                                primarySkill: true,
                                 email_verified: true,
                                 rateAndAvailability: true,
                             }
@@ -341,12 +341,12 @@ export class JobService {
                 user: {
                     select: {
                         role: true,
-                        skill: true,
                         email: true,
                         avatar: true,
                         username: true,
                         lastname: true,
                         firstname: true,
+                        primarySkill: true,
                         email_verified: true,
                         rateAndAvailability: true,
                     }

@@ -286,7 +286,7 @@ export class ProfileSetupService {
                 try {
                     const results = await Promise.all(attachments.map(async (file) => {
                         const result = validateFile(file, 10 << 20, 'jpg', 'png')
-                        if (result.status) {
+                        if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
@@ -332,35 +332,27 @@ export class ProfileSetupService {
                         userId: user.id
                     },
                     create: {
+                        charge: skill.charge,
                         category: skill.category,
                         subSkills: skill.subSkills,
-                        yearsOfExperience: skill.yearsOfExperience,
-                        charge: skill.charge,
                         chargeTime: skill.chargeTime,
-                        user: {
-                            connect: {
-                                id: user.id
-                            }
-                        }
+                        yearsOfExperience: skill.yearsOfExperience,
+                        user: { connect: { id: user.id } }
                     },
                     update: {
+                        charge: skill.charge,
                         category: skill.category,
                         subSkills: skill.subSkills,
-                        yearsOfExperience: skill.yearsOfExperience,
-                        charge: skill.charge,
                         chargeTime: skill.chargeTime,
+                        yearsOfExperience: skill.yearsOfExperience,
                     }
                 })
                 newUserSkills.push(newSkill)
             }
 
             await this.prisma.user.update({
-                where: {
-                    id: user.id
-                },
-                data: {
-                    skillAttachments: filesArray
-                }
+                where: { id: user.id },
+                data: { skillAttachments: filesArray }
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: newUserSkills })
@@ -394,8 +386,9 @@ export class ProfileSetupService {
             const rates = await this.prisma.rateAndAvailability.upsert({
                 where: { userId: sub },
                 create: {
-                    charge, chargeTime, weekdays,
-                    availability, user: { connect: { id: sub } }
+                    weekdays, chargeTime,
+                    availability, charge,
+                    user: { connect: { id: sub } }
                 },
                 update: {
                     availability, charge,

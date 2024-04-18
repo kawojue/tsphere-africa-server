@@ -142,9 +142,10 @@ export class AuthService {
                 data: {
                     under18: true,
                     role, password,
+                    email, username,
+                    primarySkill: skill,
                     lastname: last_name,
                     firstname: first_name,
-                    email, username, skill,
                 }
             })
 
@@ -220,8 +221,9 @@ export class AuthService {
 
             const newUser = await this.prisma.user.create({
                 data: {
+                    username,
                     under18: false,
-                    skill, username,
+                    primarySkill: skill,
                     lastname: last_name,
                     firstname: first_name,
                     password, email, role,
