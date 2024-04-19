@@ -395,12 +395,15 @@ export class ArticleService {
     }
 
     async addCommentOnArticle(
+        req: Request,
         res: Response,
         articleId: string,
-        { sub }: ExpressUser,
         { content }: CommentDto,
     ) {
         try {
+            // @ts-ignore
+            const sub = req.user?.sub
+
             let comment: Comment
 
             if (sub) {

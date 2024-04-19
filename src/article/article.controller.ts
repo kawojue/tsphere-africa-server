@@ -88,14 +88,13 @@ export class ArticleController {
 
   @ApiBearerAuth()
   @Post('/comment/:articleId')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   async addCommentOnArticle(
-    @Req() req: IRequest,
+    @Req() req: Request,
     @Res() res: Response,
     @Body() body: CommentDto,
     @Param('articleId') articleId: string
   ) {
-    return await this.articleService.addCommentOnArticle(res, articleId, req.user, body)
+    return await this.articleService.addCommentOnArticle(req, res, articleId, body)
   }
 
   @ApiBearerAuth()

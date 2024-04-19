@@ -54,7 +54,8 @@ export class AppModule implements NestModule {
     consumer
       .apply(ArticleMiddlware)
       .forRoutes(
-        { path: 'article/fetch/:articleId', method: RequestMethod.GET }
+        { path: 'article/fetch/:articleId', method: RequestMethod.GET },
+        { path: '/comment/:articleId', method: RequestMethod.POST },
       )
   }
 }
