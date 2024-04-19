@@ -6,11 +6,15 @@ import { PrismaService } from 'lib/prisma.service'
 import { NextFunction, Request, Response } from 'express'
 
 export class ArticleMiddlware implements NestMiddleware {
-    constructor(
-        private readonly response: SendRes,
-        private readonly prisma: PrismaService,
-        private readonly jwtService: JwtService
-    ) { }
+    private response: SendRes
+    private prisma: PrismaService
+    private jwtService: JwtService
+
+    constructor() {
+        this.response = new SendRes()
+        this.prisma = new PrismaService()
+        this.jwtService = new JwtService()
+    }
 
     private async validateAndDecodeToken(token: string) {
         try {
@@ -22,10 +26,14 @@ export class ArticleMiddlware implements NestMiddleware {
         }
     }
 
-    async use(req: Request, res: Response, next: NextFunction) {
-        const article = await this.prisma.article.findUnique({
-            where: { id: req.params?.articleId }
+    private async retrieveArticle(articleId: string) {
+        return await this.prisma.article.findUnique({
+            where: { id: articleId }
         })
+    }
+
+    async use(req: Request, res: Response, next: NextFunction) {
+        const article = await this.retrieveArticle(req.params?.articleId)
 
         if (!article) {
             return this.response.sendError(res, StatusCodes.NotFound, "Article not found")
@@ -39,6 +47,7 @@ export class ArticleMiddlware implements NestMiddleware {
             const token = authHeader.split(' ')[1]
             if (token) {
                 const decodedToken = await this.validateAndDecodeToken(token)
+
                 if (decodedToken) {
                     sub = decodedToken.sub
                     role = decodedToken.role
@@ -46,18 +55,20 @@ export class ArticleMiddlware implements NestMiddleware {
             }
         }
 
-        const transaction = await this.prisma.$transaction([
-            this.prisma.article.update({
-                where: { id: req.params.articleId },
-                data: {
-                    views: { increment: role !== 'admin' && article.authorId !== sub ? 1 : 0 }
-                }
-            })
-        ])
+        if ((!role || !sub) || (role && (article.adminId !== sub && article.authorId !== sub))) {
+            const transaction = await this.prisma.$transaction([
+                this.prisma.article.update({
+                    where: { id: req.params.articleId },
+                    data: {
+                        views: { increment: 1 }
+                    }
+                })
+            ])
 
-        if (transaction && !Array.isArray(transaction)) {
-            console.error("Transaction error:", transaction)
-            return this.response.sendError(res, StatusCodes.InternalServerError, "Error updating view count")
+            if (transaction && !Array.isArray(transaction)) {
+                console.error("Transaction error:", transaction)
+                return this.response.sendError(res, StatusCodes.InternalServerError, "Error updating view count")
+            }
         }
 
         if (sub) {

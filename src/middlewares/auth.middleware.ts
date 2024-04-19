@@ -3,7 +3,11 @@ import { NestMiddleware } from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express'
 
 export class CustomAuthMiddlware implements NestMiddleware {
-    constructor(private readonly jwtService: JwtService) { }
+    private jwtService: JwtService
+
+    constructor() {
+        this.jwtService = new JwtService()
+    }
 
     private async validateAndDecodeToken(token: string) {
         try {

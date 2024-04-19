@@ -26,21 +26,20 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
   imports: [
     AuthModule,
     FileModule,
+    JobModule,
     UserModule,
     TalentModule,
     ModminModule,
+    ArticleModule,
+    ContactModule,
     CreativeModule,
     ProfileSetupModule,
-    JobModule,
-    ContactModule,
-    ArticleModule,
   ],
   controllers: [AppController],
   providers: [
-    AppService, MiscService, PlunkService, AwsService, SendRes,
-    JwtService, PrismaService, BrevoService, EncryptionService,
-  ],
-  exports: [PrismaService]
+    AppService, PrismaService, MiscService, PlunkService, SendRes,
+    JwtService, BrevoService, EncryptionService, AwsService,
+  ]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
@@ -55,7 +54,7 @@ export class AppModule implements NestModule {
       .apply(ArticleMiddlware)
       .forRoutes(
         { path: 'article/fetch/:articleId', method: RequestMethod.GET },
-        { path: '/comment/:articleId', method: RequestMethod.POST },
+        { path: 'comment/:articleId', method: RequestMethod.POST },
       )
   }
 }
