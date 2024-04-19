@@ -46,11 +46,18 @@ export class ArticleMiddlware implements NestMiddleware {
             }
         }
 
-        if (role !== 'admin' && article.authorId !== sub) {
-            await this.prisma.article.update({
+        const transaction = await this.prisma.$transaction([
+            this.prisma.article.update({
                 where: { id: req.params.articleId },
-                data: { views: { increment: 1 } }
+                data: {
+                    views: { increment: role !== 'admin' && article.authorId !== sub ? 1 : 0 }
+                }
             })
+        ])
+
+        if (transaction && !Array.isArray(transaction)) {
+            console.error("Transaction error:", transaction)
+            return this.response.sendError(res, StatusCodes.InternalServerError, "Error updating view count")
         }
 
         if (sub) {
