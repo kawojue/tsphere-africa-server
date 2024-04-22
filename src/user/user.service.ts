@@ -73,6 +73,7 @@ export class UserService {
             this.misc.handleServerError(res, err)
         }
     }
+
     async fetchProfile(
         res: Response,
         { role, sub }: ExpressUser,
@@ -99,18 +100,16 @@ export class UserService {
                     primarySkill: true,
                     skillAttachments: true,
                     rateAndAvailability: true,
-                    creative: {
-                        select: {
-                            bio: true,
-                            personalInfo: true,
-                        }
-                    },
-                    talent: {
-                        select: {
+                    [role]: {
+                        select: role === "talent" ? {
                             bioStats: true,
                             personalInfo: true,
-                        }
-                    }
+                        } : role === "creative" ? {
+                            bio: true,
+                            personalInfo: true,
+                            certifications: true,
+                        } : {}
+                    },
                 }
             })
 

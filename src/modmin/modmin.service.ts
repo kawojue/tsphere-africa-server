@@ -343,4 +343,69 @@ export class ModminService {
             this.misc.handleServerError(res, err)
         }
     }
+
+    async fetchUserProfile(res: Response, userId: string) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId, },
+                select: {
+                    id: true,
+                    role: true,
+                    email: true,
+                    skills: true,
+                    avatar: true,
+                    username: true,
+                    lastname: true,
+                    firstname: true,
+                    portfolio: true,
+                    createdAt: true,
+                    bankDetails: true,
+                    experiences: true,
+                    primarySkill: true,
+                    skillAttachments: true,
+                    rateAndAvailability: true,
+                    creative: {
+                        select: {
+                            bio: true,
+                            personalInfo: true,
+                            certifications: true,
+                        }
+                    },
+                    talent: {
+                        select: {
+                            bioStats: true,
+                            personalInfo: true,
+                        }
+                    },
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: user })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async toggleUserVerification(res: Response, userId: string) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId }
+            })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, "User not found")
+            }
+
+            const updatedUser = await this.prisma.user.update({
+                where: { id: userId },
+                data: { verified: !!user.verified }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                message: updatedUser.verified ? 'User is now verified' : 'Verifiction has been removed'
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
 }

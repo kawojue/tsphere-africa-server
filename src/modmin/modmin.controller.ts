@@ -7,7 +7,7 @@ import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
 import { AnalyticsDto, FetchUserDto, UserSuspensionDto } from './dto/user.dto'
-import { Body, Controller, Get, Param, Post, Query, Res, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common'
 
 @ApiTags('Admin')
 @Controller('modmin')
@@ -55,6 +55,17 @@ export class ModminController {
     return await this.modminService.toggleUserSuspension(res, userId, query)
   }
 
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Patch('/users/toggle-verification/:userId')
+  async toggleUserVerification(
+    @Res() res: Response,
+    @Param('userId') userId: string,
+  ) {
+    return await this.modminService.toggleUserVerification(res, userId)
+  }
+
   @Get('/users')
   @ApiBearerAuth()
   @Role(Roles.admin)
@@ -64,6 +75,17 @@ export class ModminController {
     @Query() query: FetchUserDto
   ) {
     return await this.modminService.fetchUsers(res, query)
+  }
+
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @Get('/users/user/:userId')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async fetchUserProfile(
+    @Res() res: Response,
+    @Param('userId') userId: string,
+  ) {
+    return await this.modminService.fetchUserProfile(res, userId)
   }
 
   @ApiBearerAuth()
