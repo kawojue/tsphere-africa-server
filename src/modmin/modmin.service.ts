@@ -1,4 +1,5 @@
 import { Response } from 'express'
+import { $Enums } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
@@ -7,7 +8,7 @@ import { titleName } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
 import { EncryptionService } from 'lib/encryption.service'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
-import { AnalyticsDto, SortUserDto, UserSuspensionDto } from './dto/user.dto'
+import { AnalyticsDto, FetchUserDto, UserSuspensionDto } from './dto/user.dto'
 
 @Injectable()
 export class ModminService {
@@ -93,23 +94,9 @@ export class ModminService {
         try {
             let total: number
 
-            if (q === "talent") {
+            if (q === "talent" || q === "creative" || q === "client") {
                 total = await this.prisma.user.count({
-                    where: {
-                        role: 'talent'
-                    }
-                })
-            } else if (q === "creative") {
-                total = await this.prisma.user.count({
-                    where: {
-                        role: 'creative'
-                    }
-                })
-            } else if (q === "client") {
-                total = await this.prisma.user.count({
-                    where: {
-                        role: 'client'
-                    }
+                    where: { role: q }
                 })
             } else if (q === "job") {
                 total = await this.prisma.job.count()
@@ -132,9 +119,7 @@ export class ModminService {
     ) {
         try {
             const user = await this.prisma.user.findUnique({
-                where: {
-                    id: userId
-                }
+                where: { id: userId }
             })
 
             if (!user) {
@@ -142,12 +127,8 @@ export class ModminService {
             }
 
             await this.prisma.user.update({
-                where: {
-                    id: userId
-                },
-                data: {
-                    userStatus: action === 'active' ? 'active' : 'suspended'
-                }
+                where: { id: userId },
+                data: { userStatus: action }
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { message: "Successful" })
@@ -156,12 +137,30 @@ export class ModminService {
         }
     }
 
-    async fetchAllUsers(
+    async fetchUsers(
         res: Response,
-        { q, s = "", page = 1, limit = 50 }: SortUserDto,
+        { q, s = "", page = 1, limit = 200, type }: FetchUserDto,
     ) {
         try {
-            let users
+            let users: {
+                firstname: string
+                username: string
+                lastname: string
+                email: string
+                id: string
+                avatar: {
+                    idx: string
+                    url: string
+                    path: string
+                    type: string
+                }
+                role: $Enums.Role
+                createdAt: Date
+                skill: never
+                primarySkills: never
+            }[]
+
+            let total: number
 
             page = Number(page)
             limit = Number(limit)
@@ -204,11 +203,7 @@ export class ModminService {
                 lastname: true
                 firstname: true,
                 createdAt: true,
-                skills: {
-                    select: {
-                        subSkills: true
-                    }
-                }
+                primarySkills: true,
             } = {
                 id: true,
                 role: true,
@@ -219,37 +214,61 @@ export class ModminService {
                 lastname: true,
                 firstname: true,
                 createdAt: true,
-                skills: {
-                    select: {
-                        subSkills: true
-                    }
-                },
+                primarySkills: true,
             }
 
-            if (q === "date") {
+            const orderBy: {
+                createdAt: "desc"
+            } | ({
+                firstname: "asc"
+            } | {
+                lastname: "asc"
+            })[] = q === "date" ? {
+                createdAt: 'desc'
+            } : [
+                    { firstname: 'asc' },
+                    { lastname: 'asc' },
+                ]
+
+            if (type === "verified") {
                 users = await this.prisma.user.findMany({
-                    where: { OR },
-                    orderBy: {
-                        createdAt: 'desc'
+                    where: {
+                        verified: true,
+                        OR
                     },
+                    orderBy,
                     take: limit,
                     skip: offset,
                     select,
                 })
+
+                total = await this.prisma.user.count({ where: { verified: true } })
+            } else if (type === "unverified") {
+                users = await this.prisma.user.findMany({
+                    where: {
+                        verified: false,
+                        OR
+                    },
+                    orderBy,
+                    take: limit,
+                    skip: offset,
+                    select,
+                })
+
+                total = await this.prisma.user.count({ where: { verified: false } })
             } else {
                 users = await this.prisma.user.findMany({
                     where: { OR },
-                    orderBy: [
-                        { firstname: 'desc' },
-                        { lastname: 'desc' },
-                    ],
+                    orderBy,
                     take: limit,
                     skip: offset,
                     select,
                 })
+
+                total = await this.prisma.user.count()
             }
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: users })
+            this.response.sendSuccess(res, StatusCodes.OK, { data: { users, total } })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }

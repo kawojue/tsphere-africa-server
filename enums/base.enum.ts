@@ -26,3 +26,9 @@ export enum ArticleStatus {
   pending = "pending",
   approved = "approved"
 }
+
+export enum FetchUser {
+  verified = "verified",
+  unverified = "unverified",
+  all = "all"
+}

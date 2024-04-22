@@ -22,6 +22,7 @@ model User {
     avatar              File?
     portfolio           Portfolio?
     email_verified      Boolean              @default(false)
+    verified            Boolean              @default(false)
     role                Role                 @default(user)
     under18             Boolean
     creative            Creative?
@@ -337,8 +338,8 @@ enum Role {
     user
     admin
     talent
-    creative
     client
+    creative
 }
 
 enum UserStatus {

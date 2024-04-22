@@ -1,6 +1,6 @@
 import { UserStatus } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
-import { Analytics, SortUser } from 'enums/base.enum'
+import { Analytics, SortUser, FetchUser } from 'enums/base.enum'
 import { IsEnum, IsOptional } from 'class-validator'
 
 export class UserSuspensionDto {
@@ -48,4 +48,15 @@ export class SortUserDto extends SearchDto {
     @IsEnum(SortUser)
     @IsOptional()
     q: SortUser
+}
+
+
+
+export class FetchUserDto extends SortUserDto {
+    @ApiProperty({
+        enum: FetchUser
+    })
+    @IsOptional()
+    @IsEnum(FetchUser)
+    type: FetchUser
 }

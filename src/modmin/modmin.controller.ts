@@ -6,7 +6,7 @@ import { ModminService } from './modmin.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
-import { AnalyticsDto, SortUserDto, UserSuspensionDto } from './dto/user.dto'
+import { AnalyticsDto, FetchUserDto, UserSuspensionDto } from './dto/user.dto'
 import { Body, Controller, Get, Param, Post, Query, Res, UseGuards } from '@nestjs/common'
 
 @ApiTags('Admin')
@@ -61,9 +61,9 @@ export class ModminController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async fetchAllUsers(
     @Res() res: Response,
-    @Query() query: SortUserDto
+    @Query() query: FetchUserDto
   ) {
-    return await this.modminService.fetchAllUsers(res, query)
+    return await this.modminService.fetchUsers(res, query)
   }
 
   @ApiBearerAuth()
