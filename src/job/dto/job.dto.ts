@@ -85,4 +85,9 @@ export class PostJobDto {
     })
     @Matches(/^\d+-\d+$/, { message: 'Rate must be in the format digit-digit (e.g., 215-317)' })
     rate: string
+
+    @ApiProperty({
+        type: [File]
+    })
+    attachments?: File
 }

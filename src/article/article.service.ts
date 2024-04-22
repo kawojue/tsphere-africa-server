@@ -46,29 +46,15 @@ export class ArticleService {
                 type: file.mimetype
             }
 
-            let article: Article
-
-            if (role === "admin") {
-                article = await this.prisma.article.create({
-                    data: {
-                        pending_approval: false,
-                        coverPhoto: cover_photo,
-                        title, category, content,
-                        admin: { connect: { id: sub } },
-                        readingTime: await this.misc.calculateReadingTime(content),
-                    }
-                })
-            } else {
-                article = await this.prisma.article.create({
-                    data: {
-                        pending_approval: true,
-                        coverPhoto: cover_photo,
-                        title, category, content,
-                        author: { connect: { id: sub } },
-                        readingTime: await this.misc.calculateReadingTime(content),
-                    }
-                })
-            }
+            const article = await this.prisma.article.create({
+                data: {
+                    pending_approval: role === "admin" ? false : true,
+                    coverPhoto: cover_photo,
+                    title, category, content,
+                    readingTime: await this.misc.calculateReadingTime(content),
+                    [role === "admin" ? 'admin' : 'author']: { connect: { id: sub } },
+                }
+            })
 
             this.response.sendSuccess(res, StatusCodes.Created, {
                 data: article,
@@ -93,7 +79,29 @@ export class ArticleService {
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
-            let articles = []
+            let articles: {
+                id: string
+                title: string
+                category: string
+                views: number
+                shares: number
+                pending_approval: boolean
+                publishedAt: Date
+                approvedAt: Date
+                likes: {
+                    id: string
+                    likedAt: Date
+                    articleId: string
+                    userId: string
+                }[]
+            }[] = []
+
+            const OR: {
+                title: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            }[] = [{ title: { contains: search, mode: 'insensitive' } }]
 
             const select = {
                 id: true,
@@ -112,7 +120,7 @@ export class ArticleService {
                     articles = await this.prisma.article.findMany({
                         where: {
                             pending_approval: false,
-                            OR: [{ title: { contains: search, mode: 'insensitive' } }]
+                            OR
                         },
                         select,
                         take: limit,
@@ -123,7 +131,7 @@ export class ArticleService {
                     articles = await this.prisma.article.findMany({
                         where: {
                             pending_approval: true,
-                            OR: [{ title: { contains: search, mode: 'insensitive' } }]
+                            OR
                         },
                         select,
                         take: limit,
@@ -132,7 +140,7 @@ export class ArticleService {
                     })
                 } else {
                     articles = await this.prisma.article.findMany({
-                        where: { OR: [{ title: { contains: search, mode: 'insensitive' } }] },
+                        where: { OR },
                         select,
                         take: limit,
                         skip: offset,
@@ -143,7 +151,7 @@ export class ArticleService {
                 articles = await this.prisma.article.findMany({
                     where: {
                         pending_approval: false,
-                        OR: [{ title: { contains: search, mode: 'insensitive' } }]
+                        OR
                     },
                     select,
                     take: limit,
@@ -156,7 +164,7 @@ export class ArticleService {
                         where: {
                             authorId: sub,
                             pending_approval: false,
-                            OR: [{ title: { contains: search, mode: 'insensitive' } }]
+                            OR
                         },
                         select,
                         take: limit,
@@ -168,7 +176,7 @@ export class ArticleService {
                         where: {
                             authorId: sub,
                             pending_approval: true,
-                            OR: [{ title: { contains: search, mode: 'insensitive' } }]
+                            OR
                         },
                         select,
                         take: limit,
@@ -179,7 +187,7 @@ export class ArticleService {
                     articles = await this.prisma.article.findMany({
                         where: {
                             authorId: sub,
-                            OR: [{ title: { contains: search, mode: 'insensitive' } }]
+                            OR
                         },
                         select,
                         take: limit,

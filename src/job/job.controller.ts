@@ -1,7 +1,7 @@
 import {
   Body, Controller, Delete, Get, Param,
   Patch, Post, Req, Res, UseGuards, Put,
-  Query,
+  Query, UploadedFiles, UseInterceptors,
 } from '@nestjs/common'
 import { Role } from 'src/role.decorator'
 import { JobService } from './job.service'
@@ -11,6 +11,7 @@ import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
 
 @ApiTags("Job")
@@ -22,12 +23,14 @@ export class JobController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.admin, Roles.client)
+  @UseInterceptors(FileInterceptor('attachments'))
   async postJob(
     @Res() res: Response,
     @Req() req: IRequest,
     @Body() body: PostJobDto,
+    @UploadedFiles() files: Express.Multer.File[]
   ) {
-    return await this.jobService.postJob(res, req.user, body)
+    return await this.jobService.postJob(res, req.user, files || [], body)
   }
 
   @Delete('/remove/:jobId')

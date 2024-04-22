@@ -1,16 +1,20 @@
 import { Job } from '@prisma/client'
+import { validateFile } from 'utils/file'
 import { PostJobDto } from './dto/job.dto'
 import { Request, Response } from 'express'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
+import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
+import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
 
 @Injectable()
 export class JobService {
     constructor(
+        private readonly aws: AwsService,
         private readonly response: SendRes,
         private readonly misc: MiscService,
         private readonly prisma: PrismaService,
@@ -19,42 +23,65 @@ export class JobService {
     async postJob(
         res: Response,
         { sub, role }: ExpressUser,
+        files: Express.Multer.File[],
         {
-            job_title, job_type, playingAge, rate, duration,
-            applicaion_deadline, description, experience,
-            gender, requirement, job_role, location,
+            duration, applicaion_deadline, description,
+            experience, requirement, location, job_role,
+            job_title, job_type, playingAge, rate, gender,
         }: PostJobDto
     ) {
         try {
-            let job: Job
+            if (files.length > 10) {
+                return this.response.sendError(res, StatusCodes.PayloadTooLarge, "Only a maximum of 10 files is allowed")
+            }
 
             if (new Date(applicaion_deadline) < new Date()) {
                 return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid deadline date')
             }
 
-            if (role === "admin") {
-                job = await this.prisma.job.create({
-                    data: {
-                        role: job_role, app_deadline: new Date(applicaion_deadline),
-                        type: job_type, title: job_title, playingAge, rate,
-                        duration: duration ? new Date(duration) : null,
-                        gender, requirement, description, experience,
-                        approvedAt: new Date(), status: 'APPROVED',
-                        admin: { connect: { id: sub } }, location,
+            let filesArray = [] as IFile[]
+            try {
+                const results = await Promise.all(files.map(async (file) => {
+                    const result = validateFile(file, 30 << 20, 'jpg', 'png', 'mp4', 'mp3', 'wav', 'aac')
+                    if (result?.status) {
+                        return this.response.sendError(res, result.status, result.message)
                     }
-                })
-            } else {
-                job = await this.prisma.job.create({
-                    data: {
-                        role: job_role, type: job_type,
-                        app_deadline: new Date(applicaion_deadline),
-                        title: job_title, playingAge, rate, location,
-                        gender, requirement, description, experience,
-                        duration: duration ? new Date(duration) : null,
-                        user: { connect: { id: sub } }, status: 'PENDING'
+
+                    const path = `${sub}/${genFileName()}`
+                    await this.aws.uploadS3(result.file, path)
+                    return {
+                        path,
+                        type: file.mimetype,
+                        url: this.aws.getS3(path),
                     }
-                })
+                }))
+
+                filesArray = results.filter((result): result is IFile => !!result)
+            } catch {
+                try {
+                    if (filesArray.length > 0) {
+                        for (const file of filesArray) {
+                            if (file?.path) {
+                                await this.aws.deleteS3(file.path)
+                            }
+                        }
+                    }
+                    filesArray = []
+                } catch (err) {
+                    this.misc.handleServerError(res, err, err.message)
+                }
             }
+
+            const job = await this.prisma.job.create({
+                data: {
+                    role: job_role, type: job_type, title: job_title,
+                    app_deadline: new Date(applicaion_deadline), location,
+                    duration: duration ? new Date(duration) : null, description,
+                    status: role === "admin" ? 'APPROVED' : 'PENDING', playingAge,
+                    attachments: filesArray, gender, requirement, experience, rate,
+                    [role === "admin" ? 'admin' : 'user']: { connect: { id: sub } },
+                }
+            })
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 data: job,
