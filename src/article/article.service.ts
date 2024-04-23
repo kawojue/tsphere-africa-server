@@ -48,9 +48,8 @@ export class ArticleService {
 
             const article = await this.prisma.article.create({
                 data: {
+                    coverPhoto: cover_photo, title, category, content,
                     pending_approval: role === "admin" ? false : true,
-                    coverPhoto: cover_photo,
-                    title, category, content,
                     readingTime: await this.misc.calculateReadingTime(content),
                     [role === "admin" ? 'admin' : 'author']: { connect: { id: sub } },
                 }

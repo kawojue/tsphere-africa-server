@@ -29,7 +29,7 @@ export class ProfileSetupService {
     ) {
         try {
             if (files.length > 3) {
-                return this.response.sendError(res, StatusCodes.BadRequest, 'Images should be maximum of three')
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Images should not be maximum of three')
             } else if (files.length === 0) {
                 return this.response.sendError(res, StatusCodes.BadRequest, 'No Images were selected')
             } else {
