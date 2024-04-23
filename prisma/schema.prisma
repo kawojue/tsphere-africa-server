@@ -34,6 +34,7 @@ model User {
     rateAndAvailability RateAndAvailability?
     subscribed          Boolean              @default(false)
     createdAt           DateTime             @default(now())
+    updatedAt           DateTime             @updatedAt
     validation          Validation?
     jobs                Job[]
     jobApplications     JobApplication[]
@@ -43,16 +44,19 @@ model User {
 }
 
 model Referral {
-    id       String     @id @default(auto()) @map("_id") @db.ObjectId
-    points   Int        @default(0)
-    key      String     @unique
-    referred Referred[]
-    user     User       @relation(references: [id], fields: [userId])
-    userId   String     @unique @db.ObjectId
+    id        String     @id @default(auto()) @map("_id") @db.ObjectId
+    points    Int        @default(0)
+    key       String     @unique
+    referred  Referred[]
+    user      User       @relation(references: [id], fields: [userId])
+    userId    String     @unique @db.ObjectId
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
 }
 
 model Referred {
     id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    createdAt  DateTime @default(now())
     referral   Referral @relation(fields: [referralId], references: [id])
     referralId String   @db.ObjectId
     user       User     @relation(fields: [userId], references: [id])

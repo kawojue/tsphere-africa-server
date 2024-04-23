@@ -8,7 +8,7 @@ import { titleName } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
 import { EncryptionService } from 'lib/encryption.service'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
-import { AnalyticsDto, FetchUserDto, UserSuspensionDto } from './dto/user.dto'
+import { AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto } from './dto/user.dto'
 
 @Injectable()
 export class ModminService {
@@ -90,7 +90,7 @@ export class ModminService {
         }
     }
 
-    async analytics(res: Response, { q }: AnalyticsDto) {
+    async userAnalytics(res: Response, { q }: AnalyticsDto) {
         try {
             let total: number
 
@@ -274,7 +274,7 @@ export class ModminService {
         }
     }
 
-    async chart(res: Response) {
+    async userChart(res: Response) {
         try {
             const currentYear = new Date().getFullYear()
             const monthNames = [
@@ -407,5 +407,156 @@ export class ModminService {
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
+    }
+
+    async referralAnalytics(res: Response) {
+        const totalReferredUsers = await this.prisma.referred.count()
+        const totalReferrals = await this.prisma.referral.count({ where: { points: { gte: 10 } } })
+        const totalPoints = await this.prisma.referral.aggregate({
+            _sum: { points: true }
+        })
+
+        this.response.sendSuccess(res, StatusCodes.OK, {
+            data: { totalReferredUsers, totalPoints, totalReferrals }
+        })
+    }
+
+    async referralChart(res: Response) {
+        try {
+            const currentYear = new Date().getFullYear()
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ]
+
+            const referralCounts = []
+
+            for (let i = 0; i < monthNames.length; i++) {
+                const startDate = new Date(currentYear, i, 1)
+                let endMonth = i + 1
+                let endYear = currentYear
+
+                if (endMonth === 12) {
+                    endMonth = 1
+                    endYear = currentYear + 1
+                } else {
+                    endMonth++
+                }
+
+                const endDate = new Date(endYear, endMonth - 1, 1)
+
+                const count = await this.prisma.referral.count({
+                    where: {
+                        points: { gte: 10 },
+                        AND: [
+                            { createdAt: { gte: startDate } },
+                            { createdAt: { lt: endDate } }
+                        ]
+                    }
+                })
+
+                referralCounts.push({ monthName: monthNames[i], count })
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: {
+                    chart: referralCounts,
+                    total: await this.prisma.referral.count({ where: { points: { gte: 10 } } })
+                }
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error caching chart")
+        }
+    }
+
+    async fetchReferrals(
+        res: Response,
+        { q, s = '', page = 1, limit = 50 }: SortUserDto
+    ) {
+        limit = Number(limit)
+        const offset = (Number(page) - 1) * limit
+
+        const referrals = await this.prisma.referral.findMany({
+            where: {
+                points: { gte: 10 },
+                OR: [
+                    { user: { username: { contains: s, mode: 'insensitive' } } },
+                    { user: { lastname: { contains: s, mode: 'insensitive' } } },
+                    { user: { firstname: { contains: s, mode: 'insensitive' } } },
+                ],
+            },
+            take: limit,
+            skip: offset,
+            orderBy: q === "date" ?
+                { createdAt: 'desc' } :
+                q === "name" ?
+                    { user: { firstname: 'asc' } } :
+                    { points: 'asc' },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        role: true,
+                        avatar: true,
+                        username: true,
+                        lastname: true,
+                        firstname: true,
+                    }
+                }
+            }
+        })
+
+        const referralsWithTotalReferred = await Promise.all(referrals.map(async (referral) => {
+            const totalReferred = await this.prisma.referred.count({ where: { referralId: referral.id } })
+
+            return { ...referral, totalReferred }
+        }))
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: referralsWithTotalReferred })
+    }
+
+    async fetchReferral(res: Response, referralId: string) {
+        const referral = await this.prisma.referral.findUnique({
+            where: { id: referralId },
+            include: {
+                referred: {
+                    select: {
+                        createdAt: true,
+                        referral: {
+                            select: {
+                                id: true,
+                                points: true,
+                            }
+                        },
+                        user: {
+                            select: {
+                                id: true,
+                                avatar: true,
+                                username: true,
+                                verified: true,
+                                lastname: true,
+                                firstname: true,
+                            }
+                        }
+                    }
+                },
+                user: {
+                    select: {
+                        id: true,
+                        avatar: true,
+                        username: true,
+                        verified: true,
+                        lastname: true,
+                        firstname: true,
+                    }
+                }
+            }
+        })
+
+        if (!referral) {
+            return this.response.sendError(res, StatusCodes.NotFound, 'Referral not found')
+        }
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: referral })
     }
 }

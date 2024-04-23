@@ -35,7 +35,7 @@ export class InfiniteScroll {
 
 export class SearchDto extends InfiniteScroll {
     @ApiProperty({
-        example: ''
+        example: ' '
     })
     @IsOptional()
     s: string
@@ -49,8 +49,6 @@ export class SortUserDto extends SearchDto {
     @IsOptional()
     q: SortUser
 }
-
-
 
 export class FetchUserDto extends SortUserDto {
     @ApiProperty({

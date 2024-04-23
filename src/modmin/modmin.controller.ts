@@ -6,7 +6,7 @@ import { ModminService } from './modmin.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
-import { AnalyticsDto, FetchUserDto, UserSuspensionDto } from './dto/user.dto'
+import { AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto } from './dto/user.dto'
 import { Body, Controller, Get, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common'
 
 @ApiTags('Admin')
@@ -27,20 +27,28 @@ export class ModminController {
   @ApiBearerAuth()
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Get('/user/analytics')
-  async analytics(
+  @Get('/user/analytics/dashboard')
+  async userAnalytics(
     @Res() res: Response,
     @Query() query: AnalyticsDto,
   ) {
-    return await this.modminService.analytics(res, query)
+    return await this.modminService.userAnalytics(res, query)
   }
 
   @ApiBearerAuth()
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Get('/article/analytics')
+  @Get('/article/analytics/dashboard')
   async articleAnalytics(@Res() res: Response,) {
     return await this.modminService.articleAnalytics(res)
+  }
+
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('/referral/analytics/dashboard')
+  async referralAnalytics(@Res() res: Response,) {
+    return await this.modminService.referralAnalytics(res)
   }
 
   @Get('/user/totggle-suspension/:userId')
@@ -91,8 +99,38 @@ export class ModminController {
   @ApiBearerAuth()
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Get('/users/chart')
-  async chart(@Res() res: Response) {
-    return await this.modminService.chart(res)
+  @Get('/user/chart/dashboard')
+  async userChart(@Res() res: Response) {
+    return await this.modminService.userChart(res)
+  }
+
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('/referral/chart/dashboard')
+  async referralChart(@Res() res: Response) {
+    return await this.modminService.referralChart(res)
+  }
+
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @Get('/referrals')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async fetchReferrals(
+    @Res() res: Response,
+    @Query() query: SortUserDto,
+  ) {
+    return await this.modminService.fetchReferrals(res, query)
+  }
+
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @Get('/referrals/referral/:referralId')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async fetchReferral(
+    @Res() res: Response,
+    @Param('referralId') referralId: string,
+  ) {
+    return await this.modminService.fetchReferral(res, referralId)
   }
 }
