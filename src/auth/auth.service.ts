@@ -1,17 +1,23 @@
 import { Response } from 'express'
+import { Referral } from '@prisma/client'
 import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
+import {
+    RequestTokenDto, LoginDto, EmailDto,
+    SignupDto, SignupUnder18Dto, ReferralDto,
+} from './dto/auth.dto'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
-import { titleName } from 'helpers/formatTexts'
 import { BrevoService } from 'lib/brevo.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { genReferralKey } from 'helpers/genReferralKey'
 import { EncryptionService } from 'lib/encryption.service'
-import { RequestTokenDto, LoginDto, EmailDto, SignupDto, SignupUnder18Dto } from './dto/auth.dto'
-import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dto/reset-password.dto'
+import {
+    ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto
+} from './dto/reset-password.dto'
 
 @Injectable()
 export class AuthService {
@@ -63,6 +69,7 @@ export class AuthService {
 
     async signupUnder18(
         res: Response,
+        { refKey }: ReferralDto,
         files: Express.Multer.File[],
         {
             first_name, last_name,
@@ -71,10 +78,6 @@ export class AuthService {
         }: SignupUnder18Dto
     ) {
         try {
-            last_name = titleName(last_name)
-            first_name = titleName(first_name)
-            username = username.trim().toLowerCase()
-
             if (files.length === 0) {
                 return this.response.sendError(res, StatusCodes.BadRequest, "ID is required")
             }
@@ -102,8 +105,6 @@ export class AuthService {
             if (findUserByEmail) {
                 return this.response.sendError(res, StatusCodes.Conflict, 'User with this email already exists')
             }
-
-            password = await this.encryption.hashAsync(password)
 
             let filesArray = [] as IFile[]
             try {
@@ -138,6 +139,23 @@ export class AuthService {
                 }
             }
 
+            password = await this.encryption.hashAsync(password)
+
+            let referral: Referral
+
+            if (refKey) {
+                referral = await this.prisma.referral.findUnique({
+                    where: { key: refKey }
+                })
+
+                if (referral) {
+                    await this.prisma.referral.update({
+                        where: { key: refKey },
+                        data: { points: { increment: 10 } }
+                    })
+                }
+            }
+
             const user = await this.prisma.user.create({
                 data: {
                     under18: true,
@@ -149,32 +167,43 @@ export class AuthService {
                 }
             })
 
-            await this.prisma.under18Kyc.create({
-                data: {
-                    issuingCountry,
-                    images: filesArray,
-                    user: {
-                        connect: {
-                            id: user.id
-                        }
-                    }
-                }
-            })
+            if (user) {
+                const token = this.misc.genenerateToken(user.id)
 
-            const token = this.misc.genenerateToken(user.id)
-            await this.prisma.validation.create({
-                data: {
-                    ...token,
-                    user: {
-                        connect: {
-                            id: user.id
+                await this.prisma.$transaction([
+                    this.prisma.under18Kyc.create({
+                        data: {
+                            issuingCountry,
+                            images: filesArray,
+                            user: { connect: { id: user.id } }
                         }
-                    }
-                }
-            })
+                    }),
+                    this.prisma.validation.create({
+                        data: {
+                            ...token,
+                            user: { connect: { id: user.id } }
+                        }
+                    }),
+                    this.prisma.referral.create({
+                        data: {
+                            key: genReferralKey(user.username),
+                            user: { connect: { id: user.id } }
+                        }
+                    })
+                ])
 
-            await this.brevo.sendVerificationEmail(email, token.token)
-            await this.prisma.isSubscribed(email)
+                if (referral) {
+                    await this.prisma.referred.create({
+                        data: {
+                            user: { connect: { id: user.id } },
+                            referral: { connect: { id: referral.id } },
+                        }
+                    })
+                }
+
+                await this.brevo.sendVerificationEmail(email, token.token)
+                await this.prisma.isSubscribed(email)
+            }
 
             this.response.sendSuccess(res, StatusCodes.Created, {
                 message: "A verification link has been sent to your email"
@@ -186,16 +215,13 @@ export class AuthService {
 
     async signupOver18(
         res: Response,
+        { refKey }: ReferralDto,
         {
             email, password, role, skill,
             first_name, last_name, username,
         }: SignupDto
     ) {
         try {
-            last_name = titleName(last_name)
-            first_name = titleName(first_name)
-            username = username.trim().toLowerCase()
-
             if (!this.misc.isValidUsername(username)) {
                 this.response.sendError(res, StatusCodes.BadRequest, "Username is not allowed")
                 return
@@ -204,6 +230,7 @@ export class AuthService {
             const usernameExists = await this.prisma.user.findUnique({
                 where: { username }
             })
+
             if (usernameExists) {
                 this.response.sendError(res, StatusCodes.Conflict, "Username has been taken")
                 return
@@ -212,9 +239,25 @@ export class AuthService {
             const user = await this.prisma.user.findUnique({
                 where: { email }
             })
+
             if (user) {
                 this.response.sendError(res, StatusCodes.Conflict, 'User with this email already exists')
                 return
+            }
+
+            let referral: Referral
+
+            if (refKey) {
+                referral = await this.prisma.referral.findUnique({
+                    where: { key: refKey }
+                })
+
+                if (referral) {
+                    await this.prisma.referral.update({
+                        where: { key: refKey },
+                        data: { points: { increment: 10 } }
+                    })
+                }
             }
 
             password = await this.encryption.hashAsync(password)
@@ -230,20 +273,36 @@ export class AuthService {
                 }
             })
 
-            const token = this.misc.genenerateToken(newUser.id)
-            await this.prisma.validation.create({
-                data: {
-                    ...token,
-                    user: {
-                        connect: {
-                            id: newUser.id
-                        }
-                    }
-                }
-            })
+            if (newUser) {
+                const token = this.misc.genenerateToken(newUser.id)
 
-            await this.brevo.sendVerificationEmail(email, token.token)
-            await this.prisma.isSubscribed(email)
+                await this.prisma.$transaction([
+                    this.prisma.validation.create({
+                        data: {
+                            ...token,
+                            user: { connect: { id: newUser.id } }
+                        }
+                    }),
+                    this.prisma.referral.create({
+                        data: {
+                            key: genReferralKey(newUser.username),
+                            user: { connect: { id: newUser.id } }
+                        }
+                    })
+                ])
+
+                if (referral) {
+                    await this.prisma.referred.create({
+                        data: {
+                            user: { connect: { id: newUser.id } },
+                            referral: { connect: { id: referral.id } },
+                        }
+                    })
+                }
+
+                await this.brevo.sendVerificationEmail(email, token.token)
+                await this.prisma.isSubscribed(email)
+            }
 
             this.response.sendSuccess(res, StatusCodes.Created, {
                 message: "A verification link has been sent to your email"

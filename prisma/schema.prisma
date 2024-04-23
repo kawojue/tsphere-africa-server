@@ -27,8 +27,10 @@ model User {
     under18             Boolean
     creative            Creative?
     talent              Talent?
+    referred            Referred[]
     bankDetails         BankDetails?
     experiences         Experience[]
+    referral            Referral?
     rateAndAvailability RateAndAvailability?
     subscribed          Boolean              @default(false)
     createdAt           DateTime             @default(now())
@@ -38,6 +40,23 @@ model User {
     articles            Article[]
     comments            Comment[]
     likes               Like[]
+}
+
+model Referral {
+    id       String     @id @default(auto()) @map("_id") @db.ObjectId
+    points   Int        @default(0)
+    key      String     @unique
+    referred Referred[]
+    user     User       @relation(references: [id], fields: [userId])
+    userId   String     @unique @db.ObjectId
+}
+
+model Referred {
+    id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    referral   Referral @relation(fields: [referralId], references: [id])
+    referralId String   @db.ObjectId
+    user       User     @relation(fields: [userId], references: [id])
+    userId     String   @db.ObjectId
 }
 
 model SubscribedEmails {

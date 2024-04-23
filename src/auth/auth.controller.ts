@@ -1,12 +1,12 @@
-import { Response } from 'express'
+import { query, Response } from 'express'
 import { Role } from 'src/role.decorator'
 import { AuthService } from './auth.service'
 import { AuthGuard } from '@nestjs/passport'
-import {
-  UsernameDto, LoginDto, SignupDto, TokenDto,
-  SignupUnder18Dto, EmailDto, RequestTokenDto,
-} from './dto/auth.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import {
+  SignupUnder18Dto, RequestTokenDto, ReferralDto,
+  UsernameDto, LoginDto, SignupDto, TokenDto, EmailDto,
+} from './dto/auth.dto'
 import {
   UseInterceptors, Post, Query, Res, Body, Patch, Req,
   Controller, Get, UploadedFiles, UseGuards, UploadedFile,
@@ -62,15 +62,20 @@ export class AuthController {
   })
   async signupUnder18(
     @Res() res: Response,
+    @Query() query: ReferralDto,
     @Body() signupUnder18Dto: SignupUnder18Dto,
-    @UploadedFiles() files: Express.Multer.File[]
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return await this.authService.signupUnder18(res, files || [], signupUnder18Dto)
+    return await this.authService.signupUnder18(res, query, files || [], signupUnder18Dto)
   }
 
   @Post('/signup-over18')
-  async signupOver18(@Res() res: Response, @Body() signupDto: SignupDto) {
-    return await this.authService.signupOver18(res, signupDto)
+  async signupOver18(
+    @Res() res: Response,
+    @Query() query: ReferralDto,
+    @Body() signupDto: SignupDto,
+  ) {
+    return await this.authService.signupOver18(res, query, signupDto)
   }
 
   @Post('/login')

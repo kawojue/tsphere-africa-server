@@ -1,18 +1,20 @@
-import {
-    IsNotEmpty, MaxLength, MinLength,
-    IsEmail, Matches, IsEnum, IsString,
-} from 'class-validator'
 import { Role } from '@prisma/client'
+import { USER_REGEX } from 'utils/regExp'
 import { TokenEnum } from 'enums/base.enum'
+import {
+    IsEmail, Matches, IsString, IsOptional,
+    IsNotEmpty, MaxLength, MinLength, IsEnum,
+} from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
+import { titleName } from 'helpers/formatTexts'
 
 export class EmailDto {
     @ApiProperty({
         example: "kawojue08@gmail.com",
     })
-    @IsEmail({}, {
-        message: "Invalid Email"
-    })
+    @IsEmail({}, { message: "Invalid Email" })
+    @Transform(({ value }) => value.trim().toLowerCase())
     email: string
 }
 
@@ -21,16 +23,17 @@ export class UsernameDto {
         example: 'kawojue',
     })
     @IsString()
-    @IsNotEmpty()
+    @Matches(USER_REGEX, { message: "Username is not allowed" })
+    @IsNotEmpty({ message: 'Username is required' })
     username: string
 }
 
 export class TokenDto {
-    @IsString()
-    @IsNotEmpty()
     @ApiProperty({
         example: '026c567f8000d5a4ccd83fe61d822c4fcb7a148e9af72aa03a==',
     })
+    @IsString()
+    @IsNotEmpty()
     token: string
 }
 
@@ -43,36 +46,13 @@ export class TokenEnumDto {
     token_type: TokenEnum
 }
 
-export class RequestTokenDto extends TokenEnumDto {
+export class RequestTokenDto extends EmailDto {
     @ApiProperty({
-        example: 'john.doe@example.com',
+        enum: TokenEnum,
+        example: 'email'
     })
-    @IsString()
-    @IsEmail({}, { message: 'Invalid email format' })
-    email: string
-}
-
-export class GoogleOnboardingDto extends UsernameDto {
-    @ApiProperty({
-        example: 'talent',
-    })
-    @IsNotEmpty({ message: 'Role is required' })
-    @IsEnum(Role)
-    role: Role
-
-    @ApiProperty({
-        example: 'Raheem',
-    })
-    @IsNotEmpty({ message: 'Role is required' })
-    @IsString()
-    firstname: string
-
-    @ApiProperty({
-        example: 'Kawojue',
-    })
-    @IsNotEmpty({ message: 'Role is required' })
-    @IsString()
-    readonly lastname: string
+    @IsEnum(TokenEnum)
+    token_type: TokenEnum
 }
 
 export class LoginDto extends EmailDto {
@@ -89,6 +69,7 @@ export class SignupDto extends EmailDto {
     })
     @IsNotEmpty({ message: 'First name is required' })
     @IsString()
+    @Transform(({ value }) => titleName(value))
     first_name: string
 
     @ApiProperty({
@@ -96,13 +77,16 @@ export class SignupDto extends EmailDto {
     })
     @IsNotEmpty({ message: 'Last name is required' })
     @IsString()
+    @Transform(({ value }) => titleName(value))
     last_name: string
 
     @ApiProperty({
-        example: 'kawojue_',
+        example: 'kawojue',
     })
-    @IsNotEmpty({ message: 'Username is required' })
     @IsString()
+    @Matches(USER_REGEX, { message: "Username is not allowed" })
+    @Transform(({ value }) => value.trim().toLowerCase())
+    @IsNotEmpty({ message: 'Username is required' })
     username: string
 
     @ApiProperty({
@@ -120,18 +104,15 @@ export class SignupDto extends EmailDto {
     skill: string
 
     @ApiProperty({
-        example: 'P@ssw0rd1',
+        example: 'Mypswd123',
     })
     @IsString()
     @IsNotEmpty()
     @MinLength(6, {
         message: "Password must be at least 6 characters"
     })
-    @MaxLength(72, {
+    @MaxLength(36, {
         message: "Password is too long"
-    })
-    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*/, {
-        message: 'Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 numeric digit',
     })
     password: string
 }
@@ -143,4 +124,13 @@ export class SignupUnder18Dto extends SignupDto {
     @IsNotEmpty()
     @IsString()
     issuingCountry: string
+}
+
+export class ReferralDto {
+    @ApiProperty({
+        example: 'a2F3b2p1ZQ'
+    })
+    @IsString()
+    @IsOptional()
+    refKey: string
 }
