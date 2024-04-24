@@ -22,30 +22,27 @@ export class TxHistoriesDto extends SortHistoryDto {
     @ApiProperty({
         example: '2024-01-01T00:00:00.000Z',
         default: 0,
-        description: 'The starting date. This is optional and could be 0',
     })
-    startDate?: string
+    @IsOptional()
+    startDate: string
 
     @ApiProperty({
-        example: '2024-02-01T00:00:00.000Z',
-        default: new Date(),
-        description: 'The ending date. This is optional and default is current date'
+        example: new Date(),
     })
-    endDate?: string
+    @IsOptional()
+    endDate: string
 
     @ApiProperty({
-        example: TxType,
-        default: null,
+        enum: TxType,
     })
     @IsOptional()
     @IsEnum(TxType)
-    type?: TxType
+    type: TxType
 
     @ApiProperty({
-        example: TxStatus,
-        default: null,
+        enum: TxStatus,
     })
     @IsOptional()
     @IsEnum(TxStatus)
-    status?: TxStatus
+    status: TxStatus
 }
