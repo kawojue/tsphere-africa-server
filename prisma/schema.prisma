@@ -386,6 +386,7 @@ enum TxType {
 
 enum TxStatus {
     FAILED
+    PENDING
     SUCCESS
     REVERSED
 }

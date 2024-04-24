@@ -4,11 +4,16 @@ import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { ModminService } from './modmin.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
-import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
-import { AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto } from './dto/user.dto'
-import { Body, Controller, Get, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common'
+import { TxHistoriesDto } from './dto/txHistory.dto'
 import { PaymentChartDto } from './dto/analytics.dto'
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
+import {
+  AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
+} from './dto/user.dto'
+import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
+import {
+  Body, Controller, Get, Param, Patch, Post, Query, Res, UseGuards
+} from '@nestjs/common'
 
 @ApiTags('Admin')
 @Controller('modmin')
@@ -131,8 +136,8 @@ export class ModminController {
 
   @ApiBearerAuth()
   @Role(Roles.admin)
-  @Get('/referrals')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('/referrals')
   async fetchReferrals(
     @Res() res: Response,
     @Query() query: SortUserDto,
@@ -142,12 +147,23 @@ export class ModminController {
 
   @ApiBearerAuth()
   @Role(Roles.admin)
-  @Get('/referrals/referral/:referralId')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('/referrals/referral/:referralId')
   async fetchReferral(
     @Res() res: Response,
     @Param('referralId') referralId: string,
   ) {
     return await this.modminService.fetchReferral(res, referralId)
+  }
+
+  // @ApiBearerAuth()
+  // @Role(Roles.admin)
+  // @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('/transaction/histories')
+  async fetchTransactionHistories(
+    @Res() res: Response,
+    @Query() query: TxHistoriesDto,
+  ) {
+    return await this.modminService.fetchTransactionHistories(res, query)
   }
 }
