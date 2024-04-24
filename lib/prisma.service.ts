@@ -45,8 +45,66 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
     async validateToken(recv_token: string, validation: Validation) {
         const decodedToken = atob(recv_token)
-        const token = genToken(validation?.userId, validation?.randomCode)
+        const tk = genToken(validation?.userId, validation?.randomCode)
 
-        return token.token === decodedToken
+        return tk.token === decodedToken
+    }
+
+    async totalInflow(userId?: string) {
+        let total: number = 0
+
+        if (userId) {
+            const inflow = await this.txHistory.aggregate({
+                where: {
+                    userId,
+                    type: 'DEPOSIT',
+                    status: 'SUCCESS',
+                },
+                _sum: { settlementAmount: true }
+            })
+
+            total = inflow._sum.settlementAmount
+        } else {
+            const inflow = await this.txHistory.aggregate({
+                where: {
+                    type: 'DEPOSIT',
+                    status: 'SUCCESS',
+                },
+                _sum: { settlementAmount: true }
+            })
+
+            total = inflow._sum.settlementAmount
+        }
+
+        return total
+    }
+
+    async totalOutflow(userId?: string) {
+        let total: number = 0
+
+        if (userId) {
+            const inflow = await this.txHistory.aggregate({
+                where: {
+                    userId,
+                    status: 'SUCCESS',
+                    type: 'WITHDRAWAL',
+                },
+                _sum: { settlementAmount: true }
+            })
+
+            total = inflow._sum.settlementAmount
+        } else {
+            const inflow = await this.txHistory.aggregate({
+                where: {
+                    status: 'SUCCESS',
+                    type: 'WITHDRAWAL',
+                },
+                _sum: { settlementAmount: true }
+            })
+
+            total = inflow._sum.settlementAmount
+        }
+
+        return total
     }
 }

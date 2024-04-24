@@ -8,6 +8,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
 import { AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto } from './dto/user.dto'
 import { Body, Controller, Get, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common'
+import { PaymentChartDto } from './dto/analytics.dto'
 
 @ApiTags('Admin')
 @Controller('modmin')
@@ -49,6 +50,14 @@ export class ModminController {
   @Get('/referral/analytics/dashboard')
   async referralAnalytics(@Res() res: Response,) {
     return await this.modminService.referralAnalytics(res)
+  }
+
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('/payment/analytics/dashboard')
+  async paymentAnalytics(@Res() res: Response,) {
+    return await this.modminService.paymentAnalytics(res)
   }
 
   @Get('/user/totggle-suspension/:userId')
@@ -110,6 +119,14 @@ export class ModminController {
   @Get('/referral/chart/dashboard')
   async referralChart(@Res() res: Response) {
     return await this.modminService.referralChart(res)
+  }
+
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('/payment/chart/dashboard')
+  async paymentCharts(@Res() res: Response, @Query() q: PaymentChartDto) {
+    return await this.modminService.paymentCharts(res, q)
   }
 
   @ApiBearerAuth()

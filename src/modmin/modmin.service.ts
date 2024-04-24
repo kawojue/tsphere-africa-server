@@ -9,6 +9,7 @@ import { PrismaService } from 'lib/prisma.service'
 import { EncryptionService } from 'lib/encryption.service'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
 import { AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto } from './dto/user.dto'
+import { PaymentChartDto } from './dto/analytics.dto'
 
 @Injectable()
 export class ModminService {
@@ -561,5 +562,110 @@ export class ModminService {
         }
 
         this.response.sendSuccess(res, StatusCodes.OK, { data: referral })
+    }
+
+    async paymentAnalytics(res: Response) {
+        const inflow = await this.prisma.totalInflow()
+        const outflow = await this.prisma.totalOutflow()
+
+        const { _sum: { processsingFee: income } } = await this.prisma.txHistory.aggregate({
+            where: {},
+            _sum: { processsingFee: true }
+        })
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: { income, inflow, outflow } })
+    }
+
+    async paymentCharts(res: Response, { q }: PaymentChartDto) {
+        try {
+            const currentYear = new Date().getFullYear()
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June', 'July',
+                'August', 'September', 'October', 'November', 'December'
+            ]
+
+            const totalAmount = [] as {
+                monthName: string
+                amount: number
+            }[]
+
+            let total: number = 0
+
+            if (q === "income") {
+                const aggregate = await this.prisma.txHistory.aggregate({
+                    where: { status: 'SUCCESS' },
+                    _sum: { settlementAmount: true }
+                })
+
+                total = aggregate._sum.settlementAmount
+            } else {
+                const aggregate = await this.prisma.txHistory.aggregate({
+                    where: {
+                        status: 'SUCCESS',
+                        type: q === "inflow" ? 'DEPOSIT' : 'WITHDRAWAL',
+                    },
+                    _sum: { settlementAmount: true }
+                })
+
+                total = aggregate._sum.settlementAmount
+            }
+
+            for (let i = 0; i < monthNames.length; i++) {
+                const startDate = new Date(currentYear, i, 1)
+                let endMonth = i + 1
+                let endYear = currentYear
+
+                if (endMonth === 12) {
+                    endMonth = 1
+                    endYear = currentYear + 1
+                } else {
+                    endMonth++
+                }
+
+                const endDate = new Date(endYear, endMonth - 1, 1)
+
+                let amount = 0
+
+                if (q === "income") {
+                    const aggregate = await this.prisma.txHistory.aggregate({
+                        where: {
+                            status: 'SUCCESS',
+                            AND: [
+                                { createdAt: { gte: startDate } },
+                                { createdAt: { lt: endDate } }
+                            ]
+                        },
+                        _sum: { settlementAmount: true }
+                    })
+
+                    amount = aggregate._sum.settlementAmount
+                } else {
+                    const aggregate = await this.prisma.txHistory.aggregate({
+                        where: {
+                            status: 'SUCCESS',
+                            type: q === "inflow" ? 'DEPOSIT' : 'WITHDRAWAL',
+                            AND: [
+                                { createdAt: { gte: startDate } },
+                                { createdAt: { lt: endDate } }
+                            ]
+                        },
+                        _sum: { settlementAmount: true }
+                    })
+
+                    amount = aggregate._sum.settlementAmount
+                }
+
+                totalAmount.push({ monthName: monthNames[i], amount })
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: {
+                    chart: totalAmount,
+                    total
+                }
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error caching chart")
+        }
     }
 }

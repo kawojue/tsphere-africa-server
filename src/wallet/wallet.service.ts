@@ -1,13 +1,13 @@
+import { Response } from 'express'
+import { TxStatus } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
+import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { BrevoService } from 'lib/brevo.service'
+import { ValidateBankDto } from './dto/bank.dto'
 import { PrismaService } from 'lib/prisma.service'
 import { PaystackService } from 'lib/Paystack/paystack.service'
-import { TxHistory, TxStatus, TxType } from '@prisma/client'
-import StatusCodes from 'enums/StatusCodes'
-import { Response } from 'express'
-import { ValidateBankDto } from './dto/bank.dto'
 
 @Injectable()
 export class WalletService {
@@ -54,7 +54,6 @@ export class WalletService {
 
                 if (body.event === 'transfer.reversed' || body.event === 'transfer.failed') {
                     await this.updateUserBalance(transaction.userId, amount)
-                    await this.updateTransactionType(transaction.reference, 'REVERSED')
                 }
             }
         } catch (err) {
@@ -72,13 +71,6 @@ export class WalletService {
         await this.prisma.txHistory.update({
             where: { reference },
             data: { status }
-        })
-    }
-
-    private async updateTransactionType(reference: string, type: TxType) {
-        await this.prisma.txHistory.update({
-            where: { reference },
-            data: { type }
         })
     }
 
