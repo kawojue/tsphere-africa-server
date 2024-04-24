@@ -7,6 +7,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 async function bootstrap() {
   const PORT: number = parseInt(process.env.PORT, 10) || 2005
   const app = await NestFactory.create(AppModule)
+  const expressApp = app.getHttpAdapter().getInstance()
 
   app.enableCors({
     origin: [
@@ -23,6 +24,7 @@ async function bootstrap() {
     optionsSuccessStatus: 200,
     methods: 'GET,PATCH,POST,PUT,DELETE',
   })
+  expressApp.set('trust proxy', true)
   app.use(express.json({ limit: 50 << 20 }))
   app.useGlobalPipes(new ValidationPipe())
 
