@@ -19,7 +19,7 @@ model User {
     email_verified      Boolean              @default(false)
     verified            Boolean              @default(false)
     role                Role                 @default(user)
-    under18             Boolean
+    over18              Boolean
     subscribed          Boolean              @default(false)
     createdAt           DateTime             @default(now())
     updatedAt           DateTime             @updatedAt
@@ -29,7 +29,6 @@ model User {
     creative            Creative?
     referral            Referral?
     portfolio           Portfolio?
-    under18Kyc          under18Kyc?
     validation          Validation?
     bankDetails         BankDetails?
     rateAndAvailability RateAndAvailability?
@@ -119,14 +118,6 @@ model Contact {
     replied     Boolean   @default(false)
     sentAt      DateTime  @default(now())
     repliedAt   DateTime?
-}
-
-model under18Kyc {
-    id             String @id @default(auto()) @map("_id") @db.ObjectId
-    issuingCountry String
-    images         File[]
-    user           User   @relation(fields: [userId], references: [id])
-    userId         String @unique @db.ObjectId
 }
 
 model Admin {

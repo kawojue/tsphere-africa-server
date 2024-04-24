@@ -1,19 +1,23 @@
-import { query, Response } from 'express'
+import { Response } from 'express'
 import { Role } from 'src/role.decorator'
 import { AuthService } from './auth.service'
+import {
+  LoginDto, SignupDto, TokenDto, EmailDto,
+  RequestTokenDto, ReferralDto, UsernameDto,
+} from './dto/auth.dto'
 import { AuthGuard } from '@nestjs/passport'
+import {
+  Req, Controller, Get, UseGuards, UploadedFile,
+  UseInterceptors, Post, Query, Res, Body, Patch,
+} from '@nestjs/common'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import {
-  SignupUnder18Dto, RequestTokenDto, ReferralDto,
-  UsernameDto, LoginDto, SignupDto, TokenDto, EmailDto,
-} from './dto/auth.dto'
-import {
-  UseInterceptors, Post, Query, Res, Body, Patch, Req,
-  Controller, Get, UploadedFiles, UseGuards, UploadedFile,
-} from '@nestjs/common'
+  ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags
+} from '@nestjs/swagger'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto } from './dto/reset-password.dto'
+import {
+  ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto
+} from './dto/reset-password.dto'
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -54,28 +58,13 @@ export class AuthController {
     return await this.authService.usernameExists(res, username)
   }
 
-  @Post('/signup-under18')
-  @ApiConsumes('multipart/form-data', 'image/jpeg', 'image/png')
-  @UseInterceptors(FileInterceptor('kyc'))
-  @ApiOperation({
-    summary: 'The ID photo(s) key/fieldname should be kyc in the formdata'
-  })
-  async signupUnder18(
-    @Res() res: Response,
-    @Query() query: ReferralDto,
-    @Body() signupUnder18Dto: SignupUnder18Dto,
-    @UploadedFiles() files: Express.Multer.File[],
-  ) {
-    return await this.authService.signupUnder18(res, query, files || [], signupUnder18Dto)
-  }
-
-  @Post('/signup-over18')
-  async signupOver18(
+  @Post('/signup')
+  async signup(
     @Res() res: Response,
     @Query() query: ReferralDto,
     @Body() signupDto: SignupDto,
   ) {
-    return await this.authService.signupOver18(res, query, signupDto)
+    return await this.authService.signup(res, query, signupDto)
   }
 
   @Post('/login')

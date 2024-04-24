@@ -4,6 +4,7 @@ import { TokenEnum } from 'enums/base.enum'
 import {
     IsEmail, Matches, IsString, IsOptional,
     IsNotEmpty, MaxLength, MinLength, IsEnum,
+    IsBoolean,
 } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
@@ -104,6 +105,12 @@ export class SignupDto extends EmailDto {
     skill: string
 
     @ApiProperty({
+        example: true
+    })
+    @IsBoolean({ message: "Over18 has to be a boolean value" })
+    over18: boolean
+
+    @ApiProperty({
         example: 'Mypswd123',
     })
     @IsString()
@@ -115,15 +122,6 @@ export class SignupDto extends EmailDto {
         message: "Password is too long"
     })
     password: string
-}
-
-export class SignupUnder18Dto extends SignupDto {
-    @ApiProperty({
-        example: 'Nigeria'
-    })
-    @IsNotEmpty()
-    @IsString()
-    issuingCountry: string
 }
 
 export class ReferralDto {

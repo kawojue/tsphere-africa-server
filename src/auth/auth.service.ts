@@ -1,13 +1,13 @@
 import { Response } from 'express'
+import {
+    RequestTokenDto, LoginDto,
+    EmailDto, SignupDto, ReferralDto,
+} from './dto/auth.dto'
 import { Referral } from '@prisma/client'
 import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
-import {
-    RequestTokenDto, LoginDto, EmailDto,
-    SignupDto, SignupUnder18Dto, ReferralDto,
-} from './dto/auth.dto'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { BrevoService } from 'lib/brevo.service'
@@ -67,161 +67,12 @@ export class AuthService {
         }
     }
 
-    async signupUnder18(
-        res: Response,
-        { refKey }: ReferralDto,
-        files: Express.Multer.File[],
-        {
-            first_name, last_name,
-            email, username, password,
-            skill, role, issuingCountry,
-        }: SignupUnder18Dto
-    ) {
-        try {
-            if (files.length === 0) {
-                return this.response.sendError(res, StatusCodes.BadRequest, "ID is required")
-            }
-
-            if (files.length > 2) {
-                return this.response.sendError(res, StatusCodes.PayloadTooLarge, "Images shouldn't be greater than 2")
-            }
-
-            if (!this.misc.isValidUsername(username)) {
-                return this.response.sendError(res, StatusCodes.BadRequest, "Username is not allowed")
-            }
-
-            const findUserByUsername = await this.prisma.user.findUnique({
-                where: { username }
-            })
-
-            if (findUserByUsername) {
-                return this.response.sendError(res, StatusCodes.Conflict, "Username has been taken")
-            }
-
-            const findUserByEmail = await this.prisma.user.findUnique({
-                where: { email }
-            })
-
-            if (findUserByEmail) {
-                return this.response.sendError(res, StatusCodes.Conflict, 'User with this email already exists')
-            }
-
-            let filesArray = [] as IFile[]
-            try {
-                const results = await Promise.all(files.map(async (file) => {
-                    const result = validateFile(file, 5 << 20, 'jpg', 'png')
-                    if (result.status) {
-                        return this.response.sendError(res, result.status, result.message)
-                    }
-
-                    const path = `${user.id}/${genFileName()}`
-                    await this.aws.uploadS3(result.file, path)
-                    return {
-                        path,
-                        url: this.aws.getS3(path),
-                        type: result.file.mimetype,
-                    }
-                }))
-
-                filesArray = results.filter((result): result is IFile => !!result)
-            } catch {
-                try {
-                    if (filesArray.length > 0) {
-                        for (const file of filesArray) {
-                            if (file?.path) {
-                                await this.aws.deleteS3(file.path)
-                            }
-                        }
-                    }
-                    filesArray = []
-                } catch (err) {
-                    this.misc.handleServerError(res, err, err.message)
-                }
-            }
-
-            password = await this.encryption.hashAsync(password)
-
-            let referral: Referral
-
-            if (refKey) {
-                referral = await this.prisma.referral.findUnique({
-                    where: { key: refKey }
-                })
-
-                if (referral) {
-                    await this.prisma.referral.update({
-                        where: { key: refKey },
-                        data: { points: { increment: 10 } }
-                    })
-                }
-            }
-
-            const user = await this.prisma.user.create({
-                data: {
-                    under18: true,
-                    role, password,
-                    email, username,
-                    primarySkill: skill,
-                    lastname: last_name,
-                    firstname: first_name,
-                }
-            })
-
-            if (user) {
-                const token = this.misc.genenerateToken(user.id)
-
-                await this.prisma.$transaction([
-                    this.prisma.under18Kyc.create({
-                        data: {
-                            issuingCountry,
-                            images: filesArray,
-                            user: { connect: { id: user.id } }
-                        }
-                    }),
-                    this.prisma.validation.create({
-                        data: {
-                            ...token,
-                            user: { connect: { id: user.id } }
-                        }
-                    }),
-                    this.prisma.referral.create({
-                        data: {
-                            key: genReferralKey(user.username),
-                            user: { connect: { id: user.id } }
-                        }
-                    })
-                ])
-
-                if (referral) {
-                    await this.prisma.referred.create({
-                        data: {
-                            user: { connect: { id: user.id } },
-                            referral: { connect: { id: referral.id } },
-                        }
-                    })
-                }
-
-                await Promise.all([
-                    this.prisma.isSubscribed(email),
-                    this.prisma.wallet.create({ data: { user: { connect: { id: user.id } } } }),
-                ])
-                await this.brevo.sendVerificationEmail(email, token.token)
-            }
-
-            this.response.sendSuccess(res, StatusCodes.Created, {
-                message: "A verification link has been sent to your email"
-            })
-        } catch (err) {
-            this.misc.handleServerError(res, err)
-        }
-    }
-
-    async signupOver18(
+    async signup(
         res: Response,
         { refKey }: ReferralDto,
         {
-            email, password, role, skill,
-            first_name, last_name, username,
+            email, password, role, first_name,
+            last_name, username, skill, over18,
         }: SignupDto
     ) {
         try {
@@ -267,8 +118,7 @@ export class AuthService {
 
             const newUser = await this.prisma.user.create({
                 data: {
-                    username,
-                    under18: false,
+                    username, over18,
                     primarySkill: skill,
                     lastname: last_name,
                     firstname: first_name,
