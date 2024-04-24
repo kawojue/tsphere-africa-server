@@ -686,7 +686,7 @@ export class ModminService {
                 return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid type query')
             }
 
-            if (status && !['SUCCESS', 'FAILED', 'REVERSED'].includes(status.toUpperCase())
+            if (status && !['SUCCESS', 'FAILED', 'REVERSED', 'PENDING'].includes(status.toUpperCase())
             ) {
                 return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid status query')
             }

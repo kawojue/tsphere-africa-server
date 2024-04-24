@@ -156,9 +156,9 @@ export class ModminController {
     return await this.modminService.fetchReferral(res, referralId)
   }
 
-  // @ApiBearerAuth()
-  // @Role(Roles.admin)
-  // @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/transaction/histories')
   async fetchTransactionHistories(
     @Res() res: Response,
