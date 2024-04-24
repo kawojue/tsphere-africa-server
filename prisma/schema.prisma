@@ -19,6 +19,7 @@ model User {
     skills              Skill[]
     skillAttachments    File[]
     under18Kyc          under18Kyc?
+    wallet              Wallet?
     avatar              File?
     portfolio           Portfolio?
     email_verified      Boolean              @default(false)
@@ -61,6 +62,35 @@ model Referred {
     referralId String   @db.ObjectId
     user       User     @relation(fields: [userId], references: [id])
     userId     String   @db.ObjectId
+}
+
+model Wallet {
+    id                  String     @id @default(auto()) @map("_id") @db.ObjectId
+    balance             Float      @default(0.00)
+    lastAmountWithdrawn Float      @default(0.00)
+    txHistories         TxHistory?
+    createdAt           DateTime   @default(now())
+    updatedAt           DateTime   @updatedAt
+    user                User       @relation(fields: [userId], references: [id])
+    userId              String     @unique @db.ObjectId
+}
+
+model TxHistory {
+    id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+    reference          String    @unique
+    amount             Float     @default(0.00)
+    status             String
+    totalFee           Float?
+    paystackFee        Float?
+    processsingFee     Float?
+    createdAt          DateTime  @default(now())
+    channel            String?
+    type               TxType?
+    source             TxSource?
+    authorization_code String?
+    updatedAt          DateTime  @updatedAt
+    wallet             Wallet    @relation(references: [id], fields: [walletId])
+    walletId           String    @unique @db.ObjectId
 }
 
 model SubscribedEmails {
@@ -345,11 +375,15 @@ enum ChargeTime {
     Monthly
 }
 
-type File {
-    idx  String? @default(uuid())
-    url  String
-    path String
-    type String?
+enum TxType {
+    REVERSED
+    RESOURCE
+    WITHDRAWAL
+}
+
+enum TxSource {
+    wallet
+    external
 }
 
 enum JobStatus {
@@ -368,4 +402,11 @@ enum Role {
 enum UserStatus {
     active
     suspended
+}
+
+type File {
+    idx  String? @default(uuid())
+    url  String
+    path String
+    type String?
 }
