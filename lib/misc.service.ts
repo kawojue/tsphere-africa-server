@@ -25,7 +25,7 @@ export class MiscService {
     genenerateToken(id: string) {
         const randomCode = genRandomCode()
         const tk = genToken(id, randomCode)
-        const token = Buffer.from(tk.token).toString('base64')
+        const token = Buffer.from(tk.token).toString('base64url')
 
         return {
             token,
