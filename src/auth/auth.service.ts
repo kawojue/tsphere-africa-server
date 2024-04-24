@@ -201,8 +201,11 @@ export class AuthService {
                     })
                 }
 
+                await Promise.all([
+                    this.prisma.isSubscribed(email),
+                    this.prisma.wallet.create({ data: { user: { connect: { id: user.id } } } }),
+                ])
                 await this.brevo.sendVerificationEmail(email, token.token)
-                await this.prisma.isSubscribed(email)
             }
 
             this.response.sendSuccess(res, StatusCodes.Created, {
@@ -300,8 +303,11 @@ export class AuthService {
                     })
                 }
 
+                await Promise.all([
+                    this.prisma.isSubscribed(email),
+                    this.prisma.wallet.create({ data: { user: { connect: { id: newUser.id } } } }),
+                ])
                 await this.brevo.sendVerificationEmail(email, token.token)
-                await this.prisma.isSubscribed(email)
             }
 
             this.response.sendSuccess(res, StatusCodes.Created, {

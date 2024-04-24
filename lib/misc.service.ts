@@ -51,6 +51,37 @@ export class MiscService {
         }
     }
 
+    async calculateWithdrawalFee(amount: number) {
+        let processsingFee = amount * 0.01
+
+        if (processsingFee > 10) {
+            processsingFee = 10
+        }
+
+        let fee = { processsingFee } as {
+            totalFee: number
+            paystackFee: number
+            processsingFee: number
+        }
+
+        if (amount > 5_000) {
+            fee.paystackFee = 10
+        } else {
+            fee.paystackFee = amount <= 50_000 ? 25 : 50
+        }
+
+        return { ...fee, totalFee: fee.paystackFee + fee.processsingFee }
+    }
+
+    handlePaystackAndServerError(res: Response, err: any) {
+        if (err.response?.message) {
+            console.error(err)
+            this.response.sendError(res, err.status, err.response.message)
+        } else {
+            this.handleServerError(res, err)
+        }
+    }
+
     async handleServerError(res: Response, err?: any, msg?: string) {
         console.error(err)
         return this.response.sendError(res, StatusCodes.InternalServerError, msg || 'Something went wrong')

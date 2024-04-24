@@ -13,6 +13,7 @@ import { BrevoService } from 'lib/brevo.service'
 import { PrismaService } from 'lib/prisma.service'
 import { TalentModule } from './talent/talent.module'
 import { ModminModule } from './modmin/modmin.module'
+import { WalletModule } from './wallet/wallet.module'
 import { ContactModule } from './contact/contact.module'
 import { ArticleModule } from './article/article.module'
 import { EncryptionService } from 'lib/encryption.service'
@@ -34,6 +35,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
     ContactModule,
     CreativeModule,
     ProfileSetupModule,
+    WalletModule,
   ],
   controllers: [AppController],
   providers: [
