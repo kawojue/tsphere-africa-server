@@ -1,8 +1,11 @@
 import { Gender } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, IsUrl } from 'class-validator'
+import { UsernameDto } from 'src/auth/dto/auth.dto'
+import {
+    IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, IsUrl
+} from 'class-validator'
 
-export class CreativePersonalInfoDto {
+export class CreativePersonalInfoDto extends UsernameDto {
     @ApiProperty({
         example: 'Raheem'
     })
@@ -18,14 +21,6 @@ export class CreativePersonalInfoDto {
     @IsNotEmpty()
     @IsOptional()
     lastname: string
-
-    @ApiProperty({
-        example: 'Kawojue'
-    })
-    @IsString()
-    @IsNotEmpty()
-    @IsOptional()
-    username: string
 
     @ApiProperty({
         example: '+2348131911964'

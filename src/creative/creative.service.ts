@@ -8,6 +8,7 @@ import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { genReferralKey } from 'helpers/genReferralKey'
 import { CertificationDto } from './dto/certification.dto'
 import { CreativePersonalInfoDto } from './dto/personal-info.dto'
 
@@ -84,6 +85,11 @@ export class CreativeService {
                 if (usernameExists) {
                     return this.response.sendError(res, StatusCodes.Conflict, 'Username has been taken')
                 }
+
+                await this.prisma.referral.update({
+                    where: { userId: sub },
+                    data: { key: genReferralKey(username) }
+                })
             } else {
                 username = user.username
             }

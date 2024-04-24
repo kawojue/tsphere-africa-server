@@ -8,6 +8,7 @@ import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { genReferralKey } from 'helpers/genReferralKey'
 import { TalentBioStatsDto } from './dto/bio-stats.dto'
 import { TalentPersonalInfoDto } from './dto/personal-info.dto'
 
@@ -85,6 +86,11 @@ export class TalentService {
                 if (usernameExists) {
                     return this.response.sendError(res, StatusCodes.Conflict, 'Username has been taken')
                 }
+
+                await this.prisma.referral.update({
+                    where: { userId: sub },
+                    data: { key: genReferralKey(username) }
+                })
             } else {
                 username = user.username
             }
@@ -122,14 +128,16 @@ export class TalentService {
             const personalInfoData = await this.prisma.talentPersonalInfo.upsert({
                 where: { talentId: talent.id },
                 create: {
-                    phone, altPhone, gender, religion, dob, playingMaxAge, playingMinAge, nationality,
-                    country, state, proofOfId: proofOfId?.path ? proofOfId : personalInfo?.proofOfId,
-                    address, idType, languages, fbHandle, igHandle, xHandle, workingTitle,
+                    languages, fbHandle, igHandle, xHandle, workingTitle,
+                    phone, altPhone, gender, religion, dob, playingMaxAge,
+                    playingMinAge, nationality, country, state, address, idType,
+                    proofOfId: proofOfId?.path ? proofOfId : personalInfo?.proofOfId,
                     talent: { connect: { id: talent.id } }
                 },
                 update: {
-                    state, address, idType, languages, workingTitle, fbHandle, igHandle, xHandle, dob,
-                    phone, altPhone, gender, religion, playingMaxAge, playingMinAge, nationality, country,
+                    playingMaxAge, playingMinAge, nationality, country,
+                    state, address, idType, languages, workingTitle, fbHandle,
+                    igHandle, xHandle, dob, phone, altPhone, gender, religion,
                 }
             })
 
