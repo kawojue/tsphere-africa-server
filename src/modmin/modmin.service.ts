@@ -412,7 +412,7 @@ export class ModminService {
     async referralAnalytics(res: Response) {
         const totalReferredUsers = await this.prisma.referred.count()
         const totalReferrals = await this.prisma.referral.count({ where: { points: { gte: 10 } } })
-        const totalPoints = await this.prisma.referral.aggregate({
+        const { _sum: { points: totalPoints } } = await this.prisma.referral.aggregate({
             _sum: { points: true }
         })
 
@@ -425,11 +425,14 @@ export class ModminService {
         try {
             const currentYear = new Date().getFullYear()
             const monthNames = [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
+                'January', 'February', 'March', 'April', 'May', 'June', 'July',
+                'August', 'September', 'October', 'November', 'December'
             ]
 
-            const referralCounts = []
+            const referralCounts = [] as {
+                monthName: string
+                count: number
+            }[]
 
             for (let i = 0; i < monthNames.length; i++) {
                 const startDate = new Date(currentYear, i, 1)
