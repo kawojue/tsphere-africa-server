@@ -6,7 +6,7 @@ import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { FetchProfilesDto } from './dto/infinite-scroll.dto'
-import { Controller, Get, Param, Query, Req, Res, UseGuards } from '@nestjs/common'
+import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common'
 
 @ApiTags("User")
 @Controller('user')
@@ -24,7 +24,7 @@ export class UserController {
   @Get('/profile')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Role(Roles.creative, Roles.talent)
+  @Role(Roles.creative, Roles.talent, Roles.client)
   async fetchProfile(
     @Res() res: Response,
     @Req() req: IRequest,

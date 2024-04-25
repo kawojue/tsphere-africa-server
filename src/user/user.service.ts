@@ -100,6 +100,7 @@ export class UserService {
                     primarySkill: true,
                     skillAttachments: true,
                     rateAndAvailability: true,
+                    wallet: { select: { balance: true } },
                     [role]: {
                         select: role === "talent" ? {
                             bioStats: true,

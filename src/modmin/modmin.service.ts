@@ -721,7 +721,7 @@ export class ModminService {
                 },
                 skip: offset,
                 take: limit,
-                orderBy: q === "amount" ? { amount: 'asc' } : { createdAt: 'desc' },
+                orderBy: q === "amount" ? { amount: 'asc' } : { updatedAt: 'desc' },
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: txHistories })

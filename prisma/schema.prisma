@@ -30,7 +30,6 @@ model User {
     referral            Referral?
     portfolio           Portfolio?
     validation          Validation?
-    bankDetails         BankDetails?
     rateAndAvailability RateAndAvailability?
     jobs                Job[]
     likes               Like[]
@@ -39,8 +38,9 @@ model User {
     comments            Comment[]
     articles            Article[]
     referred            Referred[]
-    experiences         Experience[]
     txHistories         TxHistory[]
+    experiences         Experience[]
+    bankDetails         BankDetails[]
     jobApplications     JobApplication[]
 }
 
@@ -86,7 +86,6 @@ model TxHistory {
     totalFee                 Float?
     paystackFee              Float?
     processsingFee           Float?
-    createdAt                DateTime @default(now())
     channel                  String?
     type                     TxType
     source                   TxSource
@@ -100,6 +99,7 @@ model TxHistory {
     sourceAccountNumber      String?
     sourceBankCode           String?
     sourceBankName           String?
+    createdAt                DateTime @default(now())
     updatedAt                DateTime @updatedAt
     user                     User     @relation(references: [id], fields: [userId])
     userId                   String   @unique @db.ObjectId
@@ -153,6 +153,7 @@ model BankDetails {
     bankName      String
     accountName   String
     accountNumber String
+    primay        Boolean @default(false)
     sortCode      String?
     user          User    @relation(fields: [userId], references: [id])
     userId        String  @unique @db.ObjectId
@@ -202,6 +203,7 @@ model Creative {
 
 model CreativePersonalInfo {
     id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    proofOfId  File?
     phone      String?
     altPhone   String?
     gender     Gender?
@@ -212,7 +214,6 @@ model CreativePersonalInfo {
     state      String?
     address    String?
     idType     String?
-    proofOfId  File?
     languages  String[]
     fbHandle   String?
     igHandle   String?
@@ -319,12 +320,6 @@ model JobApplication {
     @@unique([userId, jobId])
 }
 
-enum ApplicantStatus {
-    HIRED
-    PENDING
-    REJECTED
-}
-
 model Article {
     id               String    @id @default(auto()) @map("_id") @db.ObjectId
     content          String
@@ -366,6 +361,12 @@ model Like {
     userId    String?  @db.ObjectId
 
     @@unique([userId, articleId])
+}
+
+enum ApplicantStatus {
+    HIRED
+    PENDING
+    REJECTED
 }
 
 enum Gender {
