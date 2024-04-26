@@ -105,12 +105,6 @@ export class SignupDto extends EmailDto {
     skill: string
 
     @ApiProperty({
-        example: true
-    })
-    @IsBoolean({ message: "Over18 has to be a boolean value" })
-    over18: boolean
-
-    @ApiProperty({
         example: 'Mypswd123',
     })
     @IsString()

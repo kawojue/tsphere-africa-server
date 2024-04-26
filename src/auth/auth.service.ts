@@ -71,8 +71,8 @@ export class AuthService {
         res: Response,
         { refKey }: ReferralDto,
         {
-            email, password, role, first_name,
-            last_name, username, skill, over18,
+            email, password, role, skill,
+            first_name, last_name, username,
         }: SignupDto
     ) {
         try {
@@ -118,11 +118,9 @@ export class AuthService {
 
             const newUser = await this.prisma.user.create({
                 data: {
-                    username, over18,
-                    primarySkill: skill,
-                    lastname: last_name,
-                    firstname: first_name,
-                    password, email, role,
+                    username, primarySkill: skill,
+                    firstname: first_name, password,
+                    lastname: last_name, email, role,
                 }
             })
 

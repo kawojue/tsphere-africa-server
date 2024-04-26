@@ -19,7 +19,6 @@ model User {
     email_verified      Boolean              @default(false)
     verified            Boolean              @default(false)
     role                Role                 @default(user)
-    over18              Boolean
     subscribed          Boolean              @default(false)
     createdAt           DateTime             @default(now())
     updatedAt           DateTime             @updatedAt
