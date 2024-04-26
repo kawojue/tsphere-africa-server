@@ -266,7 +266,7 @@ export class ProfileSetupService {
                 message: "Your primary account has been added"
             })
         } catch (err) {
-            this.misc.handleServerError(res, err, 'Error adding primary bank account')
+            this.misc.handlePaystackAndServerError(res, err)
         }
     }
 

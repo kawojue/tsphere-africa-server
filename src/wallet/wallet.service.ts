@@ -53,20 +53,18 @@ export class WalletService {
 
             await this.prisma.bankDetails.create({
                 data: {
-                    bankName,
-                    bankCode,
-                    primary: false,
-                    accountNumber,
+                    bankName, accountNumber,
+                    bankCode, primary: false,
+                    user: { connect: { id: sub } },
                     accountName: details.account_name,
-                    user: { connect: { id: sub } }
                 }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, {
+            this.response.sendSuccess(res, StatusCodes.Created, {
                 message: "New account has been added"
             })
         } catch (err) {
-            this.misc.handleServerError(res, err, 'Error adding bank account')
+            this.misc.handlePaystackAndServerError(res, err)
         }
     }
 
@@ -108,6 +106,64 @@ export class WalletService {
             })
         } catch (err) {
             this.misc.handleServerError(res, err, 'Error removing bank account')
+        }
+    }
+
+    async togglePrimaryAccount(
+        res: Response,
+        { sub }: ExpressUser,
+        id: string,
+    ) {
+        try {
+            const where = { id, userId: sub }
+
+            const account = await this.prisma.bankDetails.findUnique({ where })
+
+            if (!account) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Account details not found")
+            }
+
+            const accountCounts = await this.prisma.bankDetails.count({ where: { userId: sub } })
+
+            if (accountCounts <= 1) {
+                if (account.primary) {
+                    return this.response.sendError(res, StatusCodes.OK, 'Add a new account before removing this from primary')
+                }
+            }
+
+            await this.prisma.bankDetails.updateMany({
+                where: {
+                    userId: sub,
+                    primary: true,
+                },
+                data: { primary: false }
+            })
+
+            const bankAccount = await this.prisma.bankDetails.update({
+                where,
+                data: { primary: !!account.primary }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: bankAccount })
+
+            res.on('finish', async () => {
+                if (bankAccount && !bankAccount.primary) {
+                    const latestAccount = await this.prisma.bankDetails.findFirst({
+                        where,
+                        select: { id: true },
+                        orderBy: { updatedAt: 'desc' }
+                    })
+
+                    if (latestAccount) {
+                        await this.prisma.bankDetails.update({
+                            where: { id: latestAccount.id, userId: sub },
+                            data: { primary: true }
+                        })
+                    }
+                }
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, 'Error toggling bank account')
         }
     }
 

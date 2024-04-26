@@ -2,11 +2,11 @@ import { Role } from 'src/role.decorator'
 import { Request, Response } from 'express'
 import StatusCodes from 'enums/StatusCodes'
 import { AuthGuard } from '@nestjs/passport'
-import {
-  Body, Controller, Delete, Get, Query, Req,
-  HttpException, Param, Post, Res, UseGuards,
-} from '@nestjs/common'
 import { Role as Roles } from '@prisma/client'
+import {
+  Body, Controller, Delete, Query, Patch, Param,
+  Req, HttpException, Post, Res, UseGuards, Get,
+} from '@nestjs/common'
 import { WalletService } from './wallet.service'
 import { ValidateBankDto } from './dto/bank.dto'
 import { getIPAddress } from 'helpers/getIPAddress'
@@ -56,6 +56,18 @@ export class WalletController {
     @Param('id') id: string
   ) {
     return await this.walletService.removeBankDetail(res, req.user, id)
+  }
+
+  @Patch('/toggle-primary/bank-details/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.creative, Roles.talent, Roles.client)
+  async togglePrimaryAccount(
+    @Req() req: IRequest,
+    @Res() res: Response,
+    @Param('id') id: string
+  ) {
+    return await this.walletService.togglePrimaryAccount(res, req.user, id)
   }
 
   @ApiOperation({
