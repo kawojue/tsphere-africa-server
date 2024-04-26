@@ -11,6 +11,7 @@ import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { ExperienceDto } from './dto/experiece.dto'
 import { BankDetailsDto } from './dto/bank-details.dto'
+import { PaystackService } from 'lib/Paystack/paystack.service'
 import { RateAndAvailabilityDto } from './dto/rate-availability.dto'
 
 @Injectable()
@@ -20,6 +21,7 @@ export class ProfileSetupService {
         private readonly response: SendRes,
         private readonly misc: MiscService,
         private readonly prisma: PrismaService,
+        private readonly paystack: PaystackService,
     ) { }
 
     async uploadPortfolioImages(
@@ -241,21 +243,28 @@ export class ProfileSetupService {
         }
     }
 
-    async manageBankDetails(
+    async addPrimaryBankDetails(
         res: Response,
         { sub }: ExpressUser,
-        bankDetails: BankDetailsDto
+        { accountNumber, bankCode, bankName }: BankDetailsDto
     ) {
         try {
-            const details = await this.prisma.bankDetails.upsert({
-                where: {
-                    userId: sub
-                },
-                create: { ...bankDetails, user: { connect: { id: sub } } },
-                update: bankDetails
+            const { data: details } = await this.paystack.resolveAccount(accountNumber, bankCode)
+
+            await this.prisma.bankDetails.create({
+                data: {
+                    bankName,
+                    bankCode,
+                    primay: true,
+                    accountNumber,
+                    accountName: details.account_name,
+                    user: { connect: { id: sub } }
+                }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: details })
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                message: "Your primary account has been added"
+            })
         } catch (err) {
             this.misc.handleServerError(res, err, 'Error updating bank account')
         }

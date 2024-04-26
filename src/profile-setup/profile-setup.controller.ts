@@ -94,7 +94,7 @@ export class ProfileSetupController {
     @Req() req: IRequest,
     @Body() bankDetails: BankDetailsDto
   ) {
-    return await this.profileSetupService.manageBankDetails(res, req.user, bankDetails)
+    return await this.profileSetupService.addPrimaryBankDetails(res, req.user, bankDetails)
   }
 
   @ApiOperation({

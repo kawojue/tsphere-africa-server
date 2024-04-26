@@ -24,9 +24,9 @@ export class BankDetailsDto {
     accountNumber: string
 
     @ApiProperty({
-        example: '12-34-56'
+        example: '004'
     })
     @IsOptional()
     @IsString()
-    sortCode: string
+    bankCode: string
 }
