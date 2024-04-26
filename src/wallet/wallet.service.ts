@@ -100,10 +100,10 @@ export class WalletService {
             }
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                message: "Account details removed successfully"
+                message: "Account has been successfully unlinked"
             })
         } catch (err) {
-            this.misc.handleServerError(res, err, 'Error removing bank account')
+            this.misc.handleServerError(res, err, 'Error removing linked account')
         }
     }
 
@@ -124,7 +124,7 @@ export class WalletService {
             const accountCounts = await this.prisma.bankDetails.count({ where: { userId: sub } })
 
             if (accountCounts <= 1 && account.primary) {
-                return this.response.sendError(res, StatusCodes.OK, 'Add a new account before removing this from primary')
+                return this.response.sendError(res, StatusCodes.OK, 'Link a new account before removing your primary account')
             }
 
             await this.prisma.$transaction([
