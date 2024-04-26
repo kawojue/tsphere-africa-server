@@ -1,5 +1,5 @@
 import { Response } from 'express'
-import { $Enums, TxStatus, TxType } from '@prisma/client'
+import { $Enums } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
@@ -7,10 +7,10 @@ import { MiscService } from 'lib/misc.service'
 import { titleName } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
 import { EncryptionService } from 'lib/encryption.service'
+import {
+    AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
+} from './dto/user.dto'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
-import { AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto } from './dto/user.dto'
-import { PaymentChartDto } from './dto/analytics.dto'
-import { TxHistoriesDto } from './dto/txHistory.dto'
 
 @Injectable()
 export class ModminService {
@@ -280,8 +280,8 @@ export class ModminService {
         try {
             const currentYear = new Date().getFullYear()
             const monthNames = [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
+                'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+                'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
             ]
 
             const userCounts = []
@@ -427,8 +427,8 @@ export class ModminService {
         try {
             const currentYear = new Date().getFullYear()
             const monthNames = [
-                'January', 'February', 'March', 'April', 'May', 'June', 'July',
-                'August', 'September', 'October', 'November', 'December'
+                'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+                'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
             ]
 
             const referralCounts = [] as {
@@ -563,170 +563,5 @@ export class ModminService {
         }
 
         this.response.sendSuccess(res, StatusCodes.OK, { data: referral })
-    }
-
-    async paymentAnalytics(res: Response) {
-        const inflow = await this.prisma.totalInflow() ?? 0
-        const outflow = await this.prisma.totalOutflow() ?? 0
-
-        const { _sum: { processsingFee: income } } = await this.prisma.txHistory.aggregate({
-            where: {},
-            _sum: { processsingFee: true }
-        })
-
-        this.response.sendSuccess(res, StatusCodes.OK, { data: { income: income ?? 0, inflow, outflow } })
-    }
-
-    async paymentCharts(res: Response, { q }: PaymentChartDto) {
-        try {
-            const currentYear = new Date().getFullYear()
-            const monthNames = [
-                'January', 'February', 'March', 'April', 'May', 'June', 'July',
-                'August', 'September', 'October', 'November', 'December'
-            ]
-
-            const totalAmount = [] as {
-                monthName: string
-                amount: number
-            }[]
-
-            let total: number = 0
-
-            if (q === "income") {
-                const aggregate = await this.prisma.txHistory.aggregate({
-                    where: { status: 'SUCCESS' },
-                    _sum: { settlementAmount: true }
-                })
-
-                total = aggregate._sum.settlementAmount ?? 0
-            } else {
-                const aggregate = await this.prisma.txHistory.aggregate({
-                    where: {
-                        status: 'SUCCESS',
-                        type: q === "inflow" ? 'DEPOSIT' : 'WITHDRAWAL',
-                    },
-                    _sum: { settlementAmount: true }
-                })
-
-                total = aggregate._sum.settlementAmount ?? 0
-            }
-
-            for (let i = 0; i < monthNames.length; i++) {
-                const startDate = new Date(currentYear, i, 1)
-                let endMonth = i + 1
-                let endYear = currentYear
-
-                if (endMonth === 12) {
-                    endMonth = 1
-                    endYear = currentYear + 1
-                } else {
-                    endMonth++
-                }
-
-                const endDate = new Date(endYear, endMonth - 1, 1)
-
-                let amount = 0
-
-                if (q === "income") {
-                    const aggregate = await this.prisma.txHistory.aggregate({
-                        where: {
-                            status: 'SUCCESS',
-                            AND: [
-                                { createdAt: { gte: startDate } },
-                                { createdAt: { lt: endDate } }
-                            ]
-                        },
-                        _sum: { settlementAmount: true }
-                    })
-
-                    amount = aggregate._sum.settlementAmount ?? 0
-                } else {
-                    const aggregate = await this.prisma.txHistory.aggregate({
-                        where: {
-                            status: 'SUCCESS',
-                            type: q === "inflow" ? 'DEPOSIT' : 'WITHDRAWAL',
-                            AND: [
-                                { createdAt: { gte: startDate } },
-                                { createdAt: { lt: endDate } }
-                            ]
-                        },
-                        _sum: { settlementAmount: true }
-                    })
-
-                    amount = aggregate._sum.settlementAmount ?? 0
-                }
-
-                totalAmount.push({ monthName: monthNames[i], amount })
-            }
-
-            this.response.sendSuccess(res, StatusCodes.OK, {
-                data: {
-                    chart: totalAmount,
-                    total
-                }
-            })
-        } catch (err) {
-            this.misc.handleServerError(res, err, "Error caching chart")
-        }
-    }
-
-    async fetchTransactionHistories(
-        res: Response,
-        {
-            s = '', limit = 100, page = 1, endDate = '',
-            startDate = '', type = null, status = null, q,
-        }: TxHistoriesDto
-    ) {
-        try {
-            page = Number(page)
-            limit = Number(limit)
-            const offset = (page - 1) * limit
-
-            if (type && !['WITHDRAWAL', 'DEPOSIT',].includes(type.toUpperCase())) {
-                return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid type query')
-            }
-
-            if (status && !['SUCCESS', 'FAILED', 'REVERSED', 'PENDING'].includes(status.toUpperCase())
-            ) {
-                return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid status query')
-            }
-
-            const txHistories = await this.prisma.txHistory.findMany({
-                where: {
-                    createdAt: {
-                        gte: startDate !== '' ? new Date(startDate) : new Date(0),
-                        lte: endDate !== '' ? new Date(endDate) : new Date(),
-                    },
-                    type: type !== null ? type as TxType : undefined,
-                    status: status !== null ? status as TxStatus : undefined,
-                    OR: [
-                        { user: { email: { contains: s, mode: 'insensitive' } } },
-                        { user: { lastname: { contains: s, mode: 'insensitive' } } },
-                        { user: { firstname: { contains: s, mode: 'insensitive' } } },
-                    ]
-                },
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            role: true,
-                            email: true,
-                            avatar: true,
-                            username: true,
-                            lastname: true,
-                            firstname: true,
-                            primarySkill: true,
-                        }
-                    }
-                },
-                skip: offset,
-                take: limit,
-                orderBy: q === "amount" ? { amount: 'asc' } : { updatedAt: 'desc' },
-            })
-
-            this.response.sendSuccess(res, StatusCodes.OK, { data: txHistories })
-        } catch (err) {
-            this.misc.handleServerError(res, err, "Error caching chart")
-        }
     }
 }

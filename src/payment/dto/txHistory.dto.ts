@@ -1,4 +1,4 @@
-import { SearchDto } from './user.dto'
+import { SearchDto } from '../../modmin/dto/user.dto'
 import { ApiProperty } from '@nestjs/swagger'
 import { TxStatus, TxType } from '@prisma/client'
 import { IsEnum, IsOptional } from 'class-validator'

@@ -4,8 +4,6 @@ import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { ModminService } from './modmin.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
-import { TxHistoriesDto } from './dto/txHistory.dto'
-import { PaymentChartDto } from './dto/analytics.dto'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import {
   AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
@@ -55,14 +53,6 @@ export class ModminController {
   @Get('/referral/analytics/dashboard')
   async referralAnalytics(@Res() res: Response,) {
     return await this.modminService.referralAnalytics(res)
-  }
-
-  @ApiBearerAuth()
-  @Role(Roles.admin)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Get('/payment/analytics/dashboard')
-  async paymentAnalytics(@Res() res: Response,) {
-    return await this.modminService.paymentAnalytics(res)
   }
 
   @Get('/user/totggle-suspension/:userId')
@@ -129,14 +119,6 @@ export class ModminController {
   @ApiBearerAuth()
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Get('/payment/chart/dashboard')
-  async paymentCharts(@Res() res: Response, @Query() q: PaymentChartDto) {
-    return await this.modminService.paymentCharts(res, q)
-  }
-
-  @ApiBearerAuth()
-  @Role(Roles.admin)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/referrals')
   async fetchReferrals(
     @Res() res: Response,
@@ -154,16 +136,5 @@ export class ModminController {
     @Param('referralId') referralId: string,
   ) {
     return await this.modminService.fetchReferral(res, referralId)
-  }
-
-  @ApiBearerAuth()
-  @Role(Roles.admin)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Get('/transaction/histories')
-  async fetchTransactionHistories(
-    @Res() res: Response,
-    @Query() query: TxHistoriesDto,
-  ) {
-    return await this.modminService.fetchTransactionHistories(res, query)
   }
 }

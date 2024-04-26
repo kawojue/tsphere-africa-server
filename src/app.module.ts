@@ -16,6 +16,7 @@ import { ModminModule } from './modmin/modmin.module'
 import { WalletModule } from './wallet/wallet.module'
 import { ContactModule } from './contact/contact.module'
 import { ArticleModule } from './article/article.module'
+import { PaymentModule } from './payment/payment.module'
 import { EncryptionService } from 'lib/encryption.service'
 import { CreativeModule } from './creative/creative.module'
 import { CustomAuthMiddlware } from './middlewares/auth.middleware'
@@ -26,21 +27,29 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 @Module({
   imports: [
     AuthModule,
-    FileModule,
     JobModule,
+    FileModule,
     UserModule,
     TalentModule,
     ModminModule,
+    WalletModule,
     ArticleModule,
     ContactModule,
+    PaymentModule,
     CreativeModule,
     ProfileSetupModule,
-    WalletModule,
   ],
   controllers: [AppController],
   providers: [
-    AppService, PrismaService, MiscService, PlunkService, SendRes,
-    JwtService, BrevoService, EncryptionService, AwsService,
+    AppService,
+    SendRes,
+    JwtService,
+    AwsService,
+    MiscService,
+    PlunkService,
+    BrevoService,
+    PrismaService,
+    EncryptionService,
   ]
 })
 export class AppModule implements NestModule {
@@ -55,8 +64,8 @@ export class AppModule implements NestModule {
     consumer
       .apply(ArticleMiddlware)
       .forRoutes(
-        { path: 'article/fetch/:articleId', method: RequestMethod.GET },
         { path: 'comment/:articleId', method: RequestMethod.POST },
+        { path: 'article/fetch/:articleId', method: RequestMethod.GET },
       )
   }
 }

@@ -84,7 +84,7 @@ model TxHistory {
     status                   TxStatus
     totalFee                 Float?
     paystackFee              Float?
-    processsingFee           Float?
+    processingFee            Float?
     channel                  String?
     type                     TxType
     source                   TxSource
@@ -98,6 +98,7 @@ model TxHistory {
     sourceAccountNumber      String?
     sourceBankCode           String?
     sourceBankName           String?
+    description              String?
     createdAt                DateTime @default(now())
     updatedAt                DateTime @updatedAt
     user                     User     @relation(references: [id], fields: [userId])

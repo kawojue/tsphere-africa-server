@@ -76,7 +76,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
             total = inflow._sum.settlementAmount
         }
 
-        return total
+        return total ?? 0
     }
 
     async totalOutflow(userId?: string) {
@@ -105,6 +105,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
             total = inflow._sum.settlementAmount
         }
 
-        return total
+        return total ?? 0
     }
 }
