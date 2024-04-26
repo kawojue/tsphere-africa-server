@@ -8,6 +8,7 @@ import { BrevoService } from 'lib/brevo.service'
 import { ValidateBankDto } from './dto/bank.dto'
 import { PrismaService } from 'lib/prisma.service'
 import { PaystackService } from 'lib/Paystack/paystack.service'
+import { BankDetailsDto } from 'src/profile-setup/dto/bank-details.dto'
 
 @Injectable()
 export class WalletService {
@@ -40,6 +41,75 @@ export class WalletService {
         }
 
         this.response.sendSuccess(res, StatusCodes.OK, { data: bank })
+    }
+
+    async addBankDetail(
+        res: Response,
+        { sub }: ExpressUser,
+        { accountNumber, bankCode, bankName }: BankDetailsDto
+    ) {
+        try {
+            const { data: details } = await this.paystack.resolveAccount(accountNumber, bankCode)
+
+            await this.prisma.bankDetails.create({
+                data: {
+                    bankName,
+                    bankCode,
+                    primary: false,
+                    accountNumber,
+                    accountName: details.account_name,
+                    user: { connect: { id: sub } }
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                message: "New account has been added"
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, 'Error adding bank account')
+        }
+    }
+
+    async removeBankDetail(
+        res: Response,
+        { sub }: ExpressUser,
+        id: string
+    ) {
+        try {
+            const where = { id, userId: sub }
+
+            const account = await this.prisma.bankDetails.findUnique({ where })
+
+            if (!account) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Account details not found")
+            }
+
+            const deletedAccount = await this.prisma.bankDetails.delete({ where })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                message: "Account details removed successfully"
+            })
+
+            res.on('finish', async () => {
+                if (deletedAccount && deletedAccount.primary) {
+                    const accountCounts = await this.prisma.bankDetails.count({ where: { userId: sub } })
+
+                    if (accountCounts >= 1) {
+                        const latestAccount = await this.prisma.bankDetails.findMany({
+                            where,
+                            orderBy: { updatedAt: 'desc' }
+                        })[0]
+
+                        await this.prisma.bankDetails.update({
+                            where: { id: latestAccount.id, userId: sub },
+                            data: { primary: true }
+                        })
+                    }
+                }
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, 'Error removing bank account')
+        }
     }
 
     async manageTransferEvents(body: TransferEvent) {

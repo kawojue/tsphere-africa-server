@@ -10,13 +10,6 @@ export class BankDetailsDto {
     bankName: string
 
     @ApiProperty({
-        example: 'Raheem Olumuyiwa Kawojue'
-    })
-    @IsString()
-    @IsNotEmpty()
-    accountName: string
-
-    @ApiProperty({
         example: '0N1U2B3A4N'
     })
     @IsString()

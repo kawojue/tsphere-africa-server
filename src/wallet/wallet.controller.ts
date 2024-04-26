@@ -1,12 +1,18 @@
+import { Role } from 'src/role.decorator'
 import { Request, Response } from 'express'
 import StatusCodes from 'enums/StatusCodes'
+import { AuthGuard } from '@nestjs/passport'
+import {
+  Body, Controller, Delete, Get, Query, Req,
+  HttpException, Param, Post, Res, UseGuards,
+} from '@nestjs/common'
+import { Role as Roles } from '@prisma/client'
 import { WalletService } from './wallet.service'
 import { ValidateBankDto } from './dto/bank.dto'
 import { getIPAddress } from 'helpers/getIPAddress'
-import { ApiOperation, ApiTags } from '@nestjs/swagger'
-import {
-  Controller, Get, HttpException, Param, Post, Query, Req, Res
-} from '@nestjs/common'
+import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { BankDetailsDto } from 'src/profile-setup/dto/bank-details.dto'
 
 @ApiTags("Wallet")
 @Controller('wallet')
@@ -26,6 +32,30 @@ export class WalletController {
   @Get('/fetch/banks/:bankCode')
   async fetchBank(@Res() res: Response, @Param('bankCode') bankCode: string) {
     return await this.walletService.fetchBankByBankCode(res, bankCode)
+  }
+
+  @Post('/add/bank-details')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.creative, Roles.talent, Roles.client)
+  async addBankDetail(
+    @Req() req: IRequest,
+    @Res() res: Response,
+    @Body() body: BankDetailsDto
+  ) {
+    return await this.walletService.addBankDetail(res, req.user, body)
+  }
+
+  @Delete('/remove/bank-details/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.creative, Roles.talent, Roles.client)
+  async removeBankDetail(
+    @Req() req: IRequest,
+    @Res() res: Response,
+    @Param('id') id: string
+  ) {
+    return await this.walletService.removeBankDetail(res, req.user, id)
   }
 
   @ApiOperation({
