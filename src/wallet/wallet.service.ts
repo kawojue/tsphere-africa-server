@@ -84,25 +84,23 @@ export class WalletService {
 
             const deletedAccount = await this.prisma.bankDetails.delete({ where })
 
+            if (deletedAccount.primary) {
+                const latestAccount = await this.prisma.bankDetails.findFirst({
+                    where,
+                    select: { id: true },
+                    orderBy: { updatedAt: 'desc' }
+                })
+
+                if (latestAccount) {
+                    await this.prisma.bankDetails.update({
+                        where: { id: latestAccount.id, userId: sub },
+                        data: { primary: true }
+                    })
+                }
+            }
+
             this.response.sendSuccess(res, StatusCodes.OK, {
                 message: "Account details removed successfully"
-            })
-
-            res.on('finish', async () => {
-                if (deletedAccount && deletedAccount.primary) {
-                    const latestAccount = await this.prisma.bankDetails.findFirst({
-                        where,
-                        select: { id: true },
-                        orderBy: { updatedAt: 'desc' }
-                    })
-
-                    if (latestAccount) {
-                        await this.prisma.bankDetails.update({
-                            where: { id: latestAccount.id, userId: sub },
-                            data: { primary: true }
-                        })
-                    }
-                }
             })
         } catch (err) {
             this.misc.handleServerError(res, err, 'Error removing bank account')
@@ -125,35 +123,34 @@ export class WalletService {
 
             const accountCounts = await this.prisma.bankDetails.count({ where: { userId: sub } })
 
-            if (accountCounts <= 1) {
-                if (account.primary) {
-                    return this.response.sendError(res, StatusCodes.OK, 'Add a new account before removing this from primary')
-                }
+            if (accountCounts <= 1 && account.primary) {
+                return this.response.sendError(res, StatusCodes.OK, 'Add a new account before removing this from primary')
             }
 
-            await this.prisma.bankDetails.updateMany({
-                where: {
-                    userId: sub,
-                    primary: true,
-                },
-                data: { primary: false }
-            })
+            await this.prisma.$transaction([
+                this.prisma.bankDetails.updateMany({
+                    where: {
+                        userId: sub,
+                        primary: true,
+                        id: { not: id },
+                    },
+                    data: { primary: false }
+                }),
+                this.prisma.bankDetails.update({
+                    where,
+                    data: { primary: !account.primary }
+                })
+            ])
 
-            const bankAccount = await this.prisma.bankDetails.update({
-                where,
-                data: { primary: !!account.primary }
-            })
-
-            this.response.sendSuccess(res, StatusCodes.OK, { data: bankAccount })
+            this.response.sendSuccess(res, StatusCodes.OK, { data: account })
 
             res.on('finish', async () => {
-                if (bankAccount && !bankAccount.primary) {
+                if (!account.primary) {
                     const latestAccount = await this.prisma.bankDetails.findFirst({
                         where,
                         select: { id: true },
                         orderBy: { updatedAt: 'desc' }
                     })
-
                     if (latestAccount) {
                         await this.prisma.bankDetails.update({
                             where: { id: latestAccount.id, userId: sub },
