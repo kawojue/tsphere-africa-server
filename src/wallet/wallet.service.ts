@@ -167,6 +167,18 @@ export class WalletService {
         }
     }
 
+    async linkedBanks(res: Response, { sub }: ExpressUser) {
+        const banks = await this.prisma.bankDetails.findMany({
+            where: { userId: sub },
+            orderBy: [
+                { primary: 'desc' },
+                { createdAt: 'desc' }
+            ]
+        })
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: banks })
+    }
+
     async manageTransferEvents(body: TransferEvent) {
         const data = body.data
         try {

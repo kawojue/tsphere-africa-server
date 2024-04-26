@@ -34,6 +34,14 @@ export class WalletController {
     return await this.walletService.fetchBankByBankCode(res, bankCode)
   }
 
+  @Get('/linked-banks')
+  async linkedBanks(
+    @Req() req: IRequest,
+    @Res() res: Response,
+  ) {
+    return await this.walletService.linkedBanks(res, req.user)
+  }
+
   @Post('/add/bank-details')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
