@@ -92,14 +92,13 @@ export class WalletService {
 
             res.on('finish', async () => {
                 if (deletedAccount && deletedAccount.primary) {
-                    const accountCounts = await this.prisma.bankDetails.count({ where: { userId: sub } })
+                    const latestAccount = await this.prisma.bankDetails.findFirst({
+                        where,
+                        select: { id: true },
+                        orderBy: { updatedAt: 'desc' }
+                    })
 
-                    if (accountCounts >= 1) {
-                        const latestAccount = await this.prisma.bankDetails.findMany({
-                            where,
-                            orderBy: { updatedAt: 'desc' }
-                        })[0]
-
+                    if (latestAccount) {
                         await this.prisma.bankDetails.update({
                             where: { id: latestAccount.id, userId: sub },
                             data: { primary: true }
