@@ -22,6 +22,7 @@ model User {
     subscribed          Boolean              @default(false)
     createdAt           DateTime             @default(now())
     updatedAt           DateTime             @updatedAt
+    totp                Totp?
     avatar              File?
     wallet              Wallet?
     talent              Talent?
@@ -137,6 +138,14 @@ model Validation {
     randomCode   String
     user         User     @relation(fields: [userId], references: [id])
     userId       String   @unique @db.ObjectId
+}
+
+model Totp {
+    id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    otp        String
+    otp_expiry DateTime
+    user       User     @relation(fields: [userId], references: [id])
+    userId     String   @unique @db.ObjectId
 }
 
 model Portfolio {
