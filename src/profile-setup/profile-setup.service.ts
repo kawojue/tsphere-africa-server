@@ -255,7 +255,7 @@ export class ProfileSetupService {
                 data: {
                     bankName,
                     bankCode,
-                    primay: true,
+                    primary: true,
                     accountNumber,
                     accountName: details.account_name,
                     user: { connect: { id: sub } }
@@ -266,7 +266,7 @@ export class ProfileSetupService {
                 message: "Your primary account has been added"
             })
         } catch (err) {
-            this.misc.handleServerError(res, err, 'Error updating bank account')
+            this.misc.handleServerError(res, err, 'Error adding primary bank account')
         }
     }
 

@@ -6,7 +6,8 @@ import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { FetchProfilesDto } from './dto/infinite-scroll.dto'
-import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common'
+import { BankDetailsDto } from 'src/profile-setup/dto/bank-details.dto'
 
 @ApiTags("User")
 @Controller('user')
@@ -31,4 +32,30 @@ export class UserController {
   ) {
     return await this.userService.fetchProfile(res, req.user)
   }
+
+  @Post('/add/bank-details')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.creative, Roles.talent, Roles.client)
+  async addBankDetail(
+    @Req() req: IRequest,
+    @Res() res: Response,
+    @Body() body: BankDetailsDto
+  ) {
+    return await this.userService.addBankDetail(res, req.user, body)
+  }
+
+  @Delete('/remove/bank-details/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.creative, Roles.talent, Roles.client)
+  async removeBankDetail(
+    @Req() req: IRequest,
+    @Res() res: Response,
+    @Param('id') id: string
+  ) {
+    return await this.userService.removeBankDetail(res, req.user, id)
+  }
+
+
 }
