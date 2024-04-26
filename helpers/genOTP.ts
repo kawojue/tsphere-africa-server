@@ -8,7 +8,7 @@ const generateOTP = (length: number = 6) => {
 
     const currentDate: Date = new Date()
     const otp_expiry: Date = new Date(
-        currentDate.setMinutes(currentDate.getMinutes() + 10)
+        currentDate.setMinutes(currentDate.getMinutes() + 5)
     )
 
     return { otp, otp_expiry }
