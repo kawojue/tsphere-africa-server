@@ -1,7 +1,9 @@
 import { JwtService } from '@nestjs/jwt'
 import { Reflector } from '@nestjs/core'
+import {
+    Injectable, CanActivate, ExecutionContext
+} from '@nestjs/common'
 import { PrismaService } from 'lib/prisma.service'
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common'
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -24,10 +26,7 @@ export class RolesGuard implements CanActivate {
         try {
             const decoded = this.jwtService.verify(token)
             if (
-                decoded?.sub && (
-                    decoded.role === 'user' || decoded.role === 'client' ||
-                    decoded.role === 'creative' || decoded.role === 'talent'
-                )
+                decoded?.sub && ['client', 'creative', 'talent'].includes(decoded.role)
             ) {
                 return this.prisma.user.findUnique({
                     where: {
