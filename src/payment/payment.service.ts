@@ -1,8 +1,10 @@
 import { Response } from 'express'
+import genOTP from 'helpers/genOTP'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
+import { BrevoService } from 'lib/brevo.service'
 import { TxStatus, TxType } from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
 import { TxHistoriesDto } from './dto/txHistory.dto'
@@ -13,6 +15,7 @@ export class PaymentService {
     constructor(
         private readonly misc: MiscService,
         private readonly response: SendRes,
+        private readonly brevo: BrevoService,
         private readonly prisma: PrismaService,
     ) { }
 
@@ -224,5 +227,72 @@ export class PaymentService {
         } catch (err) {
             this.misc.handleServerError(res, err, 'Error getting transaction history')
         }
+    }
+
+    async requestPin(res: Response, { sub }: ExpressUser) {
+        try {
+            const user = await this.prisma.user.findUnique({ where: { id: sub } })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Account not found")
+            }
+
+            const totp = await this.prisma.totp.findUnique({
+                where: { userId: sub },
+            })
+
+            let remainingMinutes = 0
+            const THRESHOLD = 3 as const
+            let eligible: boolean = false
+            const { otp, otp_expiry } = genOTP()
+
+            if (totp) {
+                const currentDate = new Date()
+                const oldExpiry = new Date(totp.otp_expiry)
+                remainingMinutes = ((oldExpiry.getTime() - currentDate.getTime()) / 1000) / 60
+
+
+                if (currentDate > oldExpiry || remainingMinutes < THRESHOLD) {
+                    eligible = true
+                }
+            } else {
+                eligible = true
+            }
+
+            if (!eligible) {
+                return this.response.sendError(res, StatusCodes.BadRequest, `Request after ${Math.floor(remainingMinutes)} minutues`)
+            }
+
+            const newTotp = await this.prisma.totp.upsert({
+                where: { userId: sub },
+                create: {
+                    otp, otp_expiry,
+                    user: { connect: { id: sub } },
+                },
+                update: { otp, otp_expiry }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { message: "A new PIN has been sent to your email" })
+
+            res.on('finish', async () => {
+                if (newTotp) {
+                    await this.brevo.sendTransactionalEmail({
+                        body: `${otp} It expires in 5 mins. Ignore if you didn't request for the PIN`,
+                        to: user.email,
+                        subject: `Withdrawal PIN: ${otp}`
+                    })
+                }
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async withdraw(
+        res: Response,
+        { sub }: ExpressUser,
+        { }
+    ) {
+
     }
 }

@@ -3,11 +3,11 @@ import { AuthGuard } from '@nestjs/passport'
 import { PaymentService } from './payment.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { TxHistoriesDto } from './dto/txHistory.dto'
-import {
-  Controller, Get, Param, Query, Req, Res, UseGuards
-} from '@nestjs/common'
 import { PaymentChartDto } from './dto/analytics.dto'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import {
+  Controller, Get, Param, Post, Query, Req, Res, UseGuards
+} from '@nestjs/common'
 
 @ApiTags("Payment")
 @ApiBearerAuth()
@@ -49,5 +49,13 @@ export class PaymentController {
     @Param('tx_id') tx_id: string,
   ) {
     return await this.paymentService.fetchTxHistory(res, tx_id, req.user)
+  }
+
+  @Post('/request-pin')
+  async requestPin(
+    @Req() req: IRequest,
+    @Res() res: Response,
+  ) {
+    return await this.paymentService.requestPin(res, req.user)
   }
 }

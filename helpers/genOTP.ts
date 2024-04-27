@@ -1,4 +1,4 @@
-const generateOTP = (length: number = 6) => {
+const genOTP = (length: number = 6) => {
     let otp: string = ''
     const digits: string = '0123456789'
 
@@ -14,4 +14,4 @@ const generateOTP = (length: number = 6) => {
     return { otp, otp_expiry }
 }
 
-export default generateOTP
+export default genOTP
