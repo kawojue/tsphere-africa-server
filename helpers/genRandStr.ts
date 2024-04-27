@@ -17,5 +17,5 @@ export const genRandomCode = (): string => {
         return result
     }
 
-    return `${randomString(2)}-${randomString(3)}-${Date.now()}`
+    return `${randomString(2)}-${randomString(3)}-${Math.floor(Date.now() / 1000)}`
 }

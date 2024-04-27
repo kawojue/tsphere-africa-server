@@ -7,8 +7,11 @@ import { MiscService } from 'lib/misc.service'
 import { BrevoService } from 'lib/brevo.service'
 import { TxStatus, TxType } from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
+import { WithdrawalDto } from './dto/withdraw.dto'
+import { genRandomCode } from 'helpers/genRandStr'
 import { TxHistoriesDto } from './dto/txHistory.dto'
 import { PaymentChartDto } from './dto/analytics.dto'
+import { PaystackService } from 'lib/Paystack/paystack.service'
 
 @Injectable()
 export class PaymentService {
@@ -17,6 +20,7 @@ export class PaymentService {
         private readonly response: SendRes,
         private readonly brevo: BrevoService,
         private readonly prisma: PrismaService,
+        private readonly paystack: PaystackService,
     ) { }
 
     async payment(res: Response, { sub }: ExpressUser) {
@@ -79,8 +83,8 @@ export class PaymentService {
                 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
             ]
 
-            const totalAmount = []
             let total = 0
+            const totalAmount = []
 
             const aggregateData = async (query: any) => {
                 const aggregate = await this.prisma.txHistory.aggregate(query)
@@ -291,8 +295,117 @@ export class PaymentService {
     async withdraw(
         res: Response,
         { sub }: ExpressUser,
-        { }
+        { amount, linkedBankId, pin }: WithdrawalDto
     ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: sub },
+                select: {
+                    id: true,
+                    wallet: { select: { balance: true } }
+                }
+            })
 
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Account not found")
+            }
+
+            const bank = await this.prisma.bankDetails.findUnique({
+                where: { id: linkedBankId, userId: sub }
+            })
+
+            if (!bank) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'Selected bank not found')
+            }
+
+            if (amount > user.wallet.balance) {
+                return this.response.sendError(res, StatusCodes.UnprocessableEntity, 'Insuffcient balance')
+            }
+
+            const totp = await this.prisma.totp.findFirst({
+                where: { otp: pin }
+            })
+
+            if (!totp) {
+                return this.response.sendError(res, StatusCodes.Unauthorized, "Invalid PIN")
+            }
+
+            if (new Date() > new Date(totp.otp_expiry)) {
+                this.response.sendError(res, StatusCodes.Forbidden, "PIN has expired")
+                await this.prisma.totp.delete({
+                    where: { id: totp.id }
+                })
+                return
+            }
+
+            const { data: recipient } = await this.paystack.createRecipient({
+                type: 'nuban',
+                currency: 'NGN',
+                name: bank.accountName,
+                bank_code: bank.bankCode,
+                account_number: bank.accountNumber,
+            })
+
+            await this.prisma.recipient.upsert({
+                where: {
+                    recipient_code: recipient.recipient_code
+                },
+                create: {
+                    type: recipient.type,
+                    updatedAt: new Date(),
+                    bank_code: bank.bankCode,
+                    bank_name: bank.bankName,
+                    domain: recipient.domain,
+                    recipient_id: recipient.id,
+                    account_name: bank.accountName,
+                    account_number: bank.accountNumber,
+                    integration: recipient.integration,
+                    recipient_code: recipient.recipient_code,
+                },
+                update: { updatedAt: new Date() }
+            })
+
+            const fee = await this.misc.calculateWithdrawalFee(amount)
+            const settlementAmount = amount - fee.totalFee
+
+            const { data: transfer } = await this.paystack.initiateTransfer({
+                source: 'balance',
+                amount: amount * 100,
+                reason: `Talent Sphere - withdrawal`,
+                recipient: recipient.recipient_code,
+                reference: `withdrawal-${sub}-${genRandomCode()}`
+            })
+
+            await this.prisma.$transaction([
+                this.prisma.wallet.update({
+                    where: { userId: sub },
+                    data: { balance: { decrement: amount } }
+                }),
+                this.prisma.txHistory.create({
+                    data: {
+                        amount,
+                        ...fee,
+                        settlementAmount,
+                        type: 'WITHDRAWAL',
+                        source: transfer.source,
+                        user: { connect: { id: sub } },
+                        narration: transfer.reason,
+                        reference: transfer.reference,
+                        destinationBankCode: bank.bankCode,
+                        destinationBankName: bank.bankName,
+                        status: transfer.status as TxStatus,
+                        destinationAccountName: bank.accountName,
+                        destinationAccountNumber: bank.accountNumber,
+                    }
+                })
+            ])
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                message: "Transfer has been initiated",
+                data: { amount, settlementAmount }
+            })
+        } catch (err) {
+            this.misc.handlePaystackAndServerError(res, err)
+        }
     }
 }

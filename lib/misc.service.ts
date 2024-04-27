@@ -52,16 +52,16 @@ export class MiscService {
     }
 
     async calculateWithdrawalFee(amount: number) {
-        let processsingFee = amount * 0.01
+        let processingFee = amount * 0.01
 
-        if (processsingFee > 10) {
-            processsingFee = 10
+        if (processingFee > 10) {
+            processingFee = 10
         }
 
-        let fee = { processsingFee } as {
+        let fee = { processingFee } as {
             totalFee: number
             paystackFee: number
-            processsingFee: number
+            processingFee: number
         }
 
         if (amount > 5_000) {
@@ -70,7 +70,7 @@ export class MiscService {
             fee.paystackFee = amount <= 50_000 ? 25 : 50
         }
 
-        return { ...fee, totalFee: fee.paystackFee + fee.processsingFee }
+        return { ...fee, totalFee: fee.paystackFee + fee.processingFee }
     }
 
     handlePaystackAndServerError(res: Response, err: any) {

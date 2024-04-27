@@ -7,6 +7,7 @@ import { PassportModule } from '@nestjs/passport'
 import { PaymentService } from './payment.service'
 import { PrismaService } from 'lib/prisma.service'
 import { PaymentController } from './payment.controller'
+import { PaystackService } from 'lib/Paystack/paystack.service'
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PaymentController } from './payment.controller'
     MiscService,
     BrevoService,
     PrismaService,
+    PaystackService,
   ],
 })
 export class PaymentModule { }

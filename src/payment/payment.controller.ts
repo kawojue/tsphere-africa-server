@@ -1,12 +1,13 @@
 import { Response } from 'express'
 import { AuthGuard } from '@nestjs/passport'
 import { PaymentService } from './payment.service'
+import { WithdrawalDto } from './dto/withdraw.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { TxHistoriesDto } from './dto/txHistory.dto'
 import { PaymentChartDto } from './dto/analytics.dto'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import {
-  Controller, Get, Param, Post, Query, Req, Res, UseGuards
+  Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards
 } from '@nestjs/common'
 
 @ApiTags("Payment")
@@ -57,5 +58,14 @@ export class PaymentController {
     @Res() res: Response,
   ) {
     return await this.paymentService.requestPin(res, req.user)
+  }
+
+  @Post('/withdraw')
+  async withdraw(
+    @Req() req: IRequest,
+    @Res() res: Response,
+    @Body() body: WithdrawalDto
+  ) {
+    return await this.paymentService.withdraw(res, req.user, body)
   }
 }

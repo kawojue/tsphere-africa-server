@@ -77,6 +77,22 @@ model Wallet {
     userId              String    @unique @db.ObjectId
 }
 
+model Recipient {
+    id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+    domain             String
+    recipient_id       Int
+    recipient_code     String   @unique
+    integration        Int
+    type               String?  @default("nuban")
+    bank_code          String
+    bank_name          String
+    account_name       String
+    account_number     String
+    authorization_code String?
+    createdAt          DateTime @default(now())
+    updatedAt          DateTime
+}
+
 model TxHistory {
     id                       String   @id @default(auto()) @map("_id") @db.ObjectId
     reference                String   @unique
@@ -88,7 +104,7 @@ model TxHistory {
     processingFee            Float?
     channel                  String?
     type                     TxType
-    source                   TxSource
+    source                   String
     narration                String?
     authorization_code       String?
     destinationAccountName   String?
@@ -401,11 +417,6 @@ enum TxStatus {
     PENDING
     SUCCESS
     REVERSED
-}
-
-enum TxSource {
-    wallet
-    external
 }
 
 enum JobStatus {
