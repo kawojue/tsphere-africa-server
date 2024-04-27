@@ -376,7 +376,7 @@ export class PaymentService {
                 reference: `withdrawal-${sub}-${genRandomCode()}`
             })
 
-            await this.prisma.$transaction([
+            const [_, tx] = await this.prisma.$transaction([
                 this.prisma.wallet.update({
                     where: { userId: sub },
                     data: { balance: { decrement: amount } }
@@ -402,7 +402,7 @@ export class PaymentService {
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 message: "Transfer has been initiated",
-                data: { amount, settlementAmount }
+                data: tx,
             })
         } catch (err) {
             this.misc.handlePaystackAndServerError(res, err)
