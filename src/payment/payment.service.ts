@@ -281,9 +281,9 @@ export class PaymentService {
             res.on('finish', async () => {
                 if (newTotp) {
                     await this.brevo.sendTransactionalEmail({
-                        body: `${otp} It expires in 5 mins. Ignore if you didn't request for the PIN`,
                         to: user.email,
-                        subject: `Withdrawal PIN: ${otp}`
+                        subject: `Withdrawal PIN: ${otp}`,
+                        body: `${otp}. It expires in 5 mins. Ignore if you didn't request for the PIN`,
                     })
                 }
             })
@@ -388,9 +388,9 @@ export class PaymentService {
                         settlementAmount,
                         type: 'WITHDRAWAL',
                         source: transfer.source,
-                        user: { connect: { id: sub } },
                         narration: transfer.reason,
                         reference: transfer.reference,
+                        user: { connect: { id: sub } },
                         destinationBankCode: bank.bankCode,
                         destinationBankName: bank.bankName,
                         status: transfer.status as TxStatus,

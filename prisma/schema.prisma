@@ -104,7 +104,7 @@ model TxHistory {
     processingFee            Float?
     channel                  String?
     type                     TxType
-    source                   String
+    source                   String?
     narration                String?
     authorization_code       String?
     destinationAccountName   String?
