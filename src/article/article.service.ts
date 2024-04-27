@@ -75,134 +75,56 @@ export class ArticleService {
             // @ts-ignore
             const role = req.user?.role
 
-            limit = Number(limit)
-            const offset = (Number(page) - 1) * limit
+            page = Math.max(Number(page), 1)
+            limit = Math.min(Number(limit), 100)
 
-            let articles: {
-                id: string
-                title: string
-                category: string
-                views: number
-                shares: number
-                pending_approval: boolean
-                publishedAt: Date
-                approvedAt: Date
-                likes: {
-                    id: string
-                    likedAt: Date
-                    articleId: string
-                    userId: string
-                }[]
-            }[] = []
+            const offset = (page - 1) * limit
 
-            const OR: {
-                title: {
-                    contains: string
-                    mode: "insensitive"
-                }
-            }[] = [{ title: { contains: search, mode: 'insensitive' } }]
+            const OR = [{ title: { contains: search, mode: 'insensitive' } }]
 
-            const select = {
-                id: true,
-                likes: true,
-                views: true,
-                title: true,
-                shares: true,
-                category: true,
-                approvedAt: true,
-                publishedAt: true,
-                pending_approval: true,
+            const commonQueryOptions = {
+                select: {
+                    id: true,
+                    views: true,
+                    title: true,
+                    shares: true,
+                    category: true,
+                    approvedAt: true,
+                    publishedAt: true,
+                    pending_approval: true,
+                },
+                take: limit,
+                skip: offset,
+                orderBy: { publishedAt: 'desc' as const }
             }
 
-            if (role === "admin" && sub) {
-                if (q === "approved") {
-                    articles = await this.prisma.article.findMany({
-                        where: {
-                            pending_approval: false,
-                            OR
-                        },
-                        select,
-                        take: limit,
-                        skip: offset,
-                        orderBy: { approvedAt: 'desc' },
-                    })
-                } else if (q === "pending") {
-                    articles = await this.prisma.article.findMany({
-                        where: {
-                            pending_approval: true,
-                            OR
-                        },
-                        select,
-                        take: limit,
-                        skip: offset,
-                        orderBy: { publishedAt: 'desc' },
-                    })
-                } else {
-                    articles = await this.prisma.article.findMany({
-                        where: { OR },
-                        select,
-                        take: limit,
-                        skip: offset,
-                        orderBy: { publishedAt: 'desc' },
-                    })
-                }
+            let queryOptions
+
+            if (role === 'admin') {
+                queryOptions = q === 'approved' ?
+                    { where: { pending_approval: false, OR }, ...commonQueryOptions } :
+                    q === 'pending' ?
+                        { where: { pending_approval: true, OR }, ...commonQueryOptions } :
+                        { where: { OR }, ...commonQueryOptions }
             } else if (!sub && !role) {
-                articles = await this.prisma.article.findMany({
-                    where: {
-                        pending_approval: false,
-                        OR
-                    },
-                    select,
-                    take: limit,
-                    skip: offset,
-                    orderBy: { approvedAt: 'desc' },
-                })
+                queryOptions = { where: { pending_approval: false, OR }, ...commonQueryOptions }
             } else {
-                if (q === "approved") {
-                    articles = await this.prisma.article.findMany({
-                        where: {
-                            authorId: sub,
-                            pending_approval: false,
-                            OR
-                        },
-                        select,
-                        take: limit,
-                        skip: offset,
-                        orderBy: { approvedAt: 'desc' },
-                    })
-                } else if (q === "pending") {
-                    articles = await this.prisma.article.findMany({
-                        where: {
-                            authorId: sub,
-                            pending_approval: true,
-                            OR
-                        },
-                        select,
-                        take: limit,
-                        skip: offset,
-                        orderBy: { publishedAt: 'desc' },
-                    })
-                } else {
-                    articles = await this.prisma.article.findMany({
-                        where: {
-                            authorId: sub,
-                            OR
-                        },
-                        select,
-                        take: limit,
-                        skip: offset,
-                        orderBy: { publishedAt: 'desc' },
-                    })
-                }
+                queryOptions = q === 'approved' ?
+                    { where: { authorId: sub, pending_approval: false, OR }, ...commonQueryOptions } :
+                    q === 'pending' ?
+                        { where: { authorId: sub, pending_approval: true, OR }, ...commonQueryOptions } :
+                        { where: { authorId: sub, OR }, ...commonQueryOptions }
             }
 
-            const articlesWithTotalLikes = articles.map((article) => {
-                return { ...article, likes: article.likes.length }
-            })
+            const articles = await this.prisma.article.findMany(queryOptions)
+            const articlesWithTotalLikes = await Promise.all(articles.map(async (article) => ({
+                ...article,
+                likes: await this.prisma.like.count({ where: { articleId: article.id } })
+            })))
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: articlesWithTotalLikes })
         } catch (err) {
-            this.misc.handleServerError(res, err)
+            this.misc.handleServerError(res, err, 'Error fetching articles')
         }
     }
 
