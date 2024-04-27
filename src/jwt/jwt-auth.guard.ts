@@ -29,9 +29,7 @@ export class RolesGuard implements CanActivate {
                 decoded?.sub && ['client', 'creative', 'talent'].includes(decoded.role)
             ) {
                 return this.prisma.user.findUnique({
-                    where: {
-                        id: decoded.sub
-                    }
+                    where: { id: decoded.sub }
                 }).then(user => {
                     if ((decoded.userStatus !== user.userStatus) || (decoded.userStatus === 'suspended')) return false
                     request.user = decoded
