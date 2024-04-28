@@ -19,6 +19,7 @@ async function bootstrap() {
       'https://www.talentsphereafrica.com',
       'https://api.talentsphereafrica.co',
       'https://api.talentsphereafrica.com',
+      'https://talentsphere-staging.onrender.com',
     ],
     credentials: true,
     optionsSuccessStatus: 200,

@@ -219,7 +219,7 @@ export class AuthService {
                 return
             }
 
-           const token = this.misc.genenerateToken(user.id)
+            const token = this.misc.genenerateToken(user.id)
 
             await this.prisma.validation.upsert({
                 where: {
@@ -240,16 +240,16 @@ export class AuthService {
                 message: "New verification link has been sent to your email"
             })
 
-            res.on('finish' async () => {
-              if (token_type === 'email') {
-                await this.brevo.sendVerificationEmail(email, token.token)
-            } else if (token_type === 'password') {
-                await this.brevo.sendTransactionalEmail({
-                    to: email,
-                    subject: "Reset Password",
-                    body: `${process.env.CLIENT_URL}/reset-password?token=${token.token}&token_type=password`
-                })
-            }
+            res.on('finish', async () => {
+                if (token_type === 'email') {
+                    await this.brevo.sendVerificationEmail(email, token.token)
+                } else if (token_type === 'password') {
+                    await this.brevo.sendTransactionalEmail({
+                        to: email,
+                        subject: "Reset Password",
+                        body: `${process.env.CLIENT_URL}/reset-password?token=${token.token}&token_type=password`
+                    })
+                }
             })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error sending verification link")
