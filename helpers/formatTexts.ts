@@ -6,6 +6,4 @@ export const titleText = (text: string) => {
         .trim()
 }
 
-export const toLowerCase = (text: string) => {
-    return text.toLowerCase().trim()
-}
+export const toLowerCase = (text: string) => text.toLowerCase().trim()
