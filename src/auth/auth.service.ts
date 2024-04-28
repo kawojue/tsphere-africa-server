@@ -215,24 +215,11 @@ export class AuthService {
             })
 
             if (!user) {
-                this.response.sendError(res, StatusCodes.NotFound, "There is no email associated with this account")
+                this.response.sendError(res, StatusCodes.NotFound, "There is no account associated with this email")
                 return
             }
 
-            const token = this.misc.genenerateToken(user.id)
-
-            if (token_type === 'email') {
-                await this.brevo.sendVerificationEmail(email, token.token)
-            } else if (token_type === 'password') {
-                await this.brevo.sendTransactionalEmail({
-                    to: email,
-                    subject: "Reset Password",
-                    body: `${process.env.CLIENT_URL}/reset-password?token=${token.token}&token_type=password`
-                })
-            } else {
-                this.response.sendError(res, StatusCodes.BadRequest, 'Invalid token type')
-                return
-            }
+           const token = this.misc.genenerateToken(user.id)
 
             await this.prisma.validation.upsert({
                 where: {
@@ -251,6 +238,18 @@ export class AuthService {
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 message: "New verification link has been sent to your email"
+            })
+
+            res.on('finish' async () => {
+              if (token_type === 'email') {
+                await this.brevo.sendVerificationEmail(email, token.token)
+            } else if (token_type === 'password') {
+                await this.brevo.sendTransactionalEmail({
+                    to: email,
+                    subject: "Reset Password",
+                    body: `${process.env.CLIENT_URL}/reset-password?token=${token.token}&token_type=password`
+                })
+            }
             })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error sending verification link")
