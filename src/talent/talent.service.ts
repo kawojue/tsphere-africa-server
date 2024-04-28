@@ -5,7 +5,7 @@ import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
-import { titleName } from 'helpers/formatTexts'
+import { titleText } from 'helpers/formatTexts'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { genReferralKey } from 'helpers/genReferralKey'
@@ -96,13 +96,13 @@ export class TalentService {
             }
 
             if (firstname && user.firstname !== firstname) {
-                firstname = titleName(firstname)
+                firstname = titleText(firstname)
             } else {
                 firstname = user.firstname
             }
 
             if (lastname && user.lastname !== lastname) {
-                lastname = titleName(lastname)
+                lastname = titleText(lastname)
             } else {
                 lastname = user.lastname
             }

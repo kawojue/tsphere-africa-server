@@ -1,11 +1,11 @@
-export const titleName = (fullname: string) => {
-    let titledName = []
-    const names = fullname.trim().split(" ")
+export const titleText = (text: string) => {
+    return text.trim()
+        .split(" ")
+        .map(txt => txt[0].toUpperCase() + txt.slice(1).toLowerCase())
+        .join(" ")
+        .trim()
+}
 
-    for (const f_name of names) {
-        const formattedName = f_name[0].toUpperCase() + f_name.slice(1).toLowerCase()
-        titledName.push(formattedName)
-    }
-
-    return titledName.join(" ")
+export const toLowerCase = (text: string) => {
+    return text.toLowerCase().trim()
 }

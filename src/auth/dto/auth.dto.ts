@@ -4,18 +4,14 @@ import { TokenEnum } from 'enums/base.enum'
 import {
     IsEmail, Matches, IsString, IsOptional,
     IsNotEmpty, MaxLength, MinLength, IsEnum,
-    IsBoolean,
 } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
-import { Transform } from 'class-transformer'
-import { titleName } from 'helpers/formatTexts'
 
 export class EmailDto {
     @ApiProperty({
         example: "kawojue08@gmail.com",
     })
     @IsEmail({}, { message: "Invalid Email" })
-    @Transform(({ value }) => value.trim().toLowerCase())
     email: string
 }
 
@@ -31,7 +27,7 @@ export class UsernameDto {
 
 export class TokenDto {
     @ApiProperty({
-        example: '026c567f8000d5a4ccd83fe61d822c4fcb7a148e9af72aa03a==',
+        example: '026c567f8000d5a4ccd83fe61d822c4fcb7a148e9af72aa03a',
     })
     @IsString()
     @IsNotEmpty()
@@ -70,7 +66,6 @@ export class SignupDto extends EmailDto {
     })
     @IsNotEmpty({ message: 'First name is required' })
     @IsString()
-    @Transform(({ value }) => titleName(value))
     first_name: string
 
     @ApiProperty({
@@ -78,7 +73,6 @@ export class SignupDto extends EmailDto {
     })
     @IsNotEmpty({ message: 'Last name is required' })
     @IsString()
-    @Transform(({ value }) => titleName(value))
     last_name: string
 
     @ApiProperty({
@@ -86,7 +80,6 @@ export class SignupDto extends EmailDto {
     })
     @IsString()
     @Matches(USER_REGEX, { message: "Username is not allowed" })
-    @Transform(({ value }) => value.trim().toLowerCase())
     @IsNotEmpty({ message: 'Username is required' })
     username: string
 

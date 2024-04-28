@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
-import { titleName } from 'helpers/formatTexts'
+import { titleText } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
 import { EncryptionService } from 'lib/encryption.service'
 import {
@@ -29,7 +29,7 @@ export class ModminService {
         }: RegisterAdminDto
     ) {
         try {
-            fullName = titleName(fullName)
+            fullName = titleText(fullName)
             const decodedKey = atob(registrationKey as string)
             if (decodedKey !== process.env.ADMIN_REGISTRATION_KEY) {
                 this.response.sendError(res, StatusCodes.Unauthorized, 'Invalid registration key')

@@ -15,6 +15,7 @@ import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { genReferralKey } from 'helpers/genReferralKey'
 import { EncryptionService } from 'lib/encryption.service'
+import { titleText, toLowerCase } from 'helpers/formatTexts'
 import {
     ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto
 } from './dto/reset-password.dto'
@@ -35,7 +36,8 @@ export class AuthService {
         { email }: EmailDto,
     ) {
         try {
-            email = email.trim().toLowerCase()
+            email = toLowerCase(email)
+
             const user = await this.prisma.user.findUnique({
                 where: { email }
             })
@@ -76,6 +78,11 @@ export class AuthService {
         }: SignupDto
     ) {
         try {
+            email = toLowerCase(email)
+            username = toLowerCase(username)
+            last_name = titleText(last_name)
+            first_name = titleText(first_name)
+
             if (!this.misc.isValidUsername(username)) {
                 this.response.sendError(res, StatusCodes.BadRequest, "Username is not allowed")
                 return
@@ -311,7 +318,7 @@ export class AuthService {
     async emailExists(res: Response, email: string) {
         const user = await this.prisma.user.findUnique({
             where: {
-                email: email.trim().toLowerCase()
+                email: toLowerCase(email)
             }
         })
 
@@ -329,7 +336,7 @@ export class AuthService {
 
         const user = await this.prisma.user.findUnique({
             where: {
-                username: username.trim().toLowerCase()
+                username: toLowerCase(username)
             }
         })
 
@@ -341,6 +348,8 @@ export class AuthService {
 
     async login(res: Response, { email, password }: LoginDto) {
         try {
+            email = toLowerCase(email)
+
             const user = await this.prisma.user.findUnique({
                 where: {
                     email: email.trim().toLowerCase()
