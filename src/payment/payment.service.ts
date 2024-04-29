@@ -83,8 +83,8 @@ export class PaymentService {
                 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
             ]
 
-            let total = 0
-            const totalAmount = []
+            let totalAmount = 0
+            const chart = []
 
             const aggregateData = async (query: any) => {
                 const aggregate = await this.prisma.txHistory.aggregate(query)
@@ -113,16 +113,13 @@ export class PaymentService {
                 }
 
                 const amount = await aggregateData(query)
-                total += amount
+                totalAmount += amount
 
-                totalAmount.push({ monthName: monthNames[i], amount })
+                chart.push({ monthName: monthNames[i], amount })
             }
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: {
-                    chart: totalAmount,
-                    total
-                }
+                data: { chart, totalAmount }
             })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error caching chart")
