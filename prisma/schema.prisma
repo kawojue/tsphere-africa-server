@@ -14,7 +14,7 @@ model User {
     firstname           String
     lastname            String
     password            String
-    primarySkill        String
+    primarySkill        String?
     userStatus          UserStatus           @default(active)
     email_verified      Boolean              @default(false)
     verified            Boolean              @default(false)
