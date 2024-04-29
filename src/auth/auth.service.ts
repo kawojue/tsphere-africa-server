@@ -164,9 +164,9 @@ export class AuthService {
 
                 await Promise.all([
                     this.prisma.isSubscribed(email),
+                    this.brevo.sendVerificationEmail(email, token.token),
                     this.prisma.wallet.create({ data: { user: { connect: { id: newUser.id } } } }),
                 ])
-                await this.brevo.sendVerificationEmail(email, token.token)
             }
 
             this.response.sendSuccess(res, StatusCodes.Created, {
