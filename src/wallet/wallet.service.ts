@@ -46,9 +46,10 @@ export class WalletService {
     async addBankDetail(
         res: Response,
         { sub }: ExpressUser,
-        { accountNumber, bankCode, bankName }: BankDetailsDto
+        { accountNumber, bankCode }: BankDetailsDto
     ) {
         try {
+            const bankName = await this.paystack.getBankByBankCode(bankCode)
             const { data: details } = await this.paystack.resolveAccount(accountNumber, bankCode)
 
             await this.prisma.bankDetails.create({

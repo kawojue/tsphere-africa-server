@@ -246,9 +246,10 @@ export class ProfileSetupService {
     async addPrimaryBankDetails(
         res: Response,
         { sub }: ExpressUser,
-        { accountNumber, bankCode, bankName }: BankDetailsDto
+        { accountNumber, bankCode }: BankDetailsDto
     ) {
         try {
+            const bankName = await this.paystack.getBankByBankCode(bankCode)
             const { data: details } = await this.paystack.resolveAccount(accountNumber, bankCode)
 
             await this.prisma.bankDetails.create({
@@ -258,7 +259,7 @@ export class ProfileSetupService {
                     primary: true,
                     accountNumber,
                     accountName: details.account_name,
-                    user: { connect: { id: sub } }
+                    user: { connect: { id: sub } },
                 }
             })
 

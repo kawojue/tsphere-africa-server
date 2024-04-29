@@ -3,13 +3,6 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class BankDetailsDto {
     @ApiProperty({
-        example: 'My Usual Bank'
-    })
-    @IsString()
-    @IsNotEmpty()
-    bankName: string
-
-    @ApiProperty({
         example: '0N1U2B3A4N'
     })
     @IsString()
