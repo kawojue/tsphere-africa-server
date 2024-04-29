@@ -93,7 +93,7 @@ export class SignupDto extends EmailDto {
     @ApiProperty({
         example: 'Software Engineer',
     })
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     skill: string
 

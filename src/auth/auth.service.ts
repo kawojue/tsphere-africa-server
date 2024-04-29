@@ -106,8 +106,8 @@ export class AuthService {
                 return
             }
 
-            if (role === "client" && skill) {
-                return this.response.sendError(res, StatusCodes.BadRequest, "Client can't choose a primary skill")
+            if (role !== "client" && !skill) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "Primary skill is required")
             }
 
             let referral: Referral
