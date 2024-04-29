@@ -278,13 +278,14 @@ export class ModminService {
 
     async userChart(res: Response) {
         try {
+            let total = 0
+            const chart = []
+
             const currentYear = new Date().getFullYear()
             const monthNames = [
                 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
                 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
             ]
-
-            const userCounts = []
 
             for (let i = 0; i < monthNames.length; i++) {
                 const startDate = new Date(currentYear, i, 1)
@@ -309,14 +310,12 @@ export class ModminService {
                     }
                 })
 
-                userCounts.push({ monthName: monthNames[i], count })
+                chart.push({ monthName: monthNames[i], count })
+                total += count
             }
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: {
-                    chart: userCounts,
-                    total: await this.prisma.user.count()
-                }
+                data: { chart, total }
             })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error caching chart")
@@ -431,7 +430,8 @@ export class ModminService {
                 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
             ]
 
-            const referralCounts = [] as {
+            let total = 0
+            const chart = [] as {
                 monthName: string
                 count: number
             }[]
@@ -460,14 +460,12 @@ export class ModminService {
                     }
                 })
 
-                referralCounts.push({ monthName: monthNames[i], count })
+                chart.push({ monthName: monthNames[i], count })
+                total += count
             }
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: {
-                    chart: referralCounts,
-                    total: await this.prisma.referral.count({ where: { points: { gte: 10 } } })
-                }
+                data: { chart, total }
             })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error caching chart")
