@@ -336,13 +336,15 @@ model Job {
 }
 
 model JobApplication {
-    id        String          @id @default(auto()) @map("_id") @db.ObjectId
-    status    ApplicantStatus @default(PENDING)
-    appliedAt DateTime        @default(now())
-    job       Job             @relation(fields: [jobId], references: [id])
-    user      User            @relation(fields: [userId], references: [id])
-    jobId     String          @db.ObjectId
-    userId    String          @db.ObjectId
+    id           String          @id @default(auto()) @map("_id") @db.ObjectId
+    attachments  File[]
+    cover_letter String?
+    status       ApplicantStatus @default(PENDING)
+    appliedAt    DateTime        @default(now())
+    job          Job             @relation(fields: [jobId], references: [id])
+    user         User            @relation(fields: [userId], references: [id])
+    jobId        String          @db.ObjectId
+    userId       String          @db.ObjectId
 
     @@unique([userId, jobId])
 }
@@ -391,8 +393,8 @@ model Like {
 }
 
 enum ApplicantStatus {
-    HIRED
     PENDING
+    ACCEPTED
     REJECTED
 }
 

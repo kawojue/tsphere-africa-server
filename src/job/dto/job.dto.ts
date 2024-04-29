@@ -91,3 +91,16 @@ export class PostJobDto {
     })
     attachments?: File
 }
+
+export class ApplyJobDTO {
+    @ApiProperty({
+        example: "Omo, no long talk! Just give me this job, abeg."
+    })
+    @IsOptional()
+    cover_letter: string
+
+    @ApiProperty({
+        type: [File]
+    })
+    attachments?: File
+}

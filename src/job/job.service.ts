@@ -1,6 +1,5 @@
 import { Job } from '@prisma/client'
 import { validateFile } from 'utils/file'
-import { PostJobDto } from './dto/job.dto'
 import { Request, Response } from 'express'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
@@ -9,6 +8,7 @@ import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { ApplyJobDTO, PostJobDto } from './dto/job.dto'
 import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
 
 @Injectable()
@@ -156,7 +156,9 @@ export class JobService {
     async applyJob(
         res: Response,
         jobId: string,
-        { sub }: ExpressUser
+        { sub }: ExpressUser,
+        { cover_letter }: ApplyJobDTO,
+        attachments: Express.Multer.File[],
     ) {
         try {
             const job = await this.prisma.job.findUnique({
@@ -165,6 +167,14 @@ export class JobService {
 
             if (!job) {
                 return this.response.sendError(res, StatusCodes.NotFound, "Job not found")
+            }
+
+            if (new Date() > new Date(job.app_deadline)) {
+                return this.response.sendError(res, StatusCodes.Forbidden, "Job application has expired")
+            }
+
+            if (attachments.length === 0 && !cover_letter) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "Add attachments or write a cover letter")
             }
 
             const alreadyApplied = await this.prisma.jobApplication.findUnique({
@@ -180,10 +190,47 @@ export class JobService {
                 return this.response.sendError(res, StatusCodes.Conflict, "You've already applied for this job")
             }
 
+            let filesArray = [] as IFile[]
+            if (attachments.length > 0) {
+                try {
+                    const results = await Promise.all(attachments.map(async (file) => {
+                        const result = validateFile(file, 10 << 20, 'jpg', 'png')
+                        if (result?.status) {
+                            return this.response.sendError(res, result.status, result.message)
+                        }
+
+                        const path = `${sub}/${genFileName()}`
+                        await this.aws.uploadS3(result.file, path)
+                        return {
+                            path,
+                            url: this.aws.getS3(path),
+                            type: result.file.mimetype,
+                        }
+                    }))
+
+                    filesArray = results.filter((result): result is IFile => !!result)
+                } catch {
+                    try {
+                        if (filesArray.length > 0) {
+                            for (const file of filesArray) {
+                                if (file?.path) {
+                                    await this.aws.deleteS3(file.path)
+                                }
+                            }
+                        }
+                        filesArray = []
+                    } catch (err) {
+                        this.misc.handleServerError(res, err, err.message)
+                    }
+                }
+            }
+
             await this.prisma.jobApplication.create({
                 data: {
+                    cover_letter,
+                    attachments: filesArray,
+                    user: { connect: { id: sub } },
                     job: { connect: { id: jobId } },
-                    user: { connect: { id: sub } }
                 }
             })
 

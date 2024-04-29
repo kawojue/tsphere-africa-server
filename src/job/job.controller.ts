@@ -1,17 +1,16 @@
-import {
-  Body, Controller, Delete, Get, Param,
-  Patch, Post, Req, Res, UseGuards, Put,
-  Query, UploadedFiles, UseInterceptors,
-} from '@nestjs/common'
 import { Role } from 'src/role.decorator'
 import { JobService } from './job.service'
-import { PostJobDto } from './dto/job.dto'
 import { Request, Response } from 'express'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { ApplyJobDTO, PostJobDto } from './dto/job.dto'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { FileInterceptor } from '@nestjs/platform-express'
+import {
+  UseGuards, Query, UploadedFiles, UseInterceptors, ParseFilePipe,
+  Body, Controller, Put, Delete, Get, Param, Patch, Post, Req, Res,
+} from '@nestjs/common'
 import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
 
 @ApiTags("Job")
@@ -60,12 +59,19 @@ export class JobController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.creative, Roles.creative, Roles.user)
+  @UseInterceptors(FileInterceptor('attachments'))
   async applyJob(
     @Res() res: Response,
     @Req() req: IRequest,
+    @Body() body: ApplyJobDTO,
     @Param('jobId') jobId: string,
+    @UploadedFiles(
+      new ParseFilePipe({
+        fileIsRequired: false
+      })
+    ) attachments: Express.Multer.File[],
   ) {
-    return await this.jobService.applyJob(res, jobId, req.user)
+    return await this.jobService.applyJob(res, jobId, req.user, body, attachments || [])
   }
 
   @Get('/fetch')
