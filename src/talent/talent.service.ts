@@ -167,7 +167,9 @@ export class TalentService {
             }
 
             const stat = bio
+            // @ts-ignore
             if (stat?.role) {
+               // @ts-ignore
                delete stat.role
             }
 
