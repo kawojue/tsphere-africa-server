@@ -166,12 +166,17 @@ export class TalentService {
                 return this.response.sendError(res, StatusCodes.NotFound, 'Add your personal information')
             }
 
+            const stat = bio
+            if (stat?.role) {
+               delete stat.role
+            }
+
             const bioStat = await this.prisma.talentBioStats.upsert({
                 where: {
                     talentId: talent.id
                 },
-                create: { ...bio, talent: { connect: { id: talent.id } } },
-                update: bio
+                create: { ...stat, talent: { connect: { id: talent.id } } },
+                update: stat
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: bioStat })
