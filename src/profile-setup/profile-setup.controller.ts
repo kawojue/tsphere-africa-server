@@ -4,6 +4,9 @@ import { AuthGuard } from '@nestjs/passport'
 import { SkillsDto } from './dto/skills.dto'
 import { Role as UserRole } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import {
+  ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags
+} from '@nestjs/swagger'
 import { ExperienceDto } from './dto/experiece.dto'
 import { BankDetailsDto } from './dto/bank-details.dto'
 import {
@@ -12,7 +15,6 @@ import {
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ProfileSetupService } from './profile-setup.service'
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { RateAndAvailabilityDto } from './dto/rate-availability.dto'
 
 @ApiTags("Profile Setup")

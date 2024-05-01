@@ -157,28 +157,25 @@ export class TalentService {
     ) {
         try {
             const talent = await this.prisma.talent.findUnique({
-                where: {
-                    userId: sub
-                }
+                where: { userId: sub }
             })
 
             if (!talent) {
-                return this.response.sendError(res, StatusCodes.NotFound, 'Add your personal information')
+                return this.response.sendError(res, StatusCodes.NotFound, 'Complete your personal information')
             }
 
-            const stat = bio
             // @ts-ignore
-            if (stat?.role) {
-               // @ts-ignore
-               delete stat.role
+            if (bio?.role) {
+                // @ts-ignore
+                delete bio.role
             }
 
             const bioStat = await this.prisma.talentBioStats.upsert({
                 where: {
                     talentId: talent.id
                 },
-                create: { ...stat, talent: { connect: { id: talent.id } } },
-                update: stat
+                create: { ...bio, talent: { connect: { id: talent.id } } },
+                update: bio
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: bioStat })
