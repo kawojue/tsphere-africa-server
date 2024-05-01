@@ -27,7 +27,7 @@ export class ProfileSetupService {
     async uploadPortfolioImages(
         res: Response,
         { sub }: ExpressUser,
-        files: Express.Multer.File[]
+        files: Array<Express.Multer.File>
     ) {
         try {
             if (files.length > 3) {
@@ -271,7 +271,7 @@ export class ProfileSetupService {
         res: Response,
         { sub }: ExpressUser,
         { skills }: SkillsDto,
-        attachments: Express.Multer.File[],
+        attachments: Array<Express.Multer.File>,
     ) {
         try {
             if (attachments.length > 3) {

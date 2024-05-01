@@ -5,13 +5,13 @@ import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApplyJobDTO, PostJobDto } from './dto/job.dto'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
-import { FileInterceptor } from '@nestjs/platform-express'
+import { AnyFilesInterceptor } from '@nestjs/platform-express'
 import {
   UseGuards, Query, UploadedFiles, UseInterceptors, ParseFilePipe,
   Body, Controller, Put, Delete, Get, Param, Patch, Post, Req, Res,
 } from '@nestjs/common'
 import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger'
 
 @ApiTags("Job")
 @Controller('job')
@@ -22,12 +22,13 @@ export class JobController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.admin, Roles.client)
-  @UseInterceptors(FileInterceptor('attachments'))
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor())
   async postJob(
     @Res() res: Response,
     @Req() req: IRequest,
     @Body() body: PostJobDto,
-    @UploadedFiles() files: Express.Multer.File[]
+    @UploadedFiles() files: Array<Express.Multer.File>
   ) {
     return await this.jobService.postJob(res, req.user, files || [], body)
   }
@@ -58,8 +59,9 @@ export class JobController {
   @Put('/apply-job/:jobId')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiConsumes('multipart/form-data')
   @Role(Roles.creative, Roles.creative, Roles.user)
-  @UseInterceptors(FileInterceptor('attachments'))
+  @UseInterceptors(AnyFilesInterceptor())
   async applyJob(
     @Res() res: Response,
     @Req() req: IRequest,
@@ -69,7 +71,7 @@ export class JobController {
       new ParseFilePipe({
         fileIsRequired: false
       })
-    ) attachments: Express.Multer.File[],
+    ) attachments: Array<Express.Multer.File>,
   ) {
     return await this.jobService.applyJob(res, jobId, req.user, body, attachments || [])
   }

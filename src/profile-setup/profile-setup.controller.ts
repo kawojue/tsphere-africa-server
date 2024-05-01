@@ -30,15 +30,13 @@ export class ProfileSetupController {
   @Role(UserRole.talent, UserRole.creative)
   @ApiConsumes('multipart/form-data', 'image/jpeg', 'image/png')
   @UseInterceptors(AnyFilesInterceptor({
-    limits: {
-      files: 3
-    }
+    limits: { files: 3 }
   }))
   @Put('/portfolio/images')
   async uploadPortfolioImages(
     @Req() req: IRequest,
     @Res() res: Response,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
     return await this.profileSetupService.uploadPortfolioImages(res, req.user, files || [])
   }
@@ -62,7 +60,7 @@ export class ProfileSetupController {
   @ApiOperation({
     summary: 'The formdata key for the Portfolio Audio should be audio'
   })
-  @ApiConsumes('multipart/formdata', 'audio/mp3', 'audio/wav', 'audio/aac')
+  @ApiConsumes('multipart/form-data', 'audio/mp3', 'audio/wav', 'audio/aac')
   @UseInterceptors(FileInterceptor('audio'))
   @Put('/portfolio/audio')
   async uploadPortfolioAudio(
@@ -108,16 +106,16 @@ export class ProfileSetupController {
   })
   @Role(UserRole.talent, UserRole.creative)
   @Put('/skills')
-  @UseInterceptors(FileInterceptor('attachments'))
+  @UseInterceptors(AnyFilesInterceptor())
   @ApiConsumes(
-    'multipart/formdata', 'image/jpeg', 'video/mp4',
+    'multipart/form-data', 'image/jpeg', 'video/mp4',
     'audio/mp3', 'audio/wav', 'audio/aac', 'png/image', 'image/png',
   )
   async addSkills(
     @Res() res: Response,
     @Req() req: IRequest,
     @Body() skills: SkillsDto,
-    @UploadedFiles() attachments: Express.Multer.File[]
+    @UploadedFiles() attachments: Array<Express.Multer.File>
   ) {
     return await this.profileSetupService.addSkills(res, req.user, skills, attachments || [])
   }

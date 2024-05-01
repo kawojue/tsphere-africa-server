@@ -23,7 +23,7 @@ export class JobService {
     async postJob(
         res: Response,
         { sub, role }: ExpressUser,
-        files: Express.Multer.File[],
+        files: Array<Express.Multer.File>,
         {
             duration, applicaion_deadline, description,
             experience, requirement, location, job_role,
@@ -158,7 +158,7 @@ export class JobService {
         jobId: string,
         { sub }: ExpressUser,
         { cover_letter }: ApplyJobDTO,
-        attachments: Express.Multer.File[],
+        attachments: Array<Express.Multer.File>,
     ) {
         try {
             const job = await this.prisma.job.findUnique({
