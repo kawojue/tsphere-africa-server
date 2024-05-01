@@ -28,7 +28,7 @@ export class ProfileSetupController {
     summary: 'The formdata key for the Portfolio Images should be images'
   })
   @Role(UserRole.talent, UserRole.creative)
-  @ApiConsumes('multipart/formdata', 'image/jpeg', 'image/png')
+  @ApiConsumes('multipart/form-data', 'image/jpeg', 'image/png')
   @UseInterceptors(AnyFilesInterceptor({
     limits: {
       files: 3
@@ -47,7 +47,7 @@ export class ProfileSetupController {
     summary: 'The formdata key for the Portfolio Video should be video'
   })
   @Role(UserRole.talent, UserRole.creative)
-  @ApiConsumes('multipart/formdata', 'video/mp4')
+  @ApiConsumes('multipart/form-data', 'video/mp4')
   @UseInterceptors(FileInterceptor('video'))
   @Put('/portfolio/video')
   async uploadPortfolioVideo(
