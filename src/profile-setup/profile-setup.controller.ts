@@ -13,9 +13,9 @@ import {
   Controller, Delete, Param, Post, UseInterceptors, Put,
   UploadedFiles, UseGuards, Req, Res, Body, UploadedFile,
 } from '@nestjs/common'
-import { FileInterceptor } from '@nestjs/platform-express'
 import { ProfileSetupService } from './profile-setup.service'
 import { RateAndAvailabilityDto } from './dto/rate-availability.dto'
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
 
 @ApiTags("Profile Setup")
 @ApiBearerAuth()
@@ -29,7 +29,11 @@ export class ProfileSetupController {
   })
   @Role(UserRole.talent, UserRole.creative)
   @ApiConsumes('multipart/formdata', 'image/jpeg', 'image/png')
-  @UseInterceptors(FileInterceptor('images'))
+  @UseInterceptors(AnyFilesInterceptor({
+    limits: {
+      files: 3
+    }
+  }))
   @Put('/portfolio/images')
   async uploadPortfolioImages(
     @Req() req: IRequest,

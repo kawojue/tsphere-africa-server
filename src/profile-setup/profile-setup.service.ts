@@ -31,17 +31,13 @@ export class ProfileSetupService {
     ) {
         try {
             if (files.length > 3) {
-                return this.response.sendError(res, StatusCodes.BadRequest, 'Images should not be maximum of three')
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Images should not exceed of three')
             } else if (files.length === 0) {
                 return this.response.sendError(res, StatusCodes.BadRequest, 'No Images were selected')
             } else {
                 const user = await this.prisma.user.findUnique({
-                    where: {
-                        id: sub
-                    },
-                    include: {
-                        portfolio: true
-                    }
+                    where: { id: sub },
+                    include: { portfolio: true }
                 })
 
                 let filesArray = [] as IFile[]
