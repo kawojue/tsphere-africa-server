@@ -12,7 +12,7 @@ const getIPAddress = (req: Request): string => {
         }
     }
 
-    return ipAddress || ''
+    return ipAddress ?? ''
 }
 
 export { getIPAddress }

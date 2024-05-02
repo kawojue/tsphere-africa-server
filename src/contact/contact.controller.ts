@@ -6,10 +6,10 @@ import { ContactService } from './contact.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { ContactDto, ReplyContactDto } from './dto/contact.dto'
-import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
 import {
   Body, Controller, Delete, Get, Param, Post, Query, Res, UseGuards
 } from '@nestjs/common'
+import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
 
 @ApiTags("Contact")
 @Controller('contact')

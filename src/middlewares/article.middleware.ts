@@ -55,7 +55,8 @@ export class ArticleMiddlware implements NestMiddleware {
             }
         }
 
-        if ((!role || !sub) || (role && (article.adminId !== sub && article.authorId !== sub))) {
+        const isOwner = (article.adminId || article.authorId) === sub
+        if ((!role || !sub) || (role && !isOwner)) {
             const transaction = await this.prisma.$transaction([
                 this.prisma.article.update({
                     where: { id: req.params.articleId },
@@ -66,7 +67,6 @@ export class ArticleMiddlware implements NestMiddleware {
             ])
 
             if (transaction && !Array.isArray(transaction)) {
-                console.error("Transaction error:", transaction)
                 return this.response.sendError(res, StatusCodes.InternalServerError, "Error updating view count")
             }
         }

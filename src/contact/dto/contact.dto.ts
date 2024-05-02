@@ -1,11 +1,15 @@
+import {
+    IsEmail, IsString, MaxLength, MinLength
+} from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator'
 
 export class ContactDto {
     @ApiProperty({
         example: 'kawojue08@gmail.com'
     })
-    @IsEmail()
+    @IsEmail({
+        host_whitelist: ['gmail.com', 'yahoo.com', 'outlook.com', 'icloud.com', 'fastmail.com']
+    })
     email: string
 
     @ApiProperty({

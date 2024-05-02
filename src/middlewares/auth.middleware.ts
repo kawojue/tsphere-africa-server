@@ -28,7 +28,7 @@ export class CustomAuthMiddlware implements NestMiddleware {
             const token = authHeader.split(' ')[1]
             if (token) {
                 const decodedToken = await this.validateAndDecodeToken(token)
-                if (decodedToken) {
+                if (decodedToken?.sub) {
                     sub = decodedToken.sub
                     role = decodedToken.role
                 }
