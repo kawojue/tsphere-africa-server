@@ -14,6 +14,7 @@ import { PrismaService } from 'lib/prisma.service'
 import { TalentModule } from './talent/talent.module'
 import { ModminModule } from './modmin/modmin.module'
 import { WalletModule } from './wallet/wallet.module'
+import { ClientModule } from './client/client.module'
 import { ContactModule } from './contact/contact.module'
 import { ArticleModule } from './article/article.module'
 import { PaymentModule } from './payment/payment.module'
@@ -38,6 +39,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
     PaymentModule,
     CreativeModule,
     ProfileSetupModule,
+    ClientModule,
   ],
   controllers: [AppController],
   providers: [
