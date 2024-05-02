@@ -82,6 +82,11 @@ export class ArticleService {
 
             const OR = [{ title: { contains: search, mode: 'insensitive' } }]
 
+            const pagination = {
+                take: limit,
+                skip: offset,
+            }
+
             const commonQueryOptions = {
                 select: {
                     id: true,
@@ -93,12 +98,11 @@ export class ArticleService {
                     publishedAt: true,
                     pending_approval: true,
                 },
-                take: limit,
-                skip: offset,
+                ...pagination,
                 orderBy: { publishedAt: 'desc' as const }
             }
 
-            let queryOptions
+            let queryOptions: any
 
             if (role === 'admin') {
                 queryOptions = q === 'approved' ?
@@ -117,12 +121,20 @@ export class ArticleService {
             }
 
             const articles = await this.prisma.article.findMany(queryOptions)
+            // @ts-ignore
+            const totalArticles = await this.prisma.article.count({ where: { OR } })
+
             const articlesWithTotalLikes = await Promise.all(articles.map(async (article) => ({
                 ...article,
                 likes: await this.prisma.like.count({ where: { articleId: article.id } })
             })))
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: articlesWithTotalLikes })
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                totalArticles,
+                data: articlesWithTotalLikes,
+                totalPages: Math.ceil(totalArticles / limit),
+                fetchedLength: articlesWithTotalLikes.length,
+            })
         } catch (err) {
             this.misc.handleServerError(res, err, 'Error fetching articles')
         }
@@ -421,16 +433,19 @@ export class ArticleService {
         limit = Number(limit)
         const offset = (Number(page) - 1) * limit
 
+        const comments = await this.prisma.comment.findMany({
+            take: limit,
+            skip: offset,
+            where: { articleId },
+            orderBy: { commentedAt: 'desc' }
+        })
+
+        const totalComments = await this.prisma.comment.count({ where: { articleId } })
+
         this.response.sendSuccess(res, StatusCodes.OK, {
-            data: {
-                comments: await this.prisma.comment.findMany({
-                    take: limit,
-                    skip: offset,
-                    where: { id: articleId },
-                    orderBy: { commentedAt: 'desc' }
-                }),
-                totalComments: await this.prisma.comment.count({ where: { id: articleId } })
-            }
+            totalComments,
+            data: comments,
+            totalPages: Math.ceil(totalComments / limit)
         })
     }
 

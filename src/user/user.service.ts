@@ -24,24 +24,21 @@ export class UserService {
         }: FetchProfilesDto
     ) {
         try {
-            page = Number(page)
             limit = Number(limit)
-            const offset = (page - 1) * limit
+            const offset = (Number(page) - 1) * limit
+
+            const OR = [
+                { email: { contains: search, mode: 'insensitive' } },
+                { lastname: { contains: search, mode: 'insensitive' } },
+                { firstname: { contains: search, mode: 'insensitive' } },
+            ]
 
             const users = await this.prisma.user.findMany({
-                where: {
-                    OR: [
-                        { email: { contains: search, mode: 'insensitive' } },
-                        { lastname: { contains: search, mode: 'insensitive' } },
-                        { firstname: { contains: search, mode: 'insensitive' } },
-                    ],
-                    role,
-                },
+                // @ts-ignore
+                where: { OR, role },
                 take: limit,
                 skip: offset,
-                orderBy: {
-                    createdAt: 'desc'
-                },
+                orderBy: { createdAt: 'desc' },
                 select: {
                     id: true,
                     role: true,
@@ -70,7 +67,16 @@ export class UserService {
                 }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: users })
+            const totalProfiles = await this.prisma.user.count({
+                // @ts-ignore
+                where: { OR, role },
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: users,
+                totalProfiles,
+                totalPages: Math.ceil(totalProfiles / limit)
+            })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }

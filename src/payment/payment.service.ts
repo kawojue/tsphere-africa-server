@@ -193,7 +193,14 @@ export class PaymentService {
                 orderBy: q === 'amount' ? { amount: 'asc' } : { updatedAt: 'desc' },
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: txHistories })
+            // @ts-ignore
+            const totalTxHistories = await this.prisma.txHistory.count({ where })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                totalTxHistories,
+                data: txHistories,
+                totalPages: Math.ceil(totalTxHistories / limit)
+            })
         } catch (err) {
             this.misc.handleServerError(res, err, 'Error fetching transaction histories')
         }

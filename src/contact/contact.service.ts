@@ -29,17 +29,17 @@ export class ContactService {
         res: Response,
         { search = '', page = 1, limit = 50 }: InfiniteScrollDto
     ) {
-        page = Number(page)
         limit = Number(limit)
-        const offset = (page - 1) * limit
+        const offset = (Number(page) - 1) * limit
+
+        const OR = [
+            { email: { contains: search, mode: 'insensitive' } },
+            { fullname: { contains: search, mode: 'insensitive' } },
+        ]
 
         const contacts = await this.prisma.contact.findMany({
-            where: {
-                OR: [
-                    { email: { contains: search, mode: 'insensitive' } },
-                    { fullname: { contains: search, mode: 'insensitive' } },
-                ]
-            },
+            // @ts-ignore
+            where: { OR },
             orderBy: [
                 { replied: 'asc' },
                 { repliedAt: 'asc' },
@@ -57,7 +57,15 @@ export class ContactService {
             skip: offset,
         })
 
-        this.response.sendSuccess(res, StatusCodes.OK, { data: contacts })
+        // @ts-ignore
+        const total = await this.prisma.contact.count({ where: { OR } })
+
+        this.response.sendSuccess(res, StatusCodes.OK, {
+            data: contacts,
+            totalContacts: total,
+            length: contacts.length,
+            totalPages: Math.ceil(total / limit)
+        })
     }
 
     async getContact(res: Response, contactId: string) {

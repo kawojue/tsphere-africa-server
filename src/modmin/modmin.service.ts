@@ -163,10 +163,8 @@ export class ModminService {
             }[]
 
             let total: number
-
-            page = Number(page)
             limit = Number(limit)
-            const offset = (page - 1) * limit
+            const offset = (Number(page) - 1) * limit
 
             const OR: ({
                 firstname: {
@@ -244,7 +242,7 @@ export class ModminService {
                     select,
                 })
 
-                total = await this.prisma.user.count({ where: { verified: true } })
+                total = await this.prisma.user.count({ where: { verified: true, OR } })
             } else if (type === "unverified") {
                 users = await this.prisma.user.findMany({
                     where: {
@@ -257,7 +255,7 @@ export class ModminService {
                     select,
                 })
 
-                total = await this.prisma.user.count({ where: { verified: false } })
+                total = await this.prisma.user.count({ where: { verified: false, OR } })
             } else {
                 users = await this.prisma.user.findMany({
                     where: { OR },
@@ -267,10 +265,18 @@ export class ModminService {
                     select,
                 })
 
-                total = await this.prisma.user.count()
+                total = await this.prisma.user.count({ where: { OR } })
             }
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: { users, total } })
+            const totalPages = Math.ceil(total / limit)
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: {
+                    users,
+                    total,
+                    totalPages
+                }
+            })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
@@ -476,47 +482,86 @@ export class ModminService {
         res: Response,
         { q, s = '', page = 1, limit = 50 }: SortUserDto
     ) {
-        limit = Number(limit)
-        const offset = (Number(page) - 1) * limit
+        try {
+            limit = Number(limit)
+            const offset = (Number(page) - 1) * limit
 
-        const referrals = await this.prisma.referral.findMany({
-            where: {
-                points: { gte: 10 },
-                OR: [
+            const OR: ({
+                user: {
+                    username: {
+                        contains: string
+                        mode: "insensitive"
+                    }
+                }
+            } | {
+                user: {
+                    lastname: {
+                        contains: string
+                        mode: "insensitive"
+                    }
+                }
+            } | {
+                user: {
+                    firstname: {
+                        contains: string
+                        mode: "insensitive"
+                    }
+                }
+            })[] = [
                     { user: { username: { contains: s, mode: 'insensitive' } } },
                     { user: { lastname: { contains: s, mode: 'insensitive' } } },
                     { user: { firstname: { contains: s, mode: 'insensitive' } } },
-                ],
-            },
-            take: limit,
-            skip: offset,
-            orderBy: q === "date" ?
-                { createdAt: 'desc' } :
-                q === "name" ?
-                    { user: { firstname: 'asc' } } :
-                    { points: 'asc' },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        role: true,
-                        avatar: true,
-                        username: true,
-                        lastname: true,
-                        firstname: true,
+                ]
+
+            const referrals = await this.prisma.referral.findMany({
+                where: {
+                    points: { gte: 10 },
+                    OR
+                },
+                take: limit,
+                skip: offset,
+                orderBy: q === "date" ?
+                    { createdAt: 'desc' } :
+                    q === "name" ?
+                        { user: { firstname: 'asc' } } :
+                        { points: 'asc' },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            role: true,
+                            avatar: true,
+                            username: true,
+                            lastname: true,
+                            firstname: true,
+                        }
                     }
                 }
-            }
-        })
+            })
 
-        const referralsWithTotalReferred = await Promise.all(referrals.map(async (referral) => {
-            const totalReferred = await this.prisma.referred.count({ where: { referralId: referral.id } })
+            const totalReferrals = await this.prisma.referral.count({
+                where: {
+                    points: { gte: 10 },
+                    OR,
+                },
+            })
 
-            return { ...referral, totalReferred }
-        }))
+            const referralsWithTotalReferred = await Promise.all(referrals.map(async (referral) => {
+                const totalReferred = await this.prisma.referred.count({ where: { referralId: referral.id } })
 
-        this.response.sendSuccess(res, StatusCodes.OK, { data: referralsWithTotalReferred })
+                return { ...referral, totalReferred }
+            }))
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                totalReferrals,
+                data: referralsWithTotalReferred,
+                totalPages: Math.ceil(totalReferrals / limit),
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
     }
+
 
     async fetchReferral(res: Response, referralId: string) {
         const referral = await this.prisma.referral.findUnique({

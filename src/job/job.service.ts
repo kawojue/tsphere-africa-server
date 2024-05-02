@@ -276,23 +276,35 @@ export class JobService {
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
+            const OR1 = [
+                { rate: { contains: search } },
+                { playingAge: { contains: search } },
+                { role: { contains: search, mode: 'insensitive' } },
+                { location: { contains: search, mode: 'insensitive' } },
+                { experience: { contains: search, mode: 'insensitive' } },
+                { requirement: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } }
+            ]
+
             let jobs: Job[] = await this.prisma.job.findMany({
                 where: {
                     status: 'APPROVED',
                     app_deadline: { gte: new Date() },
-                    OR: [
-                        { rate: { contains: search } },
-                        { playingAge: { contains: search } },
-                        { role: { contains: search, mode: 'insensitive' } },
-                        { location: { contains: search, mode: 'insensitive' } },
-                        { experience: { contains: search, mode: 'insensitive' } },
-                        { requirement: { contains: search, mode: 'insensitive' } },
-                        { description: { contains: search, mode: 'insensitive' } }
-                    ]
+                    // @ts-ignore
+                    OR1,
                 },
                 orderBy: { approvedAt: 'desc' },
                 skip: offset,
                 take: limit,
+            })
+
+            let totalJobs = await this.prisma.job.count({
+                where: {
+                    status: 'APPROVED',
+                    app_deadline: { gte: new Date() },
+                    // @ts-ignore
+                    OR1,
+                }
             })
 
             if (userId) {
@@ -309,18 +321,21 @@ export class JobService {
                     const bio = user[role]?.bioStats?.bio
 
                     if (personalInfo && bio) {
+                        const OR2 = [
+                            { role: { contains: user.role || '', mode: 'insensitive' } },
+                            { requirement: { contains: bio, mode: 'insensitive' } },
+                            { description: { contains: bio, mode: 'insensitive' } },
+                            { location: { contains: personalInfo.state || '', mode: 'insensitive' } },
+                            { location: { contains: personalInfo.country || '', mode: 'insensitive' } },
+                            { location: { contains: personalInfo.localGovt || '', mode: 'insensitive' } }
+                        ]
+
                         const recommendedJobs = await this.prisma.job.findMany({
                             where: {
                                 status: 'APPROVED',
                                 app_deadline: { gte: new Date() },
-                                OR: [
-                                    { role: { contains: user.role || '', mode: 'insensitive' } },
-                                    { requirement: { contains: bio, mode: 'insensitive' } },
-                                    { description: { contains: bio, mode: 'insensitive' } },
-                                    { location: { contains: personalInfo.state || '', mode: 'insensitive' } },
-                                    { location: { contains: personalInfo.country || '', mode: 'insensitive' } },
-                                    { location: { contains: personalInfo.localGovt || '', mode: 'insensitive' } }
-                                ]
+                                // @ts-ignore
+                                OR2,
                             },
                             orderBy: { approvedAt: 'desc' },
                             skip: offset,
@@ -328,12 +343,18 @@ export class JobService {
                             distinct: ['id']
                         })
 
+                        totalJobs += recommendedJobs.length
+
                         jobs = recommendedJobs.concat(jobs).slice(0, limit)
                     }
                 }
             }
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: jobs })
+            const totalPages = Math.ceil(totalJobs / limit)
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: jobs, totalPages, totalJobs
+            })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error listing jobs")
         }
