@@ -291,7 +291,7 @@ export class JobService {
                     status: 'APPROVED',
                     app_deadline: { gte: new Date() },
                     // @ts-ignore
-                    OR1,
+                    OR: OR1,
                 },
                 orderBy: { approvedAt: 'desc' },
                 skip: offset,
@@ -303,7 +303,7 @@ export class JobService {
                     status: 'APPROVED',
                     app_deadline: { gte: new Date() },
                     // @ts-ignore
-                    OR1,
+                    OR: OR1,
                 }
             })
 
@@ -335,7 +335,7 @@ export class JobService {
                                 status: 'APPROVED',
                                 app_deadline: { gte: new Date() },
                                 // @ts-ignore
-                                OR2,
+                                OR: OR2,
                             },
                             orderBy: { approvedAt: 'desc' },
                             skip: offset,
