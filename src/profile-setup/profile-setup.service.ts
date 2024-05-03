@@ -10,8 +10,6 @@ import { MiscService } from 'lib/misc.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { ExperienceDto } from './dto/experiece.dto'
-import { BankDetailsDto } from './dto/bank-details.dto'
-import { PaystackService } from 'lib/Paystack/paystack.service'
 import { RateAndAvailabilityDto } from './dto/rate-availability.dto'
 
 @Injectable()
@@ -21,7 +19,6 @@ export class ProfileSetupService {
         private readonly response: SendRes,
         private readonly misc: MiscService,
         private readonly prisma: PrismaService,
-        private readonly paystack: PaystackService,
     ) { }
 
     async uploadPortfolioImages(
@@ -236,42 +233,6 @@ export class ProfileSetupService {
             this.response.sendSuccess(res, StatusCodes.OK, {})
         } catch (err) {
             this.misc.handleServerError(res, err, 'Error removing experience')
-        }
-    }
-
-    async addPrimaryBankDetails(
-        res: Response,
-        { sub }: ExpressUser,
-        { accountNumber, bankCode }: BankDetailsDto
-    ) {
-        try {
-            const isExist = await this.prisma.bankDetails.findFirst({
-                where: {
-                    userId: sub,
-                    primary: true,
-                }
-            })
-
-            const bank = await this.paystack.getBankByBankCode(bankCode)
-            const { data: details } = await this.paystack.resolveAccount(accountNumber, bankCode)
-
-            const data = await this.prisma.bankDetails.create({
-                data: {
-                    bankCode,
-                    accountNumber,
-                    bankName: bank.name,
-                    primary: isExist ? false : true,
-                    accountName: details.account_name,
-                    user: { connect: { id: sub } },
-                }
-            })
-
-            this.response.sendSuccess(res, StatusCodes.OK, {
-                data,
-                message: "Your primary account has been added"
-            })
-        } catch (err) {
-            this.misc.handlePaystackAndServerError(res, err)
         }
     }
 

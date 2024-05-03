@@ -7,8 +7,8 @@ import { MiscService } from 'lib/misc.service'
 import { BrevoService } from 'lib/brevo.service'
 import { ValidateBankDto } from './dto/bank.dto'
 import { PrismaService } from 'lib/prisma.service'
+import { BankDetailsDto } from './dto/bank-details.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
-import { BankDetailsDto } from 'src/profile-setup/dto/bank-details.dto'
 
 @Injectable()
 export class WalletService {
@@ -49,20 +49,29 @@ export class WalletService {
         { accountNumber, bankCode }: BankDetailsDto
     ) {
         try {
+            const isExist = await this.prisma.bankDetails.findFirst({
+                where: {
+                    userId: sub,
+                    primary: true,
+                }
+            })
+
             const bank = await this.paystack.getBankByBankCode(bankCode)
             const { data: details } = await this.paystack.resolveAccount(accountNumber, bankCode)
 
-            await this.prisma.bankDetails.create({
+            const data = await this.prisma.bankDetails.create({
                 data: {
-                    bankName: bank.name, bankCode,
-                    primary: false, accountNumber,
-                    user: { connect: { id: sub } },
+                    bankName: bank.name,
+                    bankCode, accountNumber,
+                    primary: isExist ? false : true,
                     accountName: details.account_name,
+                    user: { connect: { id: sub } },
                 }
             })
 
             this.response.sendSuccess(res, StatusCodes.Created, {
-                message: "New account has been added"
+                data,
+                message: isExist ? "New account has been added" : "Your primary account has been added"
             })
         } catch (err) {
             this.misc.handlePaystackAndServerError(res, err)

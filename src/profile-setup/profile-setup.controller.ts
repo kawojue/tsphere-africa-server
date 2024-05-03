@@ -8,7 +8,6 @@ import {
   ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags
 } from '@nestjs/swagger'
 import { ExperienceDto } from './dto/experiece.dto'
-import { BankDetailsDto } from './dto/bank-details.dto'
 import {
   Controller, Delete, Param, Post, UseInterceptors, Put,
   UploadedFiles, UseGuards, Req, Res, Body, UploadedFile,
@@ -89,16 +88,6 @@ export class ProfileSetupController {
     @Param('experienceId') experienceId: string
   ) {
     return await this.profileSetupService.removeExperience(res, req.user, experienceId)
-  }
-
-  @Role(UserRole.talent, UserRole.creative)
-  @Put('/bank-details')
-  async manageBankDetails(
-    @Res() res: Response,
-    @Req() req: IRequest,
-    @Body() bankDetails: BankDetailsDto
-  ) {
-    return await this.profileSetupService.addPrimaryBankDetails(res, req.user, bankDetails)
   }
 
   @ApiOperation({

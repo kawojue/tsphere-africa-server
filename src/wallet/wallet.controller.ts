@@ -11,8 +11,8 @@ import { WalletService } from './wallet.service'
 import { ValidateBankDto } from './dto/bank.dto'
 import { getIPAddress } from 'helpers/getIPAddress'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { BankDetailsDto } from './dto/bank-details.dto'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { BankDetailsDto } from 'src/profile-setup/dto/bank-details.dto'
 
 @ApiTags("Wallet")
 @Controller('wallet')
