@@ -49,13 +49,13 @@ export class WalletService {
         { accountNumber, bankCode }: BankDetailsDto
     ) {
         try {
-            const bankName = await this.paystack.getBankByBankCode(bankCode)
+            const bank = await this.paystack.getBankByBankCode(bankCode)
             const { data: details } = await this.paystack.resolveAccount(accountNumber, bankCode)
 
             await this.prisma.bankDetails.create({
                 data: {
-                    bankName, accountNumber,
-                    bankCode, primary: false,
+                    bankName: bank.name, bankCode,
+                    primary: false, accountNumber,
                     user: { connect: { id: sub } },
                     accountName: details.account_name,
                 }

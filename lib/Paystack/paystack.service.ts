@@ -40,7 +40,7 @@ export class PaystackService {
         return this.consumer.sendRequest<ListBanksResponse>('GET', url)
     }
 
-    async getBankByBankCode(bankCode: string) {
+    async getBankByBankCode(bankCode: string): Promise<Bank> {
         const { data } = await this.listBanks()
 
         const bankDictionary = data.reduce((acc, bank) => {
