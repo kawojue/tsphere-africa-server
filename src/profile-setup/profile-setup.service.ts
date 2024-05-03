@@ -248,7 +248,7 @@ export class ProfileSetupService {
             const bank = await this.paystack.getBankByBankCode(bankCode)
             const { data: details } = await this.paystack.resolveAccount(accountNumber, bankCode)
 
-            await this.prisma.bankDetails.create({
+            const data = await this.prisma.bankDetails.create({
                 data: {
                     bankCode,
                     primary: true,
@@ -260,6 +260,7 @@ export class ProfileSetupService {
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, {
+                data,
                 message: "Your primary account has been added"
             })
         } catch (err) {
