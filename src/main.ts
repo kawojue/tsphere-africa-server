@@ -27,14 +27,14 @@ async function bootstrap() {
     methods: 'GET,PATCH,POST,PUT,DELETE',
   })
   expressApp.set('trust proxy', true)
-  app.use(express.json({ limit: 50 << 20 }))
+  app.use(express.json({ limit: 100 << 20 }))
   app.use(compression())
   app.useGlobalPipes(new ValidationPipe())
 
   const swaggerOptions = new DocumentBuilder()
     .setTitle('Talent Sphere Africa API')
     .setDescription('API Endpoints')
-    .setVersion('1.5.2')
+    .setVersion('1.7.2')
     .addServer(`https://api.talentsphereafrica.co`, 'Development')
     .addServer(`https://api.talentsphereafrica.com`, 'Production')
     .addServer(`http://localhost:${PORT}/`, 'Local')
