@@ -1,5 +1,6 @@
 import * as express from 'express'
 import { AppModule } from './app.module'
+import * as compression from 'compression'
 import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -27,6 +28,7 @@ async function bootstrap() {
   })
   expressApp.set('trust proxy', true)
   app.use(express.json({ limit: 50 << 20 }))
+  app.use(compression())
   app.useGlobalPipes(new ValidationPipe())
 
   const swaggerOptions = new DocumentBuilder()
