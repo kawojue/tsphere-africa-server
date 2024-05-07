@@ -1,12 +1,12 @@
+import { Response } from 'express'
+import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
+import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { PrismaService } from 'lib/prisma.service'
-import { Response } from 'express'
-import { validateFile } from 'utils/file'
-import { genFileName } from 'test'
-import StatusCodes from 'enums/StatusCodes'
+import { genFileName } from 'helpers/genFilename'
 import { CreateProjectDocumentDTO } from './dto/project.dto'
 
 @Injectable()
