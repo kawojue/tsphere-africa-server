@@ -25,6 +25,7 @@ model User {
     totp                Totp?
     avatar              File?
     wallet              Wallet?
+    client              Client?
     talent              Talent?
     creative            Creative?
     referral            Referral?
@@ -261,6 +262,13 @@ model CreativeCertification {
     creativeId String   @unique @db.ObjectId
 }
 
+model Client {
+    id          String      @id @default(auto()) @map("_id") @db.ObjectId
+    brief_forms BriefForm[]
+    user        User        @relation(fields: [userId], references: [id])
+    userId      String      @unique @db.ObjectId
+}
+
 model Talent {
     id           String              @id @default(auto()) @map("_id") @db.ObjectId
     personalInfo TalentPersonalInfo?
@@ -392,6 +400,48 @@ model Like {
     @@unique([userId, articleId])
 }
 
+model BriefForm {
+    id                   String        @id @default(auto()) @map("_id") @db.ObjectId
+    status               ProjectStatus @default(ONHOLD)
+    title                String
+    type                 String
+    category             String
+    description          String?
+    videos               File[]
+    images               File[]
+    docs                 File[]
+    role_name            String?
+    role_type            String?
+    gender               Gender?
+    age                  String?
+    nationality          String?
+    willing_to_pay       YesOrNO?
+    duration             String?
+    rate_type            ChargeTime?
+    compensation         String?
+    shoot_date           DateTime?
+    shoot_time           DateTime?
+    shoot_address        String?
+    shoot_info           String?
+    audition_date        DateTime?
+    audition_time        DateTime?
+    audition_options     String?
+    audition_type        String?
+    venue                String?
+    city                 String?
+    state                String?
+    audition_addrss      String?
+    pre_screen           YesOrNO?
+    audition_instruction String?
+    brief_date_expiry    DateTime?
+    brief_time_expiry    DateTime?
+    projectType          ProjectType
+    createdAt            DateTime      @default(now())
+    updatedAt            DateTime      @updatedAt
+    client               Client        @relation(fields: [clientId], references: [id])
+    clientId             String        @unique @db.ObjectId
+}
+
 enum ApplicantStatus {
     PENDING
     ACCEPTED
@@ -437,6 +487,23 @@ enum Role {
 enum UserStatus {
     active
     suspended
+}
+
+enum YesOrNO {
+    Yes
+    No
+}
+
+enum ProjectType {
+    doc
+    fill
+}
+
+enum ProjectStatus {
+    ONHOLD
+    ONGOING
+    CANCELLED
+    COMPLETED
 }
 
 type File {

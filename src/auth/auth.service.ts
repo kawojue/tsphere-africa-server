@@ -153,6 +153,12 @@ export class AuthService {
                     })
                 ])
 
+                if (newUser.role === "client") {
+                    await this.prisma.client.create({
+                        data: { user: { connect: { id: newUser.id } } }
+                    })
+                }
+
                 if (referral) {
                     await this.prisma.referred.create({
                         data: {
