@@ -402,7 +402,7 @@ model Like {
 
 model BriefForm {
     id                   String        @id @default(auto()) @map("_id") @db.ObjectId
-    status               ProjectStatus @default(ONHOLD)
+    status               ProjectStatus @default(PENDING)
     title                String
     type                 String
     category             String
@@ -501,6 +501,7 @@ enum ProjectType {
 
 enum ProjectStatus {
     ONHOLD
+    PENDING
     ONGOING
     CANCELLED
     COMPLETED

@@ -46,6 +46,7 @@ export class UserService {
                     avatar: true,
                     username: true,
                     lastname: true,
+                    verified: true,
                     firstname: true,
                     primarySkill: true,
                     creative: {
@@ -100,6 +101,7 @@ export class UserService {
                     avatar: true,
                     username: true,
                     lastname: true,
+                    verified: true,
                     firstname: true,
                     portfolio: true,
                     createdAt: true,
