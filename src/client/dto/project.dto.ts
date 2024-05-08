@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { ChargeTime, Gender, YesOrNo } from '@prisma/client'
+import { ChargeTime, Gender, ProjectStatus, YesOrNo } from '@prisma/client'
 import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class CompulsoryFieldsDTO {
@@ -232,4 +232,12 @@ export class CreateProjectFillDTO extends CompulsoryFieldsDTO {
     @IsDateString()
     @IsOptional()
     brief_time_expiry: string
+}
+
+export class ToggleProjectStatusDTO {
+    @ApiProperty({
+        enum: ProjectStatus
+    })
+    @IsEnum(ProjectStatus)
+    q: ProjectStatus
 }

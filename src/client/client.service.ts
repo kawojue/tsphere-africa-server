@@ -8,7 +8,9 @@ import { MiscService } from 'lib/misc.service'
 import { genFileName } from 'helpers/genFilename'
 import { extractTime } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
-import { CreateProjectDocumentDTO, CreateProjectFillDTO } from './dto/project.dto'
+import { $Enums, BriefForm } from '@prisma/client'
+import { SortUserDto } from 'src/modmin/dto/user.dto'
+import { CreateProjectDocumentDTO, CreateProjectFillDTO, ToggleProjectStatusDTO } from './dto/project.dto'
 
 @Injectable()
 export class ClientService {
@@ -29,6 +31,16 @@ export class ClientService {
         }
     }
 
+    private async getClient(sub: string) {
+        const client = await this.prisma.client.findUnique({
+            where: { userId: sub }
+        })
+
+        if (!client) return
+
+        return client
+    }
+
     async createProjectDocument(
         res: Response,
         { sub }: ExpressUser,
@@ -40,11 +52,7 @@ export class ClientService {
         { category, title, type }: CreateProjectDocumentDTO
     ) {
         try {
-            const client = await this.prisma.client.findUnique({
-                where: { userId: sub }
-            })
-
-            if (!client) return
+            const client = await this.getClient(sub)
 
             let docs = [] as IFile[]
             let videos = [] as IFile[]
@@ -142,7 +150,7 @@ export class ClientService {
                 }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, {
+            this.response.sendSuccess(res, StatusCodes.Created, {
                 data: briefForm,
                 messages: "Successful"
             })
@@ -163,11 +171,7 @@ export class ClientService {
                 delete body.role
             }
 
-            const client = await this.prisma.client.findUnique({
-                where: { userId: sub }
-            })
-
-            if (!client) return
+            const client = await this.getClient(sub)
 
             const briefForm = await this.prisma.briefForm.create({
                 data: {
@@ -180,12 +184,263 @@ export class ClientService {
                 }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, {
+            this.response.sendSuccess(res, StatusCodes.Created, {
                 data: briefForm,
                 messages: "Successful"
             })
         } catch (err) {
             this.misc.handleServerError(res, err)
+        }
+    }
+
+    async analytics(res: Response, { sub, role }: ExpressUser) {
+        try {
+            let total = 0
+            let pending = 0
+            let approved = 0
+            let completed = 0
+
+            if (role === "admin") {
+                pending = await this.prisma.briefForm.count({
+                    where: {
+                        status: 'PENDING'
+                    }
+                })
+                completed = await this.prisma.briefForm.count({
+                    where: {
+                        status: 'COMPLETED'
+                    }
+                })
+
+                total = await this.prisma.briefForm.count()
+
+                const cancelled = await this.prisma.briefForm.count({
+                    where: {
+                        status: 'CANCELLED'
+                    }
+                })
+
+                approved = total - (pending + cancelled)
+            } else {
+                const client = await this.getClient(sub)
+
+                pending = await this.prisma.briefForm.count({
+                    where: {
+                        status: 'PENDING',
+                        clientId: client.id,
+                    }
+                })
+                completed = await this.prisma.briefForm.count({
+                    where: {
+                        status: 'COMPLETED',
+                        clientId: client.id,
+                    }
+                })
+
+                total = await this.prisma.briefForm.count()
+
+                const cancelled = await this.prisma.briefForm.count({
+                    where: {
+                        status: 'CANCELLED',
+                        clientId: client.id,
+                    }
+                })
+
+                approved = total - (pending + cancelled)
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: { total, approved, pending, completed }
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async fetchProject(
+        res: Response,
+        projectId: string,
+        { role, sub }: ExpressUser,
+    ) {
+        try {
+            let project: BriefForm
+
+            if (role === "admin") {
+                project = await this.prisma.briefForm.findUnique({
+                    where: { id: projectId }
+                })
+            } else {
+                const client = await this.getClient(sub)
+
+                project = await this.prisma.briefForm.findUnique({
+                    where: {
+                        id: projectId,
+                        clientId: client.id,
+                    }
+                })
+            }
+
+            if (!project) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: project })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async fetchProjects(
+        res: Response,
+        { role, sub }: ExpressUser,
+        {
+            q, s, limit = 50, page = 1
+        }: SortUserDto
+    ) {
+        try {
+            limit = Number(limit)
+            const offset = (Number(page) - 1) * limit
+
+            let projects: {
+                id: string
+                type: string
+                title: string
+                createdAt: Date
+                category: string
+                status: $Enums.ProjectStatus
+                projectType: $Enums.ProjectType
+            }[]
+
+            let length = 0
+            let totalPages = 0
+
+            const OR: ({
+                type: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            } | {
+                title: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            } | {
+                category: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            })[] = [
+                    { type: { contains: s, mode: 'insensitive' } },
+                    { title: { contains: s, mode: 'insensitive' } },
+                    { category: { contains: s, mode: 'insensitive' } },
+                ]
+
+            const query: {
+                select: {
+                    id: boolean
+                    type: boolean
+                    title: boolean
+                    status: boolean
+                    category: boolean
+                    createdAt: boolean
+                    projectType: boolean
+                }
+                orderBy: ({
+                    type: "asc"
+                } | {
+                    title: "asc"
+                } | {
+                    category: "asc"
+                })[] | {
+                    createdAt: "desc"
+                }
+                skip: number
+                take: number
+            } = {
+                select: {
+                    id: true,
+                    type: true,
+                    title: true,
+                    status: true,
+                    category: true,
+                    createdAt: true,
+                    projectType: true
+                },
+                take: limit,
+                skip: offset,
+                orderBy: q === "name" ? [
+                    { type: 'asc' },
+                    { title: 'asc' },
+                    { category: 'asc' },
+                ] : { createdAt: 'desc' },
+            }
+
+            if (role === "admin") {
+                projects = await this.prisma.briefForm.findMany({
+                    where: { OR },
+                    ...query,
+                })
+
+                length = await this.prisma.briefForm.count({ where: { OR } })
+                totalPages = Math.ceil(length / limit)
+            } else {
+                const client = await this.getClient(sub)
+
+                projects = await this.prisma.briefForm.findMany({
+                    where: { clientId: client.id, OR },
+                    ...query,
+                })
+
+                length = await this.prisma.briefForm.count({ where: { clientId: client.id, OR } })
+                totalPages = Math.ceil(length / limit)
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: { projects, length, totalPages }
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async toggleStatus(
+        res: Response,
+        projectId: string,
+        { sub, role }: ExpressUser,
+        { q }: ToggleProjectStatusDTO,
+    ) {
+        try {
+            let project: BriefForm
+
+            if (role === "admin") {
+                project = await this.prisma.briefForm.findUnique({
+                    where: { id: projectId }
+                })
+            } else {
+                const client = await this.getClient(sub)
+
+                project = await this.prisma.briefForm.findUnique({
+                    where: { id: projectId, clientId: client.id }
+                })
+            }
+
+            if (!project) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
+            }
+
+            const newProject = await this.prisma.briefForm.update({
+                where: { id: project.id },
+                data: {
+                    status: q
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: newProject,
+                message: "Status has been changed"
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "error changing status")
         }
     }
 }
