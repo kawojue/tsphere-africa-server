@@ -415,7 +415,7 @@ model BriefForm {
     gender               Gender?
     age                  String?
     nationality          String?
-    willing_to_pay       YesOrNO?
+    willing_to_pay       YesOrNo?
     duration             String?
     rate_type            ChargeTime?
     compensation         String?
@@ -430,8 +430,8 @@ model BriefForm {
     venue                String?
     city                 String?
     state                String?
-    audition_addrss      String?
-    pre_screen           YesOrNO?
+    audition_address     String?
+    pre_screen           YesOrNo?
     audition_instruction String?
     brief_date_expiry    DateTime?
     brief_time_expiry    DateTime?
@@ -489,7 +489,7 @@ enum UserStatus {
     suspended
 }
 
-enum YesOrNO {
+enum YesOrNo {
     Yes
     No
 }

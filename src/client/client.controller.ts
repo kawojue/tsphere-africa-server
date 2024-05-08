@@ -7,8 +7,8 @@ import { AuthGuard } from '@nestjs/passport'
 import { ClientService } from './client.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
-import { CreateProjectDocumentDTO } from './dto/project.dto'
 import { AnyFilesInterceptor } from '@nestjs/platform-express'
+import { CreateProjectDocumentDTO, CreateProjectFillDTO } from './dto/project.dto'
 
 @ApiTags("Client")
 @ApiBearerAuth()
@@ -30,5 +30,14 @@ export class ClientController {
     }
   ) {
     await this.clientService.createProjectDocument(res, req.user, files, body)
+  }
+
+  @Post('/brief-form/fill')
+  async createProjectFill(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() body: CreateProjectFillDTO,
+  ) {
+    await this.clientService.createProjectFill(res, req.user, body)
   }
 }
