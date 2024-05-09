@@ -45,28 +45,38 @@ export class AwsService {
         return `${this.domain}/${path}`
     }
 
-    async downloadS3(path: string): Promise<Buffer> {
+    async downloadS3(path: string): Promise<{
+        data: Buffer
+        contentLength: number
+    }> {
         const params: GetObjectAclCommandInput = {
             Key: path,
             Bucket: this.bucketName,
         }
 
         try {
-            const { Body } = await this.s3.send(new GetObjectCommand(params))
-            if (!Body) {
+            const response = await this.s3.send(new GetObjectCommand(params))
+            const body = response.Body
+
+            if (!body) {
                 throw new NotFoundException('File not found')
             }
 
             const chunks: Uint8Array[] = []
-            if (typeof Body[Symbol.asyncIterator] === 'function') {
-                for await (const chunk of Body as AsyncIterable<Uint8Array>) {
+            let contentLength = 0
+
+            if (typeof body[Symbol.asyncIterator] === 'function') {
+                for await (const chunk of body as AsyncIterable<Uint8Array>) {
                     chunks.push(chunk)
+                    contentLength += chunk.length
                 }
             } else {
                 throw new Error('Body does not have an async iterator')
             }
 
-            return Buffer.concat(chunks)
+            const data = Buffer.concat(chunks)
+
+            return { data, contentLength }
         } catch (error) {
             if (error instanceof NotFoundException) {
                 throw error

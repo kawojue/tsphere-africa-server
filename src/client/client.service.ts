@@ -25,7 +25,7 @@ export class ClientService {
         private readonly prisma: PrismaService,
     ) { }
 
-    private async removeFile(files: IFile[]) {
+    private async removeFiles(files: IFile[]) {
         if (files.length > 0) {
             for (const file of files) {
                 if (file?.path) {
@@ -83,7 +83,7 @@ export class ClientService {
                     docs = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
-                        await this.removeFile(docs)
+                        await this.removeFiles(docs)
                     } catch (err) {
                         this.misc.handleServerError(res, err, err?.message)
                     }
@@ -111,7 +111,7 @@ export class ClientService {
                     images = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
-                        await this.removeFile(images)
+                        await this.removeFiles(images)
                     } catch (err) {
                         this.misc.handleServerError(res, err, err?.message)
                     }
@@ -139,7 +139,7 @@ export class ClientService {
                     videos = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
-                        await this.removeFile(videos)
+                        await this.removeFiles(videos)
                     } catch (err) {
                         this.misc.handleServerError(res, err, err?.message)
                     }
