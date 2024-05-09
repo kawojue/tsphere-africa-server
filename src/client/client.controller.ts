@@ -1,21 +1,20 @@
 import { Response } from 'express'
-import {
-  UploadedFiles, Post, UseInterceptors,
-  Body, Controller, UseGuards, Res, Req,
-  Param,
-  Get,
-  Query,
-  Patch,
-} from '@nestjs/common'
 import { Role } from 'src/role.decorator'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { ClientService } from './client.service'
+import { FundWalletDTO } from './dto/wallet.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { AnyFilesInterceptor } from '@nestjs/platform-express'
-import { CreateProjectDocumentDTO, CreateProjectFillDTO, ToggleProjectStatusDTO } from './dto/project.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
+import {
+  UploadedFiles, Post, UseInterceptors, Param, Get,
+  Body, Controller, UseGuards, Res, Req, Query, Patch,
+} from '@nestjs/common'
+import { AnyFilesInterceptor } from '@nestjs/platform-express'
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
+import {
+  CreateProjectDocumentDTO, CreateProjectFillDTO, ToggleProjectStatusDTO
+} from './dto/project.dto'
 
 @ApiTags("Client")
 @ApiBearerAuth()
@@ -87,5 +86,15 @@ export class ClientController {
     @Param('projectId') projectId: string
   ) {
     await this.clientService.toggleStatus(res, projectId, req.user, q)
+  }
+
+  @Post('/deposit')
+  @Role(Roles.client)
+  async fundWallet(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() body: FundWalletDTO
+  ) {
+    return await this.clientService.fundWallet(res, req.user, body)
   }
 }

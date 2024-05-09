@@ -10,11 +10,14 @@ import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
+import { FundWalletDTO } from './dto/wallet.dto'
 import { genFileName } from 'helpers/genFilename'
 import { extractTime } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
 import { $Enums, BriefForm } from '@prisma/client'
+import { genRandomCode } from 'helpers/genRandStr'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
+import { PaystackService } from 'lib/Paystack/paystack.service'
 
 @Injectable()
 export class ClientService {
@@ -23,6 +26,7 @@ export class ClientService {
         private readonly response: SendRes,
         private readonly misc: MiscService,
         private readonly prisma: PrismaService,
+        private readonly paystack: PaystackService,
     ) { }
 
     private async removeFiles(files: IFile[]) {
@@ -445,6 +449,57 @@ export class ClientService {
             })
         } catch (err) {
             this.misc.handleServerError(res, err, "error changing status")
+        }
+    }
+
+    async fundWallet(
+        res: Response,
+        { sub }: ExpressUser,
+        { ref }: FundWalletDTO
+    ) {
+        try {
+            const wallet = await this.prisma.wallet.findUnique({ where: { userId: sub } })
+
+            if (!wallet) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'Wallet not found')
+            }
+
+            const verifyTx = await this.paystack.verifyTransaction(ref)
+            if (!verifyTx.status || verifyTx?.data?.status !== "success") {
+                return this.response.sendError(res, StatusCodes.PaymentIsRequired, 'Payment is required')
+            }
+
+            const { data } = verifyTx
+            const amountPaid = data.amount / 100
+            const channel = data?.authorization?.channel
+            const authorization_code = data?.authorization?.authorization_code
+
+            const [_, tx] = await this.prisma.$transaction([
+                this.prisma.wallet.update({
+                    where: { userId: sub },
+                    data: {
+                        lastDepoistedAt: new Date(),
+                        lastAmountDeposited: amountPaid,
+                        balance: { increment: amountPaid }
+                    }
+                }),
+                this.prisma.txHistory.create({
+                    data: {
+                        channel,
+                        type: 'DEPOSIT',
+                        source: 'external',
+                        status: 'SUCCESS',
+                        amount: amountPaid,
+                        authorization_code,
+                        reference: `deposit-${sub}-${genRandomCode()}`,
+                        user: { connect: { id: sub } },
+                    }
+                })
+            ])
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: tx })
+        } catch (err) {
+            this.misc.handlePaystackAndServerError(res, err)
         }
     }
 }

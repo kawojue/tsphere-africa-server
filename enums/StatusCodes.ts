@@ -6,6 +6,7 @@ enum StatusCodes {
     NotModified = 304,
     BadRequest = 400,
     Unauthorized = 401,
+    PaymentIsRequired = 402,
     Forbidden = 403,
     NotFound = 404,
     MethodNotAllowed = 405,

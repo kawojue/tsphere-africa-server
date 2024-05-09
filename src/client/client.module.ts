@@ -7,10 +7,11 @@ import { ClientService } from './client.service'
 import { PassportModule } from '@nestjs/passport'
 import { PrismaService } from 'lib/prisma.service'
 import { ClientController } from './client.controller'
+import { PaystackService } from 'lib/Paystack/paystack.service'
 
 @Module({
   imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule],
   controllers: [ClientController],
-  providers: [ClientService, MiscService, AwsService, PrismaService, SendRes],
+  providers: [ClientService, MiscService, AwsService, PrismaService, SendRes, PaystackService],
 })
 export class ClientModule { }
