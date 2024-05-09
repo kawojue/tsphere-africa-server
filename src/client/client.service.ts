@@ -1,3 +1,8 @@
+import {
+    CreateProjectFillDTO,
+    ToggleProjectStatusDTO,
+    CreateProjectDocumentDTO,
+} from './dto/project.dto'
 import { Response } from 'express'
 import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
@@ -10,7 +15,6 @@ import { extractTime } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
 import { $Enums, BriefForm } from '@prisma/client'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
-import { CreateProjectDocumentDTO, CreateProjectFillDTO, ToggleProjectStatusDTO } from './dto/project.dto'
 
 @Injectable()
 export class ClientService {
