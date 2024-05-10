@@ -35,9 +35,9 @@ model User {
     jobs                Job[]
     likes               Like[]
     skillAttachments    File[]
+    skills              Skill[]
     raters              Rating[]             @relation("RaterUser")
     ratings             Rating[]             @relation("TargetUser")
-    skills              Skill[]
     comments            Comment[]
     articles            Article[]
     referred            Referred[]

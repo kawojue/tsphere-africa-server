@@ -11,6 +11,7 @@ import { AppController } from './app.controller'
 import { PlunkService } from 'lib/plunk.service'
 import { BrevoService } from 'lib/brevo.service'
 import { PrismaService } from 'lib/prisma.service'
+import { MailModule } from './mailer/mailer.module'
 import { TalentModule } from './talent/talent.module'
 import { ModminModule } from './modmin/modmin.module'
 import { WalletModule } from './wallet/wallet.module'
@@ -31,15 +32,16 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
     JobModule,
     FileModule,
     UserModule,
+    MailModule,
     TalentModule,
     ModminModule,
     WalletModule,
+    ClientModule,
     ArticleModule,
     ContactModule,
     PaymentModule,
     CreativeModule,
     ProfileSetupModule,
-    ClientModule,
   ],
   controllers: [AppController],
   providers: [
