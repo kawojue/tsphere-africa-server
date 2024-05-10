@@ -14,6 +14,7 @@ import { BrevoService } from 'lib/brevo.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { genReferralKey } from 'helpers/genReferralKey'
+import { MailService } from 'src/mailer/mailer.service'
 import { EncryptionService } from 'lib/encryption.service'
 import { titleText, toLowerCase } from 'helpers/formatTexts'
 import {
@@ -26,6 +27,7 @@ export class AuthService {
         private readonly aws: AwsService,
         private readonly response: SendRes,
         private readonly misc: MiscService,
+        private readonly mail: MailService,
         private readonly brevo: BrevoService,
         private readonly prisma: PrismaService,
         private readonly encryption: EncryptionService,
@@ -136,12 +138,12 @@ export class AuthService {
             })
 
             if (newUser) {
-                const token = this.misc.genenerateToken(newUser.id)
+                const tk = this.misc.genenerateToken(newUser.id)
 
                 await this.prisma.$transaction([
                     this.prisma.validation.create({
                         data: {
-                            ...token,
+                            ...tk,
                             user: { connect: { id: newUser.id } }
                         }
                     }),
@@ -170,7 +172,8 @@ export class AuthService {
 
                 await Promise.all([
                     this.prisma.isSubscribed(email),
-                    this.brevo.sendVerificationEmail(email, token.token),
+                    this.mail.sendVerificationEmail(email, tk.token),
+                    // this.brevo.sendVerificationEmail(email, token.token),
                     this.prisma.wallet.create({ data: { user: { connect: { id: newUser.id } } } }),
                 ])
             }
@@ -200,19 +203,15 @@ export class AuthService {
                 return
             }
 
-            await this.prisma.user.update({
-                where: {
-                    id: validation.userId
-                },
-                data: {
-                    email_verified: true
-                }
-            })
-            await this.prisma.validation.delete({
-                where: {
-                    id: validation.id
-                }
-            })
+            await this.prisma.$transaction([
+                this.prisma.user.update({
+                    where: { id: validation.userId },
+                    data: { email_verified: true }
+                }),
+                this.prisma.validation.delete({
+                    where: { id: validation.id }
+                })
+            ])
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 message: "Your email is now verified"
@@ -236,21 +235,17 @@ export class AuthService {
                 return
             }
 
-            const token = this.misc.genenerateToken(user.id)
+            const tk = this.misc.genenerateToken(user.id)
 
             await this.prisma.validation.upsert({
-                where: {
-                    userId: user.id
-                },
+                where: { userId: user.id },
                 create: {
-                    ...token,
+                    ...tk,
                     user: {
-                        connect: {
-                            id: user.id
-                        }
+                        connect: { id: user.id }
                     }
                 },
-                update: token
+                update: tk
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, {
@@ -259,13 +254,22 @@ export class AuthService {
 
             res.on('finish', async () => {
                 if (token_type === 'email') {
-                    await this.brevo.sendVerificationEmail(email, token.token)
+                    await this.mail.sendVerificationEmail(email, tk.token)
+                    // await this.brevo.sendVerificationEmail(email, tk.token)
                 } else if (token_type === 'password') {
-                    await this.brevo.sendTransactionalEmail({
+                    await this.mail.sendEmail({
                         to: email,
                         subject: "Reset Password",
-                        body: `${process.env.CLIENT_URL}/reset-password?token=${token.token}&token_type=password`
+                        context: {
+                            url: `${process.env.CLIENT_URL}/reset-password?token=${tk.token}&token_type=password`
+                        },
+                        filename: 'reset-password'
                     })
+                    // await this.brevo.sendTransactionalEmail({
+                    //     to: email,
+                    //     subject: "Reset Password",
+                    //     body: `${process.env.CLIENT_URL}/reset-password?token=${tk.token}&token_type=password`
+                    // })
                 }
             })
         } catch (err) {
@@ -306,12 +310,8 @@ export class AuthService {
 
             const newPassword = await this.encryption.hashAsync(password)
             await this.prisma.user.update({
-                where: {
-                    id: validation.userId
-                },
-                data: {
-                    password: newPassword
-                }
+                where: { id: validation.userId },
+                data: { password: newPassword }
             })
             await this.prisma.validation.delete({
                 where: { token }
@@ -397,7 +397,8 @@ export class AuthService {
                             },
                             update: token
                         }),
-                        this.brevo.sendVerificationEmail(user.email, token.token)
+
+                        this.mail.sendVerificationEmail(user.email, token.token)
                     ])
                 }
             }

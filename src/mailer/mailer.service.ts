@@ -10,16 +10,27 @@ export class MailService {
 
     private readonly sourceRoot = path.join(process.cwd(), 'src')
 
-    async sendEmail(
+    async sendEmail({ to, subject, filename, context }: {
         to: string,
         subject: string,
         filename: string,
         context: Record<string, any>
-    ): Promise<void> {
+    }): Promise<void> {
         const template = readFileSync(path.join(this.sourceRoot, `mailer/templates/${filename}`), 'utf8')
         const compiledTemplate = handlebars.compile(template)
         const html = compiledTemplate(context)
 
         await this.mailerService.sendMail({ to, subject, html })
+    }
+
+    async sendVerificationEmail(email: string, token: string) {
+        this.sendEmail({
+            to: email,
+            subject: "Verify your email",
+            context: {
+                url: `${process.env.CLIENT_URL}/verify-email?token=${token}&token_type=email`
+            },
+            filename: 'email-verification.hbs'
+        })
     }
 }

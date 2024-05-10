@@ -9,8 +9,8 @@ import { PassportModule } from '@nestjs/passport'
 import { AuthController } from './auth.controller'
 import { JwtStrategy } from 'src/jwt/jwt.strategy'
 import { PrismaService } from 'lib/prisma.service'
-import { EncryptionService } from 'lib/encryption.service'
 import { MailService } from 'src/mailer/mailer.service'
+import { EncryptionService } from 'lib/encryption.service'
 
 @Module({
   imports: [
