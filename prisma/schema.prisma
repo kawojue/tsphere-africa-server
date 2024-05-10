@@ -18,7 +18,7 @@ model User {
     userStatus          UserStatus           @default(active)
     email_verified      Boolean              @default(false)
     verified            Boolean              @default(false)
-    role                Role                 @default(user)
+    role                Role
     subscribed          Boolean              @default(false)
     createdAt           DateTime             @default(now())
     updatedAt           DateTime             @updatedAt
@@ -35,6 +35,8 @@ model User {
     jobs                Job[]
     likes               Like[]
     skillAttachments    File[]
+    raters              Rating[]             @relation("RaterUser")
+    ratings             Rating[]             @relation("TargetUser")
     skills              Skill[]
     comments            Comment[]
     articles            Article[]
@@ -442,6 +444,17 @@ model BriefForm {
     clientId             String        @unique @db.ObjectId
 }
 
+model Rating {
+    id           String   @id @default(auto()) @map("_id") @db.ObjectId
+    point        Float
+    review       String
+    target       User     @relation("TargetUser", fields: [targetUserId], references: [id])
+    targetUserId String   @db.ObjectId
+    rater        User     @relation("RaterUser", fields: [raterUserId], references: [id])
+    raterUserId  String   @db.ObjectId
+    createdAt    DateTime @default(now())
+}
+
 enum ApplicantStatus {
     PENDING
     ACCEPTED
@@ -477,7 +490,6 @@ enum JobStatus {
 }
 
 enum Role {
-    user
     admin
     talent
     client

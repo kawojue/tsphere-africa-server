@@ -1,6 +1,7 @@
 import { Response } from 'express'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
+import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { PrismaService } from 'lib/prisma.service'
@@ -83,7 +84,7 @@ export class UserService {
         }
     }
 
-    async fetchProfile(
+    async fetchMyProfile(
         res: Response,
         { role, sub }: ExpressUser,
     ) {
@@ -99,6 +100,7 @@ export class UserService {
                     email: true,
                     skills: true,
                     avatar: true,
+                    wallet: true,
                     username: true,
                     lastname: true,
                     verified: true,
@@ -110,7 +112,6 @@ export class UserService {
                     primarySkill: true,
                     skillAttachments: true,
                     rateAndAvailability: true,
-                    wallet: { select: { balance: true } },
                     [role]: {
                         select: role === "talent" ? {
                             bioStats: true,
@@ -119,12 +120,194 @@ export class UserService {
                             bio: true,
                             personalInfo: true,
                             certifications: true,
-                        } : {}
+                        } : true
                     },
                 }
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: user })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async rateUser(
+        res: Response,
+        targetUserId: string,
+        { sub, role }: ExpressUser,
+        { point, review }: RatingDTO
+    ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: targetUserId }
+            })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Target user not found")
+            }
+
+            if (role === "client") {
+                if (user.role !== "creative" && user.role !== "talent") {
+                    return this.response.sendError(res, StatusCodes.Forbidden, "You can either rate only talents/creatives")
+                }
+            }
+
+            if (role === "talent" || role === "creative") {
+                if (user.role !== "client") {
+                    return this.response.sendError(res, StatusCodes.Forbidden, "You can only rate clients")
+                }
+            }
+
+            const rating = await this.prisma.rating.create({
+                data: {
+                    point, review: review.trim(),
+                    rater: { connect: { id: sub } },
+                    target: { connect: { id: user.id } },
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: rating })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async fetchReviews(
+        res: Response,
+        userId: string,
+        {
+            point, search = '',
+            limit = 200, page = 1,
+        }: FetchReviewsDTO
+    ) {
+        try {
+            limit = Number(limit)
+            const offset = (Number(page) - 1) * limit
+
+            const reviews = await this.prisma.rating.findMany({
+                where: point ? {
+                    point,
+                    targetUserId: userId,
+                    OR: [
+                        { review: { contains: search, mode: 'insensitive' } }
+                    ],
+                } : {
+                    targetUserId: userId,
+                    OR: [
+                        { review: { contains: search, mode: 'insensitive' } }
+                    ],
+                },
+                select: {
+                    id: true,
+                    point: true,
+                    review: true,
+                    rater: {
+                        select: {
+                            lastname: true,
+                            firstname: true,
+                            username: true,
+                        }
+                    },
+                },
+                take: limit,
+                skip: offset,
+                orderBy: { createdAt: 'desc' }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: reviews })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async ratingAnalytics(
+        res: Response,
+        userId: string
+    ) {
+        try {
+            const ratings = await this.prisma.rating.count({
+                where: { targetUserId: userId }
+            })
+
+            const rating = await this.prisma.getTotalRating(userId)
+
+            const pointTypes = [
+                {
+                    point: 1.0,
+                    label: 'ONE'
+                },
+                {
+                    point: 2.0,
+                    label: 'TWO'
+                },
+                {
+                    point: 3.0,
+                    label: 'THREE'
+                },
+                {
+                    point: 4.0,
+                    label: 'FOUR'
+                },
+                {
+                    point: 5.0,
+                    label: 'FIVE'
+                },
+            ]
+
+            let chart: {
+                label: string
+                points: number
+            }[] = []
+
+            let total = 0
+
+            for (const pointType of pointTypes) {
+                const rating = await this.prisma.rating.aggregate({
+                    where: {
+                        targetUserId: userId,
+                        point: pointType.point
+                    },
+                    _sum: { point: true }
+                })
+
+                chart.push({
+                    label: pointType.label,
+                    points: rating._sum.point ?? 0
+                })
+                total += rating._sum.point ?? 0
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: { chart, total, ratings, rating }
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async deleteRating(
+        res: Response,
+        ratingId: string,
+        { sub, role }: ExpressUser,
+    ) {
+        try {
+            const existingRating = await this.prisma.rating.findUnique({
+                where: { id: ratingId },
+            })
+
+            if (!existingRating) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Rating not found")
+            }
+
+            if ((role !== "admin") && (existingRating.raterUserId !== sub)) {
+                return this.response.sendError(res, StatusCodes.Forbidden, "You are not authorized to delete this rating")
+            }
+
+            await this.prisma.rating.delete({
+                where: { id: ratingId },
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { message: "Rating deleted successfully" })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }

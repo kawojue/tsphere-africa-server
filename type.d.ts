@@ -1,5 +1,5 @@
 type UserStatus = 'active' | 'suspended'
-type Role = 'user' | 'admin' | 'talent' | 'creative' | 'client'
+type Role = 'admin' | 'talent' | 'creative' | 'client'
 
 interface ExpressUser extends Express.User {
     sub: string

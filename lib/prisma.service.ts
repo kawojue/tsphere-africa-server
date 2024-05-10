@@ -107,4 +107,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
         return total ?? 0
     }
+
+    async getTotalRating(userId: string) {
+        const ratings = await this.rating.findMany({
+            where: { targetUserId: userId },
+            select: { point: true }
+        })
+
+        if (ratings.length === 0) return 0
+
+        const totalRating = ratings.reduce((sum, rating) => sum + rating.point, 0)
+        const averageRating = totalRating / ratings.length
+
+        const scaledRating = (averageRating / 5) * 4 + 1
+
+        return scaledRating
+    }
 }

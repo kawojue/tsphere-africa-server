@@ -60,7 +60,7 @@ export class JobController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiConsumes('multipart/form-data')
-  @Role(Roles.creative, Roles.creative, Roles.user)
+  @Role(Roles.creative, Roles.creative)
   @UseInterceptors(AnyFilesInterceptor())
   async applyJob(
     @Res() res: Response,
