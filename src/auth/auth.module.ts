@@ -10,6 +10,7 @@ import { AuthController } from './auth.controller'
 import { JwtStrategy } from 'src/jwt/jwt.strategy'
 import { PrismaService } from 'lib/prisma.service'
 import { EncryptionService } from 'lib/encryption.service'
+import { MailService } from 'src/mailer/mailer.service'
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { EncryptionService } from 'lib/encryption.service'
     AuthService,
     SendRes,
     AwsService,
+    MailService,
     MiscService,
     JwtStrategy,
     BrevoService,

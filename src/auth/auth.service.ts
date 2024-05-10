@@ -382,21 +382,23 @@ export class AuthService {
                 const token = this.misc.genenerateToken(user.id)
                 let expired = user.validation ? new Date() > user.validation.token_expiry : false
                 if ((!expired && !user.validation) || (expired && user.validation)) {
-                    await this.prisma.validation.upsert({
-                        where: {
-                            userId: user.id,
-                        },
-                        create: {
-                            ...token,
-                            user: {
-                                connect: {
-                                    id: user.id
+                    await Promise.all([
+                        this.prisma.validation.upsert({
+                            where: {
+                                userId: user.id,
+                            },
+                            create: {
+                                ...token,
+                                user: {
+                                    connect: {
+                                        id: user.id
+                                    }
                                 }
-                            }
-                        },
-                        update: token
-                    })
-                    await this.brevo.sendVerificationEmail(user.email, token.token)
+                            },
+                            update: token
+                        }),
+                        this.brevo.sendVerificationEmail(user.email, token.token)
+                    ])
                 }
             }
 
