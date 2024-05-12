@@ -9,8 +9,8 @@ import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
-import { FetchProfilesDto } from './dto/infinite-scroll.dto'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
+import { FetchProfilesDto, InfiniteScrollDto } from './dto/infinite-scroll.dto'
 
 @ApiTags("User")
 @Controller('user')
@@ -33,6 +33,18 @@ export class UserController {
     @Req() req: IRequest,
   ) {
     await this.userService.fetchMyProfile(res, req.user)
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.client, Roles.talent, Roles.creative)
+  @Post('/referral')
+  async referral(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Query() query: InfiniteScrollDto
+  ) {
+    await this.userService.referral(res, req.user, query)
   }
 
   @ApiBearerAuth()

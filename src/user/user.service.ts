@@ -5,7 +5,7 @@ import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { PrismaService } from 'lib/prisma.service'
-import { FetchProfilesDto } from './dto/infinite-scroll.dto'
+import { FetchProfilesDto, InfiniteScrollDto } from './dto/infinite-scroll.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 
 @Injectable()
@@ -126,6 +126,54 @@ export class UserService {
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: user })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async referral(
+        res: Response,
+        { sub }: ExpressUser,
+        { limit = 100, page = 1, search = '' }: InfiniteScrollDto
+    ) {
+        try {
+            limit = Number(limit)
+            const offset = (Number(page) - 1) * limit
+
+            const referral = await this.prisma.referral.findUnique({
+                where: { userId: sub }
+            })
+
+            const referred = await this.prisma.referred.findMany({
+                where: {
+                    referralId: referral.id,
+                    OR: [
+                        { user: { firstname: { contains: search, mode: 'insensitive' } } },
+                        { user: { firstname: { contains: search, mode: 'insensitive' } } },
+                        { user: { username: { contains: search, mode: 'insensitive' } } },
+                        { user: { primarySkill: { contains: search, mode: 'insensitive' } } },
+                    ]
+                },
+                skip: offset,
+                take: limit,
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    user: {
+                        select: {
+                            id: true,
+                            role: true,
+                            avatar: true,
+                            username: true,
+                            lastname: true,
+                            firstname: true,
+                            primarySkill: true,
+                        }
+                    }
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: { referral, referred } })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
