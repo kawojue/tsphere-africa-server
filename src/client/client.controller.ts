@@ -59,6 +59,12 @@ export class ClientController {
     await this.clientService.fetchProjects(res, req.user, query)
   }
 
+  @Get('/projects/dropdown')
+  @Role(Roles.client)
+  async fetchProjectsDropdown(@Res() res: Response, @Req() req: IRequest) {
+    await this.clientService.fetchProjectsDropdown(res, req.user)
+  }
+
   @Get('/projects/analytics')
   @Role(Roles.client, Roles.admin)
   async analytics(@Res() res: Response, @Req() req: IRequest) {

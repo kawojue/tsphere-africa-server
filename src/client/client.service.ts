@@ -298,6 +298,32 @@ export class ClientService {
         }
     }
 
+    async fetchProjectsDropdown(res: Response, { sub }: ExpressUser) {
+        try {
+            const client = await this.prisma.client.findUnique({
+                where: { userId: sub }
+            })
+
+            const projects = await this.prisma.briefForm.findMany({
+                where: { clientId: client.id },
+                orderBy: { updatedAt: 'desc' },
+                select: {
+                    id: true,
+                    type: true,
+                    title: true,
+                    status: true,
+                    category: true,
+                    clientId: true,
+                    projectType: true,
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: projects })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
     async fetchProjects(
         res: Response,
         { role, sub }: ExpressUser,
