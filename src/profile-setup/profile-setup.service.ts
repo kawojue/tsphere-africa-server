@@ -240,26 +240,22 @@ export class ProfileSetupService {
         res: Response,
         { sub }: ExpressUser,
         { skills }: SkillsDto,
-        attachments: Array<Express.Multer.File>,
+        files: Array<Express.Multer.File>,
     ) {
         try {
-            if (attachments.length > 3) {
-                return this.response.sendError(res, StatusCodes.BadRequest, "Attachments shouldn't more than three")
+            if (files.length > 3) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "Images shouldn't more than three")
             }
 
             const user = await this.prisma.user.findUnique({
-                where: {
-                    id: sub
-                },
-                include: {
-                    skills: true
-                }
+                where: { id: sub },
+                include: { skills: true }
             })
 
-            let filesArray = [] as IFile[]
-            if (attachments.length > 0) {
+            let attachments = [] as IFile[]
+            if (files.length > 0) {
                 try {
-                    const results = await Promise.all(attachments.map(async (file) => {
+                    const results = await Promise.all(files.map(async (file) => {
                         const result = validateFile(file, 10 << 20, 'jpg', 'png')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
@@ -274,17 +270,17 @@ export class ProfileSetupService {
                         }
                     }))
 
-                    filesArray = results.filter((result): result is IFile => !!result)
+                    attachments = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
-                        if (filesArray.length > 0) {
-                            for (const file of filesArray) {
+                        if (attachments.length > 0) {
+                            for (const file of attachments) {
                                 if (file?.path) {
                                     await this.aws.deleteS3(file.path)
                                 }
                             }
                         }
-                        filesArray = []
+                        attachments = []
                     } catch (err) {
                         this.misc.handleServerError(res, err, err.message)
                     }
@@ -303,9 +299,7 @@ export class ProfileSetupService {
             const newUserSkills = [] as Skill[]
             for (const skill of skills) {
                 const newSkill = await this.prisma.skill.upsert({
-                    where: {
-                        userId: user.id
-                    },
+                    where: { userId: user.id },
                     create: {
                         charge: skill.charge,
                         category: skill.category,
@@ -327,7 +321,7 @@ export class ProfileSetupService {
 
             await this.prisma.user.update({
                 where: { id: user.id },
-                data: { skillAttachments: filesArray }
+                data: { skillAttachments: attachments }
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: newUserSkills })

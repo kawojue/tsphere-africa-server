@@ -39,7 +39,6 @@
     "@nestjs/websockets": "^10.3.8",
     "@plunk/node": "^3.0.0",
     "@prisma/client": "^5.11.0",
-    "aws-sdk": "^2.1588.0",
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
