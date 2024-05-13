@@ -16,9 +16,6 @@ export class SkillDto {
         example: ['Frontend', 'Backend', 'DevOp'],
         type: [String]
     })
-    @IsArray()
-    @ArrayMinSize(1)
-    @ArrayMaxSize(3)
     subSkills: string[]
 
     @ApiProperty({
