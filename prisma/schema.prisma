@@ -24,6 +24,7 @@ model User {
     updatedAt           DateTime             @updatedAt
     totp                Totp?
     avatar              File?
+    Inbox               Inbox?
     wallet              Wallet?
     client              Client?
     talent              Talent?
@@ -38,6 +39,7 @@ model User {
     skills              Skill[]
     raters              Rating[]             @relation("RaterUser")
     ratings             Rating[]             @relation("TargetUser")
+    messages            Message[]
     contracts           Contract[]
     comments            Comment[]
     articles            Article[]
@@ -148,6 +150,8 @@ model Admin {
     email    String    @unique
     role     Role      @default(admin)
     job      Job[]
+    Inbox    Inbox[]
+    messages Message[]
     articles Article[]
 }
 
@@ -462,9 +466,30 @@ model Contract {
     signed    Boolean         @default(false)
     content   File?
     signature File?
+    user      User            @relation(fields: [userId], references: [id])
+    userId    String          @db.ObjectId
+}
 
-    user   User   @relation(fields: [userId], references: [id])
-    userId String @db.ObjectId
+model Inbox {
+    id       String    @id @default(auto()) @map("_id") @db.ObjectId
+    user     User?     @relation(fields: [userId], references: [id])
+    userId   String?   @unique @db.ObjectId
+    admin    Admin?    @relation(fields: [adminId], references: [id])
+    adminId  String?   @unique @db.ObjectId
+    messages Message[]
+}
+
+model Message {
+    id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    sender     User?    @relation(fields: [senderId], references: [id])
+    senderId   String?  @db.ObjectId
+    receiver   Admin?   @relation(fields: [receiverId], references: [id])
+    receiverId String?  @db.ObjectId
+    content    String
+    createdAt  DateTime @default(now())
+    isRead     Boolean  @default(false)
+    inbox      Inbox    @relation(fields: [inboxId], references: [id])
+    inboxId    String   @unique @db.ObjectId
 }
 
 enum ApplicantStatus {
