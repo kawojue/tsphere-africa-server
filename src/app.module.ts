@@ -21,6 +21,7 @@ import { ArticleModule } from './article/article.module'
 import { PaymentModule } from './payment/payment.module'
 import { EncryptionService } from 'lib/encryption.service'
 import { CreativeModule } from './creative/creative.module'
+import { RealtimeModule } from './realtime/realtime.module'
 import { CustomAuthMiddlware } from './middlewares/auth.middleware'
 import { ArticleMiddlware } from './middlewares/article.middleware'
 import { ProfileSetupModule } from './profile-setup/profile-setup.module'
@@ -42,6 +43,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
     PaymentModule,
     CreativeModule,
     ProfileSetupModule,
+    RealtimeModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,5 +1,8 @@
 import { Response } from 'express'
 import {
+  FetchProfilesDto, InfiniteScrollDto
+} from './dto/infinite-scroll.dto'
+import {
   Param, Req, Res, Query, UseGuards,
   Body, Controller, Delete, Get, Post,
 } from '@nestjs/common'
@@ -10,7 +13,6 @@ import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
-import { FetchProfilesDto, InfiniteScrollDto } from './dto/infinite-scroll.dto'
 
 @ApiTags("User")
 @Controller('user')

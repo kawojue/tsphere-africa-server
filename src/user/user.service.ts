@@ -1,4 +1,7 @@
 import { Response } from 'express'
+import {
+    FetchProfilesDto, InfiniteScrollDto
+} from './dto/infinite-scroll.dto'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
@@ -6,7 +9,6 @@ import { MiscService } from 'lib/misc.service'
 import { PrismaService } from 'lib/prisma.service'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
-import { FetchProfilesDto, InfiniteScrollDto } from './dto/infinite-scroll.dto'
 
 @Injectable()
 export class UserService {
