@@ -46,8 +46,5 @@ export class SkillDto {
 
 export class SkillsDto {
     @ApiProperty({ type: [SkillDto] })
-    @IsArray()
-    @ArrayMinSize(1)
-    @ArrayMaxSize(3)
     skills: SkillDto[]
 }
