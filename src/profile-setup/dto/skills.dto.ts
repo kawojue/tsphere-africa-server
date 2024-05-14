@@ -1,8 +1,7 @@
 import { ChargeTime } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
 import {
-    ArrayMaxSize, ArrayMinSize, IsOptional,
-    IsString, IsArray, IsEnum, Min, IsNumber,
+    IsOptional, IsString, IsEnum, Min, IsNumber,
 } from 'class-validator'
 
 export class SkillDto {

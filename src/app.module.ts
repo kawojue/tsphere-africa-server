@@ -42,8 +42,8 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
     ContactModule,
     PaymentModule,
     CreativeModule,
-    ProfileSetupModule,
     RealtimeModule,
+    ProfileSetupModule,
   ],
   controllers: [AppController],
   providers: [

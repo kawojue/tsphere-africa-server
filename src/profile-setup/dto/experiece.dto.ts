@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
-export class ExperienceDto {
+export class ExperienceDTO {
     @ApiProperty({
         example: '4 years'
     })
@@ -43,4 +43,9 @@ export class ExperienceDto {
     @IsString()
     @IsOptional()
     projectDuration: string
+}
+
+export class ExperiencesDTO {
+    @ApiProperty({ type: [ExperienceDTO] })
+    experiences: ExperienceDTO[]
 }

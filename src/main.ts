@@ -30,7 +30,7 @@ async function bootstrap() {
   app.use(express.json({ limit: 100 << 20 }))
   app.useGlobalPipes(new ValidationPipe())
 
-  app.useWebSocketAdapter(new WsAdapter(app))
+  // app.useWebSocketAdapter(new WsAdapter(app))
 
   const swaggerOptions = new DocumentBuilder()
     .setTitle('Talent Sphere Africa API')

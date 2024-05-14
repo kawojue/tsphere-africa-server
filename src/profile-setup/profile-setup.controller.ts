@@ -7,7 +7,7 @@ import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import {
   ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags
 } from '@nestjs/swagger'
-import { ExperienceDto } from './dto/experiece.dto'
+import { ExperiencesDTO } from './dto/experiece.dto'
 import {
   Controller, Delete, Param, Post, UseInterceptors, Put,
   UploadedFiles, UseGuards, Req, Res, Body, UploadedFile,
@@ -75,9 +75,9 @@ export class ProfileSetupController {
   async addExperience(
     @Res() res: Response,
     @Req() req: IRequest,
-    @Body() experience: ExperienceDto
+    @Body() experiences: ExperiencesDTO
   ) {
-    return await this.profileSetupService.addExperience(res, req.user, experience)
+    return await this.profileSetupService.addExperience(res, req.user, experiences)
   }
 
   @Role(UserRole.talent, UserRole.creative)

@@ -1,5 +1,4 @@
 import { Response } from 'express'
-import { Skill } from '@prisma/client'
 import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
@@ -8,8 +7,9 @@ import { SkillsDto } from './dto/skills.dto'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { genFileName } from 'helpers/genFilename'
+import { Experience, Skill } from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
-import { ExperienceDto } from './dto/experiece.dto'
+import { ExperiencesDTO } from './dto/experiece.dto'
 import { RateAndAvailabilityDto } from './dto/rate-availability.dto'
 
 @Injectable()
@@ -200,16 +200,21 @@ export class ProfileSetupService {
     async addExperience(
         res: Response,
         { sub }: ExpressUser,
-        experience: ExperienceDto
+        { experiences }: ExperiencesDTO
     ) {
         try {
-            const exp = await this.prisma.experience.create({
-                data: { ...experience, user: { connect: { id: sub } } }
-            })
+            let exps: Experience[] = []
+            for (const experience of experiences) {
+                const exp = await this.prisma.experience.create({
+                    data: { ...experience, user: { connect: { id: sub } } }
+                })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: exp })
+                exps.push(exp)
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: exps })
         } catch (err) {
-            this.misc.handleServerError(res, err, 'Error adding experience')
+            this.misc.handleServerError(res, err, 'Error adding experiences')
         }
     }
 
