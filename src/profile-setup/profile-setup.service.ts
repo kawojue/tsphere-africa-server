@@ -249,7 +249,7 @@ export class ProfileSetupService {
     ) {
         try {
             if (files.length > 3) {
-                return this.response.sendError(res, StatusCodes.BadRequest, "Images shouldn't more than three")
+                return this.response.sendError(res, StatusCodes.BadRequest, "Media shouldn't more than three")
             }
 
             const user = await this.prisma.user.findUnique({
@@ -261,7 +261,7 @@ export class ProfileSetupService {
             if (files.length > 0) {
                 try {
                     const results = await Promise.all(files.map(async (file) => {
-                        const result = validateFile(file, 10 << 20, 'jpg', 'png')
+                        const result = validateFile(file, 10 << 20, 'jpg', 'png', 'mp4')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
                         }
