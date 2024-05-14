@@ -48,7 +48,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   }
 
   @SubscribeMessage("newMessage")
-  async handleMessage(client: Socket, @MessageBody() body: any) {
+  async messgeMe(client: Socket, @MessageBody() body: any) {
     console.log(client)
     // const { sub, role } = this.clients.get(client)
     // console.log({ sub, role })

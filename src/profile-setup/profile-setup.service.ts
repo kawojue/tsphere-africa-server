@@ -248,7 +248,7 @@ export class ProfileSetupService {
         files: Array<Express.Multer.File>,
     ) {
         try {
-            console.log(skills)
+            skills = JSON.parse(String(skills))
             if (files.length > 3) {
                 return this.response.sendError(res, StatusCodes.BadRequest, "Media shouldn't more than three")
             }
