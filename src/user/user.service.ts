@@ -122,7 +122,7 @@ export class UserService {
                             bio: true,
                             personalInfo: true,
                             certifications: true,
-                        } : true
+                        } : {}
                     },
                 }
             })
