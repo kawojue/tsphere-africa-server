@@ -261,7 +261,7 @@ export class ProfileSetupService {
             if (files.length > 0) {
                 try {
                     const results = await Promise.all(files.map(async (file) => {
-                        const result = validateFile(file, 10 << 20, 'jpg', 'png', 'mp4')
+                        const result = validateFile(file, 10 << 20, 'jpg', 'png', 'mp4', 'mp3', 'wav', 'aac')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
                         }
