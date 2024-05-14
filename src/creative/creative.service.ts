@@ -8,8 +8,9 @@ import { MiscService } from 'lib/misc.service'
 import { titleText } from 'helpers/formatTexts'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { CreativeCertification } from '@prisma/client'
 import { genReferralKey } from 'helpers/genReferralKey'
-import { CertificationDto } from './dto/certification.dto'
+import { CertificationsDTO } from './dto/certification.dto'
 import { CreativePersonalInfoDto } from './dto/personal-info.dto'
 
 @Injectable()
@@ -181,7 +182,7 @@ export class CreativeService {
     async addCertification(
         res: Response,
         { sub }: ExpressUser,
-        certification: CertificationDto
+        { certifications }: CertificationsDTO
     ) {
         try {
             const creative = await this.prisma.creative.findUnique({
@@ -189,14 +190,19 @@ export class CreativeService {
             })
 
             if (!creative) {
-                return this.response.sendError(res, StatusCodes.BadRequest, 'Add your personal information')
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Complete your personal information')
             }
 
-            const data = await this.prisma.creativeCertification.create({
-                data: { ...certification, creative: { connect: { id: creative.id } } }
-            })
+            const certs: CreativeCertification[] = []
+            for (const certification of certifications) {
+                const cert = await this.prisma.creativeCertification.create({
+                    data: { ...certification, creative: { connect: { id: creative.id } } }
+                })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data, message: "Saved!" })
+                certs.push(cert)
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: certs, message: "Saved!" })
         } catch (err) {
             this.misc.handleServerError(res, err, 'Encountered an error while saving certification')
         }

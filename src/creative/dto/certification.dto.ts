@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsOptional, IsString } from 'class-validator'
 
-export class CertificationDto {
+export class CertificationDTO {
     @ApiProperty({
         example: 'My School'
     })
@@ -39,4 +39,9 @@ export class CertificationDto {
     @IsString()
     @IsOptional()
     level_type: string
+}
+
+export class CertificationsDTO {
+    @ApiProperty({ type: [CertificationDTO] })
+    certifications: CertificationDTO[]
 }

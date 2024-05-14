@@ -1,4 +1,5 @@
 import {
+  ConnectedSocket,
   SubscribeMessage, MessageBody,
   WebSocketGateway, WebSocketServer,
   OnGatewayConnection, OnGatewayInit,
@@ -29,16 +30,19 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   }
 
   async handleConnection(client: Socket) {
-    // const token = client.handshake.headers.authorization?.split('Bearer ')[1]
-    // if (!token) return
+    const token = client.handshake.headers.authorization?.split('Bearer ')[1]
+    if (!token) return
 
-    // try {
-    // const { sub, role } = await this.jwtService.verifyAsync(token)
-    // this.clients.set(client, { sub: '23232', role: 'admin' })
-    // } catch (err) {
-    //   console.error(err)
-    //   client.disconnect()
-    // }
+    try {
+      const { sub, role } = await this.jwtService.verifyAsync(token, {
+        secret: process.env.JWT_SECRET
+      })
+
+      this.clients.set(client, { sub, role })
+    } catch (err) {
+      console.error(err)
+      client.disconnect()
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -47,10 +51,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   }
 
   @SubscribeMessage("newMessage")
-  handleMessage(client: Socket, @MessageBody() body: any) {
-    console.log(client.id)
-    // const { sub, role } = this.clients.get(client)
-    // console.log({ sub, role })
-    console.log(body)
+  handleMessage(@ConnectedSocket() client: Socket, @MessageBody() body: any) {
   }
 }

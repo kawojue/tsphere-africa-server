@@ -8,8 +8,8 @@ import {
   Req, Res, UseGuards, UploadedFile, Patch, Delete,
 } from '@nestjs/common'
 import { CreativeService } from './creative.service'
-import { CertificationDto } from './dto/certification.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
+import { CertificationsDTO } from './dto/certification.dto'
 import { CreativePersonalInfoDto } from './dto/personal-info.dto'
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger'
 
@@ -51,7 +51,7 @@ export class CreativeController {
   async addCertification(
     @Res() res: Response,
     @Req() req: IRequest,
-    @Body() body: CertificationDto,
+    @Body() body: CertificationsDTO,
   ) {
     return await this.creativeService.addCertification(res, req.user, body)
   }
