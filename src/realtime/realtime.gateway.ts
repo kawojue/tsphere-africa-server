@@ -29,12 +29,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   }
 
   handleConnection(client: Socket) {
+    console.log(client)
     // const token = client.handshake.headers.authorization?.split('Bearer ')[1]
     // if (!token) return
 
     // try {
     //   const { sub, role } = this.jwtService.verify(token)
-    //   this.clients.set(client, { sub, role })
+    this.clients.set(client, { sub: '23232', role: 'admin' })
     // } catch (err) {
     //   console.error(err)
     //   client.disconnect()
@@ -47,7 +48,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   }
 
   @SubscribeMessage("newMessage")
-  async messgeMe(@MessageBody() body: any) {
+  async handleMessage(client: Socket, @MessageBody() body: any) {
+    console.log(client)
+    // const { sub, role } = this.clients.get(client)
+    // console.log({ sub, role })
     console.log(body)
   }
 }

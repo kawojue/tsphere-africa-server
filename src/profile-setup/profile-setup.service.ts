@@ -248,6 +248,7 @@ export class ProfileSetupService {
         files: Array<Express.Multer.File>,
     ) {
         try {
+            console.log(skills)
             if (files.length > 3) {
                 return this.response.sendError(res, StatusCodes.BadRequest, "Media shouldn't more than three")
             }
@@ -292,16 +293,9 @@ export class ProfileSetupService {
                 }
             }
 
-            const userSkillAttachments = user?.skillAttachments || []
-            if (userSkillAttachments.length > 0) {
-                for (const userSkillAttachment of userSkillAttachments) {
-                    if (userSkillAttachment?.path) {
-                        await this.aws.deleteS3(userSkillAttachment.path)
-                    }
-                }
-            }
-
             const newUserSkills = [] as Skill[]
+            const userSkillAttachments = user?.skillAttachments || []
+
             for (const skill of skills) {
                 const newSkill = await this.prisma.skill.upsert({
                     where: { userId: user.id },
@@ -328,6 +322,14 @@ export class ProfileSetupService {
                 where: { id: user.id },
                 data: { skillAttachments: attachments }
             })
+
+            if (userSkillAttachments.length > 0) {
+                for (const userSkillAttachment of userSkillAttachments) {
+                    if (userSkillAttachment?.path) {
+                        await this.aws.deleteS3(userSkillAttachment.path)
+                    }
+                }
+            }
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: newUserSkills })
         } catch (err) {
