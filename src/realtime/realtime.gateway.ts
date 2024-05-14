@@ -1,14 +1,14 @@
 import {
+  SubscribeMessage, MessageBody,
   WebSocketGateway, WebSocketServer,
   OnGatewayConnection, OnGatewayInit,
-  SubscribeMessage, MessageBody,
 } from '@nestjs/websockets'
 import { JwtService } from '@nestjs/jwt'
 import { Server, Socket } from 'socket.io'
 import { PrismaService } from 'lib/prisma.service'
 import { RealtimeService } from './realtime.service'
 
-@WebSocketGateway({ transports: ['websocket'] })
+@WebSocketGateway()
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   @WebSocketServer() server: Server
 
@@ -23,19 +23,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     role: Role
   }> = new Map()
 
-  afterInit(server: Server) {
+  afterInit() {
     console.log('WebSocket Gateway initialized')
-    this.realtimeService.setServer(server)
+    this.realtimeService.setServer(this.server)
   }
 
-  handleConnection(client: Socket) {
-    console.log(client)
+  async handleConnection(client: Socket) {
     // const token = client.handshake.headers.authorization?.split('Bearer ')[1]
     // if (!token) return
 
     // try {
-    //   const { sub, role } = this.jwtService.verify(token)
-    this.clients.set(client, { sub: '23232', role: 'admin' })
+    // const { sub, role } = await this.jwtService.verifyAsync(token)
+    // this.clients.set(client, { sub: '23232', role: 'admin' })
     // } catch (err) {
     //   console.error(err)
     //   client.disconnect()
@@ -48,8 +47,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   }
 
   @SubscribeMessage("newMessage")
-  async messgeMe(client: Socket, @MessageBody() body: any) {
-    console.log(client)
+  handleMessage(client: Socket, @MessageBody() body: any) {
+    console.log(client.id)
     // const { sub, role } = this.clients.get(client)
     // console.log({ sub, role })
     console.log(body)
