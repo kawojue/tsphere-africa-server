@@ -244,12 +244,12 @@ export class ProfileSetupService {
     async addSkills(
         res: Response,
         { sub }: ExpressUser,
-        skrr: SkillsDto,
+        skillsDto: SkillsDto,
         files: Array<Express.Multer.File>,
     ) {
         try {
-            console.log(typeof skrr)
-            console.log(skrr)
+            // @ts-ignore
+            const skills = JSON.parse(skillsDto.skills)
             if (files.length > 3) {
                 return this.response.sendError(res, StatusCodes.BadRequest, "Media shouldn't more than three")
             }
@@ -307,28 +307,28 @@ export class ProfileSetupService {
                 })
             }
 
-            // for (const skill of skills) {
-            //     const newSkill = await this.prisma.skill.create({
-            //         data: {
-            //             ...skill,
-            //             user: { connect: { id: user.id } }
-            //         }
-            //     })
-            //     newUserSkills.push(newSkill)
-            // }
+            for (const skill of skills) {
+                const newSkill = await this.prisma.skill.create({
+                    data: {
+                        ...skill,
+                        user: { connect: { id: user.id } }
+                    }
+                })
+                newUserSkills.push(newSkill)
+            }
 
-            // await this.prisma.user.update({
-            //     where: { id: user.id },
-            //     data: { skillAttachments: attachments }
-            // })
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { skillAttachments: attachments }
+            })
 
-            // if (userSkillAttachments.length > 0) {
-            //     for (const userSkillAttachment of userSkillAttachments) {
-            //         if (userSkillAttachment?.path) {
-            //             await this.aws.deleteS3(userSkillAttachment.path)
-            //         }
-            //     }
-            // }
+            if (userSkillAttachments.length > 0) {
+                for (const userSkillAttachment of userSkillAttachments) {
+                    if (userSkillAttachment?.path) {
+                        await this.aws.deleteS3(userSkillAttachment.path)
+                    }
+                }
+            }
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: newUserSkills })
         } catch (err) {
