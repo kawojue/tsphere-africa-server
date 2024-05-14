@@ -340,7 +340,7 @@ export class ProfileSetupService {
         { sub }: ExpressUser,
         {
             availability, charge,
-            weekday, chargeTime,
+            weekdays, chargeTime,
         }: RateAndAvailabilityDto
     ) {
         try {
@@ -350,11 +350,6 @@ export class ProfileSetupService {
 
             if (!user) {
                 return this.response.sendError(res, StatusCodes.NotFound, 'User not found')
-            }
-
-            let weekdays = []
-            if (weekday) {
-                weekdays = JSON.parse(weekday.replace(/'/g, '"')) as Array<string>
             }
 
             const rates = await this.prisma.rateAndAvailability.upsert({

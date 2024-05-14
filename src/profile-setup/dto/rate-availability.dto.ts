@@ -1,6 +1,9 @@
+import {
+    IsOptional, IsEnum, IsNumber,
+    IsBoolean, IsArray, Max, Min,
+} from 'class-validator'
 import { ChargeTime } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsOptional, IsEnum, IsNumber, IsBoolean } from 'class-validator'
 
 export class RateAndAvailabilityDto {
     @ApiProperty({
@@ -23,7 +26,11 @@ export class RateAndAvailabilityDto {
     charge: number
 
     @ApiProperty({
-        example: "['Monday', 'Tuesday', 'Wednesday']"
+        type: [String],
+        example: ['Monday', 'Tuesday', 'Wednesday']
     })
-    weekday: string
+    @Min(1)
+    @Max(7)
+    @IsArray()
+    weekdays: []
 }
