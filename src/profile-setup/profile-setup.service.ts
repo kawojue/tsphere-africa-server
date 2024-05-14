@@ -300,20 +300,10 @@ export class ProfileSetupService {
                 const newSkill = await this.prisma.skill.upsert({
                     where: { userId: user.id },
                     create: {
-                        charge: skill.charge,
-                        category: skill.category,
-                        subSkills: skill.subSkills,
-                        chargeTime: skill.chargeTime,
-                        yearsOfExperience: skill.yearsOfExperience,
+                        ...skill,
                         user: { connect: { id: user.id } }
                     },
-                    update: {
-                        charge: skill.charge,
-                        category: skill.category,
-                        subSkills: skill.subSkills,
-                        chargeTime: skill.chargeTime,
-                        yearsOfExperience: skill.yearsOfExperience,
-                    }
+                    update: skill,
                 })
                 newUserSkills.push(newSkill)
             }
