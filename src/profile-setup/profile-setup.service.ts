@@ -248,7 +248,6 @@ export class ProfileSetupService {
         files: Array<Express.Multer.File>,
     ) {
         try {
-            skills = JSON.parse(String(skills))
             if (files.length > 3) {
                 return this.response.sendError(res, StatusCodes.BadRequest, "Media shouldn't more than three")
             }
@@ -296,14 +295,22 @@ export class ProfileSetupService {
             const newUserSkills = [] as Skill[]
             const userSkillAttachments = user?.skillAttachments || []
 
+            const countOldSkills = await this.prisma.skill.count({
+                where: { userId: user.id }
+            })
+
+            if (countOldSkills > 0) {
+                await this.prisma.skill.deleteMany({
+                    where: { userId: user.id }
+                })
+            }
+
             for (const skill of skills) {
-                const newSkill = await this.prisma.skill.upsert({
-                    where: { userId: user.id },
-                    create: {
+                const newSkill = await this.prisma.skill.create({
+                    data: {
                         ...skill,
                         user: { connect: { id: user.id } }
-                    },
-                    update: skill,
+                    }
                 })
                 newUserSkills.push(newSkill)
             }
