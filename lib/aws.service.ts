@@ -21,6 +21,17 @@ export class AwsService {
         })
     }
 
+    async uploadS3Base64(buffer: Buffer, path: string, type: string) {
+        const params: PutObjectCommandInput = {
+            Key: path,
+            Body: buffer,
+            Bucket: this.bucketName,
+            ContentType: type,
+        }
+        const command: PutObjectCommand = new PutObjectCommand(params)
+        await this.s3.send(command)
+    }
+
     async uploadS3(file: Express.Multer.File, path: string) {
         const params: PutObjectCommandInput = {
             Key: path,

@@ -485,7 +485,8 @@ model Message {
     senderId   String?  @db.ObjectId
     receiver   Admin?   @relation(fields: [receiverId], references: [id])
     receiverId String?  @db.ObjectId
-    content    String
+    content    String?
+    file       File?
     createdAt  DateTime @default(now())
     isRead     Boolean  @default(false)
     inbox      Inbox    @relation(fields: [inboxId], references: [id])
