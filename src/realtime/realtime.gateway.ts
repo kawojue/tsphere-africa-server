@@ -8,9 +8,9 @@ import { JwtService } from '@nestjs/jwt'
 import { Server, Socket } from 'socket.io'
 import StatusCodes from 'enums/StatusCodes'
 import { PrismaService } from 'lib/prisma.service'
-import { Admin, Role, User } from '@prisma/client'
 import { RealtimeService } from './realtime.service'
 import { InboxDTO, MessageDTO } from './dto/index.dto'
+import { Admin, Message, Role, User } from '@prisma/client'
 
 @WebSocketGateway()
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
@@ -144,16 +144,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     const { sub: userId, role: userRole } = clientData
     const { inboxId } = body
 
+    let messages: Message[]
+
     if (userRole === 'admin') {
-      const messages = await this.prisma.message.findMany({
+      messages = await this.prisma.message.findMany({
         where: { inboxId },
         orderBy: { createdAt: 'asc' },
       })
-      client.emit('messages', messages)
     } else {
       const inbox = await this.prisma.inbox.findUnique({
         where: { id: inboxId },
       })
+
       if (!inbox || inbox.userId !== userId) {
         client.emit('authorization_error', {
           status: StatusCodes.Unauthorized,
@@ -162,12 +164,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         return
       }
 
-      const messages = await this.prisma.message.findMany({
+      messages = await this.prisma.message.findMany({
         where: { inboxId },
         orderBy: { createdAt: 'asc' },
       })
-      client.emit('messages', messages)
+
+      await this.realtimeService.markMessagesAsRead(messages)
     }
+
+    client.emit('messages', messages)
   }
 
   @SubscribeMessage('fetch_inboxes')
@@ -181,14 +186,33 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     if (role === 'admin') {
       inboxes = await this.prisma.inbox.findMany({
         where: { adminId: userId },
-        include: { user: true, messages: { orderBy: { createdAt: 'desc' }, take: 1 } },
+        include: {
+          user: true,
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            where: { isRead: false }
+          }
+        }
       })
     } else {
       inboxes = await this.prisma.inbox.findMany({
         where: { userId },
-        include: { admin: true, messages: { orderBy: { createdAt: 'desc' }, take: 1 } },
+        include: {
+          admin: true,
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            where: { isRead: false }
+          }
+        }
       })
     }
+
+    inboxes.forEach((inbox: any) => {
+      inbox.unreadMessagesCount = inbox.messages.length
+      delete inbox.messages
+    })
 
     client.emit('inboxes', inboxes)
   }
