@@ -27,10 +27,15 @@ export class UserController {
     await this.userService.fetchProfiles(res, query)
   }
 
+  @Get('/profile/:userId')
+  async fetchProfile(@Res() res: Response, @Param('userId') userId: string) {
+    await this.userService.fetchProfile(res, userId)
+  }
+
   @Get('/my-profile')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async fetchProfile(
+  async fetchMyProfile(
     @Res() res: Response,
     @Req() req: IRequest,
   ) {

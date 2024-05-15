@@ -86,6 +86,51 @@ export class UserService {
         }
     }
 
+    async fetchProfile(res: Response, userId: string) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+                select: {
+                    id: true,
+                    role: true,
+                    email: true,
+                    skills: true,
+                    avatar: true,
+                    verified: true,
+                    username: true,
+                    lastname: true,
+                    firstname: true,
+                    portfolio: true,
+                    createdAt: true,
+                    userStatus: true,
+                    creative: {
+                        select: {
+                            bio: true,
+                            personalInfo: true,
+                            certifications: true,
+                        }
+                    },
+                    talent: {
+                        select: {
+                            bioStats: true,
+                            personalInfo: true,
+                        }
+                    },
+                    primarySkill: true,
+                    skillAttachments: true,
+                }
+            })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, "User not found")
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: user })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
     async fetchMyProfile(
         res: Response,
         { role, sub }: ExpressUser,
