@@ -261,14 +261,14 @@ export class AuthService {
                         to: email,
                         subject: "Reset Password",
                         context: {
-                            url: `${process.env.CLIENT_URL}/reset-password?token=${tk.token}&token_type=password`
+                            url: `${process.env.CLIENT_URL}/forgot-password/reset?token=${tk.token}&token_type=password`
                         },
                         filename: 'reset-password'
                     })
                     // await this.brevo.sendTransactionalEmail({
                     //     to: email,
                     //     subject: "Reset Password",
-                    //     body: `${process.env.CLIENT_URL}/reset-password?token=${tk.token}&token_type=password`
+                    //     body: `${process.env.CLIENT_URL}/forgot-password/reset?token=${tk.token}&token_type=password`
                     // })
                 }
             })
