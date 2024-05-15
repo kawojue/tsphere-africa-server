@@ -40,7 +40,7 @@ export class UserController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.client, Roles.talent, Roles.creative)
-  @Post('/referral')
+  @Get('/referral')
   async referral(
     @Res() res: Response,
     @Req() req: IRequest,

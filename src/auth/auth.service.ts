@@ -217,7 +217,7 @@ export class AuthService {
                 message: "Your email is now verified"
             })
         } catch (err) {
-            this.misc.handleServerError(res, err, "Error verifying emaail")
+            this.misc.handleServerError(res, err, "Error verifying email")
         }
     }
 
