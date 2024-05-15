@@ -31,7 +31,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
 
   async handleConnection(client: Socket) {
     const token = client.handshake.headers.authorization?.split('Bearer ')[1]
-    if (!token) return
+    if (!token) {
+      client.emit('authorization_error', {
+        status: StatusCodes.Unauthorized,
+        message: 'Token does not exist'
+      })
+      return
+    }
 
     try {
       const { sub, role } = await this.jwtService.verifyAsync(token, {
@@ -133,7 +139,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     })
 
     const targetId = senderRole === 'admin' ? receiverId : senderId
-    this.server.to(targetId).emit('receive_message', message)
+    this.realtimeService.getServer().to(targetId).emit('receive_message', message)
   }
 
   @SubscribeMessage('fetch_messages')
