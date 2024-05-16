@@ -32,6 +32,11 @@ export class UserController {
     await this.userService.fetchProfile(res, userId)
   }
 
+  @Get('/profile/:userId/similar-profiles')
+  async similarProfiles(@Res() res: Response, @Param('userId') userId: string) {
+    await this.userService.similarProfiles(res, userId)
+  }
+
   @Get('/my-profile')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)

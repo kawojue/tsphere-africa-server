@@ -131,6 +131,73 @@ export class UserService {
         }
     }
 
+    async similarProfiles(res: Response, userId: string) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+                include: {
+                    creative: {
+                        select: {
+                            personalInfo: true,
+
+                        }
+                    },
+                    talent: {
+                        select: {
+                            personalInfo: true
+                        }
+                    }
+                }
+            })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Profile not found")
+            }
+
+            const simiarProfiles = await this.prisma.user.findMany({
+                where: {
+                    OR: [
+                        { primarySkill: { equals: user.primarySkill, mode: 'insensitive' } },
+                        { lastname: { equals: user.lastname, mode: 'insensitive' } },
+                        {
+                            [user.role]: {
+                                personalInfo: {
+                                    state: { contains: user[user.role].personalInfo.state }
+                                }
+                            }
+                        },
+                        {
+                            [user.role]: {
+                                personalInfo: {
+                                    languages: { hasSome: user[user.role].personalInfo.languages }
+                                }
+                            }
+                        },
+                        {
+                            [user.role]: {
+                                personalInfo: {
+                                    localGovt: { contains: user[user.role].personalInfo.localGovt }
+                                }
+                            }
+                        },
+                        {
+                            [user.role]: {
+                                personalInfo: {
+                                    address: { contains: user[user.role].personalInfo.address }
+                                }
+                            }
+                        },
+                    ]
+                },
+                take: 10
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: simiarProfiles })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
     async fetchMyProfile(
         res: Response,
         { role, sub }: ExpressUser,
