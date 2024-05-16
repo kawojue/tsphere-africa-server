@@ -162,7 +162,10 @@ export class UserService {
                         {
                             [user.role]: {
                                 personalInfo: {
-                                    state: { contains: user[user.role].personalInfo.state }
+                                    state: {
+                                        contains: user[user.role].personalInfo.state ?? '',
+                                        mode: 'insensitive'
+                                    }
                                 }
                             }
                         },
@@ -176,18 +179,42 @@ export class UserService {
                         {
                             [user.role]: {
                                 personalInfo: {
-                                    localGovt: { contains: user[user.role].personalInfo.localGovt }
+                                    localGovt: {
+                                        contains: user[user.role].personalInfo.localGovt ?? '',
+                                        mode: 'insensitive'
+                                    }
                                 }
                             }
                         },
                         {
                             [user.role]: {
                                 personalInfo: {
-                                    address: { contains: user[user.role].personalInfo.address }
+                                    address: {
+                                        contains: user[user.role].personalInfo.address ?? '',
+                                        mode: 'insensitive'
+                                    }
                                 }
                             }
                         },
                     ]
+                },
+                select: {
+                    id: true,
+                    email: true,
+                    avatar: true,
+                    username: true,
+                    lastname: true,
+                    firstname: true,
+                    primarySkill: true,
+                    [user.role]: {
+                        select: {
+                            personalInfo: {
+                                select: {
+                                    state: true
+                                }
+                            }
+                        }
+                    }
                 },
                 take: 10
             })

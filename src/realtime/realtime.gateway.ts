@@ -44,7 +44,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   }
 
   async handleConnection(client: Socket) {
-    console.log(client.handshake.headers['authorization'])
     const token = client.handshake.headers['authorization']?.split('Bearer ')[1]
     if (!token) {
       client.emit('authorization_error', {
@@ -241,6 +240,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   @SubscribeMessage('fetch_admins')
   async fetchAdmins(@ConnectedSocket() client: Socket) {
     const clientData = this.clients.get(client)
+    console.log(clientData)
     if (!clientData) return
 
     try {
@@ -252,10 +252,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         },
       })
 
-      client.emit('admins', admins)
+      this.server.emit('admins', admins)
     } catch (err) {
       console.error(err)
-      client.emit('error', {
+      this.server.emit('error', {
         status: StatusCodes.InternalServerError,
         message: 'Unable to fetch admins'
       })
