@@ -12,7 +12,21 @@ import { RealtimeService } from './realtime.service'
 import { InboxDTO, MessageDTO } from './dto/index.dto'
 import { Admin, Message, Role, User } from '@prisma/client'
 
-@WebSocketGateway()
+@WebSocketGateway({
+  transports: ['websocket'],
+  cors: {
+    origin: [
+      'http://localhost:3000',
+      'https://talentsphereafrica.co',
+      'https://talentsphereafrica.com',
+      'https://www.talentsphereafrica.co',
+      'https://www.talentsphereafrica.com',
+      'https://api.talentsphereafrica.co',
+      'https://api.talentsphereafrica.com',
+      'https://talentsphere-staging.onrender.com',
+    ],
+  }
+})
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   @WebSocketServer() server: Server
 
