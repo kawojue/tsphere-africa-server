@@ -298,6 +298,7 @@ export class UserService {
                     review: true,
                     rater: {
                         select: {
+                            avatar: true,
                             lastname: true,
                             firstname: true,
                             username: true,
