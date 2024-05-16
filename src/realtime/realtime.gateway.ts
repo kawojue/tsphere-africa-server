@@ -154,7 +154,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     })
 
     const targetId = senderRole === 'admin' ? receiverId : senderId
-    this.realtimeService.getServer().to(targetId).emit('receive_message', message)
+    client.to(targetId).emit('receive_message', message)
   }
 
   @SubscribeMessage('fetch_messages')
