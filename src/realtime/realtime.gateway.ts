@@ -153,6 +153,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
       },
     })
 
+    console.log(message)
+
     const targetId = senderRole === 'admin' ? receiverId : senderId
     client.to(targetId).emit('receive_message', message)
   }
@@ -263,7 +265,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   @SubscribeMessage('fetch_admins')
   async fetchAdmins(@ConnectedSocket() client: Socket) {
     const clientData = this.clients.get(client)
-    console.log(clientData)
     if (!clientData) return
 
     try {
