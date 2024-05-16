@@ -61,8 +61,7 @@ export class RealtimeService {
 
     async saveFile(file: string, userId: string) {
         const base64Data = file.replace(/^data:.*;base64,/, '')
-        const fileName = `${genFileName()}.mp4`
-        const filePath = `${userId}/${fileName}`
+        const filePath = `${userId}/${genFileName()}`
         const fileType = this.getFileType(file)
 
         await this.aws.uploadS3Base64(Buffer.from(base64Data, 'base64'), filePath, fileType)
