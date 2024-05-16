@@ -13,6 +13,7 @@ import { InboxDTO, MessageDTO } from './dto/index.dto'
 import { Admin, Message, Role, User } from '@prisma/client'
 
 @WebSocketGateway({
+  transports: ['polling'],
   cors: {
     origin: [
       'http://localhost:3000',
