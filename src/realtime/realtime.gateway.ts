@@ -252,10 +252,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         },
       })
 
-      this.server.emit('admins', admins)
+      client.emit('admins', admins)
     } catch (err) {
       console.error(err)
-      this.server.emit('error', {
+      client.emit('error', {
         status: StatusCodes.InternalServerError,
         message: 'Unable to fetch admins'
       })
