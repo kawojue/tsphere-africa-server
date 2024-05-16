@@ -153,8 +153,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
       },
     })
 
-    console.log(message)
-
+    client.emit('sent_message', message)
     const targetId = senderRole === 'admin' ? receiverId : senderId
     client.to(targetId).emit('receive_message', message)
   }
