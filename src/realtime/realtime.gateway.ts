@@ -44,7 +44,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   }
 
   async handleConnection(client: Socket) {
-    const token = client.handshake.headers.authorization?.split('Bearer ')[1]
+    console.log(client.handshake.headers['authorization'])
+    const token = client.handshake.headers['authorization']?.split('Bearer ')[1]
     if (!token) {
       client.emit('authorization_error', {
         status: StatusCodes.Unauthorized,
