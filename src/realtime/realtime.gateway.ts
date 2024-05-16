@@ -39,7 +39,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   private clients: Map<Socket, { sub: string, role: Role }> = new Map()
 
   afterInit() {
-    console.log('WebSocket Gateway initialized')
     this.realtimeService.setServer(this.server)
   }
 
@@ -60,13 +59,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
 
       this.clients.set(client, { sub, role })
     } catch (err) {
-      console.error(err)
+      client.emit('error', {
+        status: StatusCodes.InternalServerError,
+        message: err.message
+      })
       client.disconnect()
     }
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`)
     this.clients.delete(client)
   }
 
