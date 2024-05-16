@@ -139,8 +139,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         return
       }
 
-      const serilizedFile = await this.realtimeService.saveFile(file, senderId)
-      messageData.file = serilizedFile
+      const serializedFile = await this.realtimeService.saveFile(validationResult.file, senderId)
+      messageData.file = serializedFile
     }
 
     const message = await this.prisma.message.create({
@@ -208,19 +208,41 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
       inboxes = await this.prisma.inbox.findMany({
         where: { adminId: userId },
         include: {
-          user: true,
+          user: {
+            select: {
+              id: true,
+              role: true,
+              email: true,
+              avatar: true,
+              lastname: true,
+              username: true,
+              verified: true,
+              firstname: true,
+              email_verified: true,
+            }
+          },
           messages: {
             orderBy: { createdAt: 'desc' },
             take: 1,
             where: { isRead: false }
           }
+        },
+        orderBy: {
+          user: { role: 'asc' }
         }
       })
     } else {
       inboxes = await this.prisma.inbox.findMany({
         where: { userId },
         include: {
-          admin: true,
+          admin: {
+            select: {
+              id: true,
+              role: true,
+              email: true,
+              fullName: true,
+            }
+          },
           messages: {
             orderBy: { createdAt: 'desc' },
             take: 1,

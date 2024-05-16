@@ -37,7 +37,7 @@ export class RealtimeService {
         return newInbox.id
     }
 
-    validateFile(file: any) {
+    validateFile(file: string) {
         const maxSize = 10 << 20
         const allowedTypes = ['video/mp4', 'image/png', 'image/jpeg']
         const fileSize = Buffer.byteLength(file, 'base64')
@@ -51,7 +51,7 @@ export class RealtimeService {
             return { status: StatusCodes.UnsupportedContent, message: 'Unsupported file type' }
         }
 
-        return null
+        return { file }
     }
 
     getFileType(file: string): string {
