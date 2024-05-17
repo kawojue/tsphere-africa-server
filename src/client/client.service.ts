@@ -528,4 +528,8 @@ export class ClientService {
             this.misc.handlePaystackAndServerError(res, err)
         }
     }
+
+    async uploadContract(res: Response) {
+
+    }
 }

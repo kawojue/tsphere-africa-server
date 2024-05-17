@@ -25,9 +25,9 @@ model User {
     totp                Totp?
     avatar              File?
     Inbox               Inbox?
-    wallet              Wallet?
-    client              Client?
     talent              Talent?
+    client              Client?
+    wallet              Wallet?
     creative            Creative?
     referral            Referral?
     portfolio           Portfolio?
@@ -40,14 +40,61 @@ model User {
     raters              Rating[]             @relation("RaterUser")
     ratings             Rating[]             @relation("TargetUser")
     messages            Message[]
-    contracts           Contract[]
     comments            Comment[]
     articles            Article[]
+    contracts           Contract[]
     referred            Referred[]
     txHistories         TxHistory[]
     experiences         Experience[]
     bankDetails         BankDetails[]
     jobApplications     JobApplication[]
+    projectsAsClient    Project[]            @relation("ClientProjects")
+    projectsAsUser      Project[]            @relation("UserProjects")
+    hires               Hire[]               @relation("ClientHires")
+    bookings            Hire[]               @relation("UserHires")
+}
+
+model BriefForm {
+    id                   String        @id @default(auto()) @map("_id") @db.ObjectId
+    title                String
+    type                 String
+    category             String
+    description          String?
+    videos               File[]
+    images               File[]
+    docs                 File[]
+    role_name            String?
+    role_type            String?
+    gender               Gender?
+    age                  String?
+    nationality          String?
+    willing_to_pay       YesOrNo?
+    duration             String?
+    rate_type            ChargeTime?
+    compensation         String?
+    shoot_date           DateTime?
+    shoot_time           DateTime?
+    shoot_address        String?
+    shoot_info           String?
+    audition_date        DateTime?
+    audition_time        DateTime?
+    audition_options     String?
+    audition_type        String?
+    venue                String?
+    city                 String?
+    state                String?
+    audition_address     String?
+    pre_screen           YesOrNo?
+    audition_instruction String?
+    brief_date_expiry    DateTime?
+    brief_time_expiry    DateTime?
+    projectType          BriefFormType
+    createdAt            DateTime      @default(now())
+    updatedAt            DateTime      @updatedAt
+    client               Client        @relation(fields: [clientId], references: [id])
+    clientId             String        @unique @db.ObjectId
+    hires                Hire[]
+    projects             Project[]
 }
 
 model Referral {
@@ -407,46 +454,53 @@ model Like {
     @@unique([userId, articleId])
 }
 
-model BriefForm {
-    id                   String        @id @default(auto()) @map("_id") @db.ObjectId
-    status               ProjectStatus @default(PENDING)
-    title                String
-    type                 String
-    category             String
-    description          String?
-    videos               File[]
-    images               File[]
-    docs                 File[]
-    role_name            String?
-    role_type            String?
-    gender               Gender?
-    age                  String?
-    nationality          String?
-    willing_to_pay       YesOrNo?
-    duration             String?
-    rate_type            ChargeTime?
-    compensation         String?
-    shoot_date           DateTime?
-    shoot_time           DateTime?
-    shoot_address        String?
-    shoot_info           String?
-    audition_date        DateTime?
-    audition_time        DateTime?
-    audition_options     String?
-    audition_type        String?
-    venue                String?
-    city                 String?
-    state                String?
-    audition_address     String?
-    pre_screen           YesOrNo?
-    audition_instruction String?
-    brief_date_expiry    DateTime?
-    brief_time_expiry    DateTime?
-    projectType          ProjectType
-    createdAt            DateTime      @default(now())
-    updatedAt            DateTime      @updatedAt
-    client               Client        @relation(fields: [clientId], references: [id])
-    clientId             String        @unique @db.ObjectId
+model Project {
+    id        String        @id @default(auto()) @map("_id") @db.ObjectId
+    brief     BriefForm     @relation(fields: [briefId], references: [id])
+    briefId   String        @db.ObjectId
+    client    User          @relation("ClientProjects", fields: [clientId], references: [id])
+    clientId  String        @db.ObjectId
+    talent    User          @relation("UserProjects", fields: [talentId], references: [id])
+    talentId  String        @db.ObjectId
+    status    ProjectStatus @default(PENDING)
+    createdAt DateTime      @default(now())
+    updatedAt DateTime      @updatedAt
+    contract  Contract?
+}
+
+model Hire {
+    id                 String     @id @default(auto()) @map("_id") @db.ObjectId
+    brief              BriefForm  @relation(fields: [briefId], references: [id])
+    briefId            String     @db.ObjectId
+    client             User       @relation("ClientHires", fields: [clientId], references: [id])
+    clientId           String     @db.ObjectId
+    talentOrCreative   User       @relation("UserHires", fields: [talentOrCreativeId], references: [id])
+    talentOrCreativeId String     @db.ObjectId
+    status             HireStatus @default(PENDING)
+    declineReason      String?
+    createdAt          DateTime   @default(now())
+    updatedAt          DateTime   @updatedAt
+}
+
+model Contract {
+    id           String         @id @default(auto()) @map("_id") @db.ObjectId
+    file         File
+    signature    File?
+    status       ContractStatus @default(PENDING)
+    signedByUser Boolean        @default(false)
+    signedAt     DateTime?
+    user         User?          @relation(fields: [userId], references: [id])
+    userId       String?        @db.ObjectId
+    project      Project        @relation(fields: [projectId], references: [id])
+    projectId    String         @unique @db.ObjectId
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @updatedAt
+}
+
+enum ContractStatus {
+    PENDING
+    SIGNED
+    DECLINED
 }
 
 model Rating {
@@ -458,16 +512,6 @@ model Rating {
     rater        User     @relation("RaterUser", fields: [raterUserId], references: [id])
     raterUserId  String   @db.ObjectId
     createdAt    DateTime @default(now())
-}
-
-model Contract {
-    id        String          @id @default(auto()) @map("_id") @db.ObjectId
-    status    ContractStatus?
-    signed    Boolean         @default(false)
-    content   File?
-    signature File?
-    user      User            @relation(fields: [userId], references: [id])
-    userId    String          @db.ObjectId
 }
 
 model Inbox {
@@ -515,16 +559,17 @@ enum TxType {
     WITHDRAWAL
 }
 
+enum HireStatus {
+    PENDING
+    APPROVED
+    DECLINED
+}
+
 enum TxStatus {
     FAILED
     PENDING
     SUCCESS
     REVERSED
-}
-
-enum ContractStatus {
-    DECLINED
-    ACCEPTED
 }
 
 enum JobStatus {
@@ -549,7 +594,7 @@ enum YesOrNo {
     No
 }
 
-enum ProjectType {
+enum BriefFormType {
     doc
     fill
 }
