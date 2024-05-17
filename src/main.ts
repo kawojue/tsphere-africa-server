@@ -15,6 +15,7 @@ async function bootstrap() {
       `http://localhost:${PORT}`,
       'https://talentsphereafrica.co',
       'https://talentsphereafrica.com',
+      'https://sphere-theta.vercel.app',
       'https://www.talentsphereafrica.co',
       'https://api.talentsphereafrica.co',
       'https://api.talentsphereafrica.com',
