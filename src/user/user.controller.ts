@@ -11,6 +11,7 @@ import { UserService } from './user.service'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { FectchContractsDTO } from './dto/contract.dto'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 
@@ -102,5 +103,16 @@ export class UserController {
     @Param('ratingId') ratingId: string,
   ) {
     await this.userService.deleteRating(res, ratingId, req.user)
+  }
+
+  @ApiBearerAuth()
+  @Get('/contracts')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async fetchContracts(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Query() query: FectchContractsDTO
+  ) {
+    await this.userService.fetchContracts(res, req.user, query)
   }
 }

@@ -9,12 +9,13 @@ import { SortUserDto } from 'src/modmin/dto/user.dto'
 import {
   UploadedFiles, Post, UseInterceptors, Param, Get,
   Body, Controller, UseGuards, Res, Req, Query, Patch,
+  UploadedFile,
 } from '@nestjs/common'
-import { AnyFilesInterceptor } from '@nestjs/platform-express'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
   CreateProjectDocumentDTO, CreateProjectFillDTO, ToggleProjectStatusDTO
 } from './dto/project.dto'
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
 
 @ApiTags("Client")
 @ApiBearerAuth()
@@ -87,11 +88,10 @@ export class ClientController {
   @Patch('/projects/:projectId')
   async toggleStatus(
     @Res() res: Response,
-    @Req() req: IRequest,
     @Query() q: ToggleProjectStatusDTO,
     @Param('projectId') projectId: string
   ) {
-    await this.clientService.toggleStatus(res, projectId, req.user, q)
+    await this.clientService.toggleStatus(res, projectId, q)
   }
 
   @Post('/deposit')
@@ -102,5 +102,20 @@ export class ClientController {
     @Body() body: FundWalletDTO
   ) {
     return await this.clientService.fundWallet(res, req.user, body)
+  }
+
+  @Post('/contract/upload')
+  @ApiOperation({
+    summary: "The formdata key should be contract"
+  })
+  @Role(Roles.client)
+  @UseInterceptors(FileInterceptor('contract'))
+  async uploadContract(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Param('projectId') projectId: string,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    await this.clientService.uploadContract(res, projectId, req.user, file)
   }
 }

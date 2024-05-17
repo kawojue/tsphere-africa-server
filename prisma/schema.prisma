@@ -93,7 +93,6 @@ model BriefForm {
     updatedAt            DateTime      @updatedAt
     client               Client        @relation(fields: [clientId], references: [id])
     clientId             String        @unique @db.ObjectId
-    hires                Hire[]
     projects             Project[]
 }
 
@@ -455,23 +454,24 @@ model Like {
 }
 
 model Project {
-    id        String        @id @default(auto()) @map("_id") @db.ObjectId
-    brief     BriefForm     @relation(fields: [briefId], references: [id])
-    briefId   String        @db.ObjectId
-    client    User          @relation("ClientProjects", fields: [clientId], references: [id])
-    clientId  String        @db.ObjectId
-    talent    User          @relation("UserProjects", fields: [talentId], references: [id])
-    talentId  String        @db.ObjectId
-    status    ProjectStatus @default(PENDING)
-    createdAt DateTime      @default(now())
-    updatedAt DateTime      @updatedAt
-    contract  Contract?
+    id                 String        @id @default(auto()) @map("_id") @db.ObjectId
+    brief              BriefForm     @relation(fields: [briefId], references: [id])
+    briefId            String        @db.ObjectId
+    client             User          @relation("ClientProjects", fields: [clientId], references: [id])
+    clientId           String        @db.ObjectId
+    talentOrCreative   User          @relation("UserProjects", fields: [talentOrCreativeId], references: [id])
+    talentOrCreativeId String        @unique @db.ObjectId
+    status             ProjectStatus @default(PENDING)
+    hires              Hire[]
+    createdAt          DateTime      @default(now())
+    updatedAt          DateTime      @updatedAt
+    contract           Contract?
 }
 
 model Hire {
     id                 String     @id @default(auto()) @map("_id") @db.ObjectId
-    brief              BriefForm  @relation(fields: [briefId], references: [id])
-    briefId            String     @db.ObjectId
+    project            Project    @relation(fields: [projectId], references: [id])
+    projectId          String     @db.ObjectId
     client             User       @relation("ClientHires", fields: [clientId], references: [id])
     clientId           String     @db.ObjectId
     talentOrCreative   User       @relation("UserHires", fields: [talentOrCreativeId], references: [id])
@@ -495,12 +495,6 @@ model Contract {
     projectId    String         @unique @db.ObjectId
     createdAt    DateTime       @default(now())
     updatedAt    DateTime       @updatedAt
-}
-
-enum ContractStatus {
-    PENDING
-    SIGNED
-    DECLINED
 }
 
 model Rating {
@@ -537,10 +531,28 @@ model Message {
     inboxId    String   @unique @db.ObjectId
 }
 
-enum ApplicantStatus {
-    PENDING
-    ACCEPTED
-    REJECTED
+type File {
+    idx  String? @default(uuid())
+    url  String
+    path String
+    type String?
+}
+
+enum Role {
+    admin
+    talent
+    client
+    creative
+}
+
+enum UserStatus {
+    active
+    suspended
+}
+
+enum YesOrNo {
+    Yes
+    No
 }
 
 enum Gender {
@@ -552,6 +564,18 @@ enum ChargeTime {
     Daily
     Weekly
     Monthly
+}
+
+enum ApplicantStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+}
+
+enum ContractStatus {
+    PENDING
+    SIGNED
+    REJECTED
 }
 
 enum TxType {
@@ -577,23 +601,6 @@ enum JobStatus {
     APPROVED
 }
 
-enum Role {
-    admin
-    talent
-    client
-    creative
-}
-
-enum UserStatus {
-    active
-    suspended
-}
-
-enum YesOrNo {
-    Yes
-    No
-}
-
 enum BriefFormType {
     doc
     fill
@@ -605,11 +612,4 @@ enum ProjectStatus {
     ONGOING
     CANCELLED
     COMPLETED
-}
-
-type File {
-    idx  String? @default(uuid())
-    url  String
-    path String
-    type String?
 }

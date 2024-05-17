@@ -14,9 +14,8 @@ import { FundWalletDTO } from './dto/wallet.dto'
 import { genFileName } from 'helpers/genFilename'
 import { extractTime } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
-import { $Enums, BriefForm } from '@prisma/client'
-import { genRandomCode } from 'helpers/genRandStr'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
+import { $Enums, BriefForm, TxStatus } from '@prisma/client'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 
 @Injectable()
@@ -209,20 +208,20 @@ export class ClientService {
             let completed = 0
 
             if (role === "admin") {
-                pending = await this.prisma.briefForm.count({
+                pending = await this.prisma.project.count({
                     where: {
                         status: 'PENDING'
                     }
                 })
-                completed = await this.prisma.briefForm.count({
+                completed = await this.prisma.project.count({
                     where: {
                         status: 'COMPLETED'
                     }
                 })
 
-                total = await this.prisma.briefForm.count()
+                total = await this.prisma.project.count()
 
-                const cancelled = await this.prisma.briefForm.count({
+                const cancelled = await this.prisma.project.count({
                     where: {
                         status: 'CANCELLED'
                     }
@@ -232,22 +231,22 @@ export class ClientService {
             } else {
                 const client = await this.getClient(sub)
 
-                pending = await this.prisma.briefForm.count({
+                pending = await this.prisma.project.count({
                     where: {
                         status: 'PENDING',
                         clientId: client.id,
                     }
                 })
-                completed = await this.prisma.briefForm.count({
+                completed = await this.prisma.project.count({
                     where: {
                         status: 'COMPLETED',
                         clientId: client.id,
                     }
                 })
 
-                total = await this.prisma.briefForm.count()
+                total = await this.prisma.project.count()
 
-                const cancelled = await this.prisma.briefForm.count({
+                const cancelled = await this.prisma.project.count({
                     where: {
                         status: 'CANCELLED',
                         clientId: client.id,
@@ -300,21 +299,23 @@ export class ClientService {
 
     async fetchProjectsDropdown(res: Response, { sub }: ExpressUser) {
         try {
-            const client = await this.prisma.client.findUnique({
-                where: { userId: sub }
-            })
+            const client = await this.getClient(sub)
 
-            const projects = await this.prisma.briefForm.findMany({
-                where: { clientId: client.id },
+            const projects = await this.prisma.project.findMany({
+                where: { clientId: client.userId },
                 orderBy: { updatedAt: 'desc' },
                 select: {
                     id: true,
-                    type: true,
-                    title: true,
                     status: true,
-                    category: true,
                     clientId: true,
-                    projectType: true,
+                    brief: {
+                        select: {
+                            id: true,
+                            type: true,
+                            title: true,
+                            category: true,
+                        }
+                    }
                 }
             })
 
@@ -328,7 +329,7 @@ export class ClientService {
         res: Response,
         { role, sub }: ExpressUser,
         {
-            q, s, limit = 50, page = 1
+            q, s = '', limit = 50, page = 1
         }: SortUserDto
     ) {
         try {
@@ -337,54 +338,79 @@ export class ClientService {
 
             let projects: {
                 id: string
-                type: string
-                title: string
-                createdAt: Date
-                category: string
                 status: $Enums.ProjectStatus
-                projectType: $Enums.ProjectType
+                brief: {
+                    type: string
+                    title: string
+                    category: string
+                    createdAt: Date
+                    id: string
+                    projectType: $Enums.BriefFormType
+                }
             }[]
 
             let length = 0
-            let totalPages = 0
 
             const OR: ({
-                type: {
-                    contains: string
-                    mode: "insensitive"
+                brief: {
+                    type: {
+                        contains: string
+                        mode: "insensitive"
+                    }
                 }
             } | {
-                title: {
-                    contains: string
-                    mode: "insensitive"
+                brief: {
+                    title: {
+                        contains: string
+                        mode: "insensitive"
+                    }
                 }
             } | {
-                category: {
-                    contains: string
-                    mode: "insensitive"
+                brief: {
+                    category: {
+                        contains: string
+                        mode: "insensitive"
+                    }
                 }
             })[] = [
-                    { type: { contains: s, mode: 'insensitive' } },
-                    { title: { contains: s, mode: 'insensitive' } },
-                    { category: { contains: s, mode: 'insensitive' } },
+                    {
+                        brief: { type: { contains: s, mode: 'insensitive' } },
+                    },
+                    {
+                        brief: { title: { contains: s, mode: 'insensitive' } },
+                    },
+                    {
+                        brief: { category: { contains: s, mode: 'insensitive' } },
+                    },
                 ]
 
             const query: {
                 select: {
-                    id: boolean
-                    type: boolean
-                    title: boolean
-                    status: boolean
-                    category: boolean
-                    createdAt: boolean
-                    projectType: boolean
+                    id: true
+                    status: true
+                    brief: {
+                        select: {
+                            id: true
+                            type: true
+                            title: true
+                            category: true
+                            createdAt: true
+                            projectType: true
+                        }
+                    }
                 }
                 orderBy: ({
-                    type: "asc"
+                    brief: {
+                        type: "asc"
+                    }
                 } | {
-                    title: "asc"
+                    brief: {
+                        title: "asc"
+                    }
                 } | {
-                    category: "asc"
+                    brief: {
+                        category: "asc"
+                    }
                 })[] | {
                     createdAt: "desc"
                 }
@@ -393,41 +419,53 @@ export class ClientService {
             } = {
                 select: {
                     id: true,
-                    type: true,
-                    title: true,
                     status: true,
-                    category: true,
-                    createdAt: true,
-                    projectType: true
+                    brief: {
+                        select: {
+                            id: true,
+                            type: true,
+                            title: true,
+                            category: true,
+                            createdAt: true,
+                            projectType: true,
+                        }
+                    }
                 },
                 take: limit,
                 skip: offset,
                 orderBy: q === "name" ? [
-                    { type: 'asc' },
-                    { title: 'asc' },
-                    { category: 'asc' },
-                ] : { createdAt: 'desc' },
+                    { brief: { type: 'asc' } },
+                    { brief: { title: 'asc' } },
+                    { brief: { category: 'asc' } },
+                ] : { createdAt: 'desc' }
             }
 
             if (role === "admin") {
-                projects = await this.prisma.briefForm.findMany({
+                projects = await this.prisma.project.findMany({
                     where: { OR },
                     ...query,
                 })
 
-                length = await this.prisma.briefForm.count({ where: { OR } })
-                totalPages = Math.ceil(length / limit)
-            } else {
+                length = await this.prisma.project.count({ where: { OR } })
+            } else if (role === "client") {
                 const client = await this.getClient(sub)
 
-                projects = await this.prisma.briefForm.findMany({
-                    where: { clientId: client.id, OR },
+                projects = await this.prisma.project.findMany({
+                    where: { clientId: client.userId, OR },
                     ...query,
                 })
 
-                length = await this.prisma.briefForm.count({ where: { clientId: client.id, OR } })
-                totalPages = Math.ceil(length / limit)
+                length = await this.prisma.project.count({ where: { clientId: client.id, OR } })
+            } else {
+                projects = await this.prisma.project.findMany({
+                    where: { talentOrCreativeId: sub, OR },
+                    ...query,
+                })
+
+                length = await this.prisma.project.count({ where: { talentOrCreativeId: sub, OR } })
             }
+
+            const totalPages = Math.ceil(length / limit)
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 data: { projects, length, totalPages }
@@ -440,33 +478,20 @@ export class ClientService {
     async toggleStatus(
         res: Response,
         projectId: string,
-        { sub, role }: ExpressUser,
         { q }: ToggleProjectStatusDTO,
     ) {
         try {
-            let project: BriefForm
-
-            if (role === "admin") {
-                project = await this.prisma.briefForm.findUnique({
-                    where: { id: projectId }
-                })
-            } else {
-                const client = await this.getClient(sub)
-
-                project = await this.prisma.briefForm.findUnique({
-                    where: { id: projectId, clientId: client.id }
-                })
-            }
+            const project = await this.prisma.project.findUnique({
+                where: { id: projectId }
+            })
 
             if (!project) {
                 return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
             }
 
-            const newProject = await this.prisma.briefForm.update({
+            const newProject = await this.prisma.project.update({
                 where: { id: project.id },
-                data: {
-                    status: q
-                }
+                data: { status: q }
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, {
@@ -514,11 +539,11 @@ export class ClientService {
                         channel,
                         type: 'DEPOSIT',
                         source: 'external',
-                        status: 'SUCCESS',
                         amount: amountPaid,
                         authorization_code,
-                        reference: `deposit-${sub}-${genRandomCode()}`,
+                        reference: `deposit-${ref}}`,
                         user: { connect: { id: sub } },
+                        status: data.status.toUpperCase() as TxStatus,
                     }
                 })
             ])
@@ -529,7 +554,92 @@ export class ClientService {
         }
     }
 
-    async uploadContract(res: Response) {
+    async createHire(
+        res: Response,
+        projectId: string,
+        profileId: string,
+        { sub }: ExpressUser,
+    ) {
+        try {
+            const client = this.getClient(sub)
+            if (!client) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'Client not found')
+            }
 
+            const profile = this.prisma.user.findUnique({
+                where: { id: profileId }
+            })
+            if (!profile) {
+                return this.response.sendError(res, StatusCodes.NotFound, "User profile not found")
+            }
+
+            const project = await this.prisma.project.findUnique({
+                where: { id: projectId }
+            })
+            if (!project) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Brief form not found")
+            }
+
+            const hire = await this.prisma.hire.create({
+                data: {
+                    client: { connect: { id: sub } },
+                    project: { connect: { id: projectId } },
+                    talentOrCreative: { connect: { id: profileId } },
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: hire,
+                message: "Successful"
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async uploadContract(
+        res: Response,
+        projectId: string,
+        { sub }: ExpressUser,
+        file: Express.Multer.File,
+    ) {
+        try {
+            if (!file) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "Blank Contract")
+            }
+
+            const re = validateFile(file, 5 << 20, '.pdf')
+            if (re?.status) {
+                return this.response.sendError(res, re.status, re.message)
+            }
+
+            const project = await this.prisma.project.findUnique({
+                where: { id: projectId },
+            })
+
+            if (!project) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
+            }
+
+            const path = `${sub}/${projectId}/${genFileName()}`
+            const url = this.aws.getS3(path)
+            await this.aws.uploadS3(file, path)
+
+            const contract = await this.prisma.contract.create({
+                data: {
+                    project: { connect: { id: projectId } },
+                    file: {
+                        url,
+                        path,
+                        type: file.mimetype
+                    },
+                    user: { connect: { id: sub } }
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: contract })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
     }
 }

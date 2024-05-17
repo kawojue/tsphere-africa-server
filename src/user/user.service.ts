@@ -9,6 +9,8 @@ import { MiscService } from 'lib/misc.service'
 import { PrismaService } from 'lib/prisma.service'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
+import { FectchContractsDTO } from './dto/contract.dto'
+import { $Enums, ContractStatus } from '@prisma/client'
 
 @Injectable()
 export class UserService {
@@ -498,6 +500,192 @@ export class UserService {
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { message: "Rating deleted successfully" })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async fetchContracts(
+        res: Response,
+        { sub, role }: ExpressUser,
+        {
+            limit = 50, page = 1,
+            sortBy, search = "", tab,
+        }: FectchContractsDTO,
+    ) {
+        try {
+            limit = Number(limit)
+            const offset = (page - 1) * limit
+
+            let contracts: {
+                id: string
+                createdAt: Date
+                status: $Enums.ContractStatus
+                project: {
+                    id: string
+                    brief: {
+                        id: string
+                        createdAt: Date
+                        type: string
+                        title: string
+                        category: string
+                        projectType: $Enums.BriefFormType
+                    }
+                }
+                totalApplied?: number
+            }[]
+
+            let orderBy: ({
+                project: {
+                    brief: {
+                        type: "asc"
+                    }
+                }
+            } | {
+                project: {
+                    brief: {
+                        title: "asc"
+                    }
+                }
+            } | {
+                project: {
+                    brief: {
+                        category: "asc"
+                    }
+                }
+            })[] | {
+                updatedAt: "desc"
+            } = sortBy === "name" ? [
+                { project: { brief: { type: 'asc' } } },
+                { project: { brief: { title: 'asc' } } },
+                { project: { brief: { category: 'asc' } } },
+            ] : { updatedAt: 'desc' }
+
+            const statuses: ContractStatus[] = ['REJECTED', 'PENDING', 'SIGNED']
+            let analytics: {
+                count: number
+                status: string
+            }[] = [
+                    {
+                        count: await this.prisma.contract.count({
+                            where: {
+                                user: role === "admin" ? {} : { role, id: sub },
+                            }
+                        }),
+                        status: 'TOTAL'
+                    }
+                ]
+
+            for (const status of statuses) {
+                const count = await this.prisma.contract.count({
+                    where: {
+                        status,
+                        user: role === "admin" ? {} : { role, id: sub },
+                    }
+                })
+
+                analytics.push({ count, status })
+            }
+
+            const OR: ({
+                project: {
+                    brief: {
+                        title: {
+                            contains: string
+                            mode: "insensitive"
+                        }
+                    }
+                }
+            } | {
+                project: {
+                    brief: {
+                        type: {
+                            contains: string
+                            mode: "insensitive"
+                        }
+                    }
+                }
+            } | {
+                project: {
+                    brief: {
+                        category: {
+                            contains: string
+                            mode: "insensitive"
+                        }
+                    }
+                }
+            })[] = [
+                    { project: { brief: { title: { contains: search, mode: 'insensitive' } } } },
+                    { project: { brief: { type: { contains: search, mode: 'insensitive' } } } },
+                    { project: { brief: { category: { contains: search, mode: 'insensitive' } } } },
+                ]
+
+            if (!tab && (role === "creative" || role === "talent")) {
+                contracts = await this.prisma.contract.findMany({
+                    where: { OR, userId: sub },
+                    select: {
+                        id: true,
+                        status: true,
+                        createdAt: true,
+                        project: {
+                            select: {
+                                id: true,
+                                brief: {
+                                    select: {
+                                        id: true,
+                                        type: true,
+                                        title: true,
+                                        category: true,
+                                        createdAt: true,
+                                        projectType: true,
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    orderBy,
+                    take: limit,
+                    skip: offset,
+                })
+            } else {
+                contracts = await this.prisma.contract.findMany({
+                    where: role === "admin" ? { OR, user: { role: tab } } : { OR, userId: sub },
+                    select: {
+                        id: true,
+                        status: true,
+                        createdAt: true,
+                        project: {
+                            select: {
+                                id: true,
+                                brief: {
+                                    select: {
+                                        id: true,
+                                        type: true,
+                                        title: true,
+                                        category: true,
+                                        createdAt: true,
+                                        projectType: true,
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    orderBy,
+                    take: limit,
+                    skip: offset,
+                })
+            }
+
+            contracts = await Promise.all(
+                contracts.map(async (contract) => {
+                    const totalApplied = await this.prisma.hire.count({
+                        where: { projectId: contract.project.id },
+                    })
+                    return { ...contract, totalApplied }
+                })
+            )
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: contracts })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
