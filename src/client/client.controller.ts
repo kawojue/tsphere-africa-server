@@ -104,7 +104,7 @@ export class ClientController {
     return await this.clientService.fundWallet(res, req.user, body)
   }
 
-  @Post('/contract/upload')
+  @Post('/contract/upload/:projectId')
   @ApiOperation({
     summary: "The formdata key should be contract"
   })
@@ -117,5 +117,16 @@ export class ClientController {
     @UploadedFile() file: Express.Multer.File
   ) {
     await this.clientService.uploadContract(res, projectId, req.user, file)
+  }
+
+  @Post('/hire/:projectId/:profileId')
+  @Role(Roles.client)
+  async createHire(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Param('projectId') projectId: string,
+    @Param('profileId') profileId: string,
+  ) {
+    await this.clientService.createHire(res, projectId, profileId, req.user)
   }
 }
