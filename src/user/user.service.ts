@@ -9,7 +9,7 @@ import { MiscService } from 'lib/misc.service'
 import { PrismaService } from 'lib/prisma.service'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { FectchContractsDTO } from './dto/contract.dto'
-import { $Enums, ContractStatus } from '@prisma/client'
+import { $Enums, ContractStatus, HireStatus } from '@prisma/client'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 
@@ -705,6 +705,61 @@ export class UserService {
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
+            const statuses: {
+                label: string
+                status: HireStatus
+            }[] = [
+                    {
+                        status: 'APPROVED',
+                        label: 'Approved'
+                    },
+                    {
+                        status: 'PENDING',
+                        label: 'Pending'
+                    },
+                    {
+                        status: 'DECLINED',
+                        label: 'Declined'
+                    }
+                ]
+
+            let analytics: {
+                count: number
+                status?: string
+                label: string
+            }[] = [
+                    {
+                        count: await this.prisma.hire.count({
+                            where: { talentOrCreativeId: sub }
+                        }),
+                        label: 'TOTAL',
+                    },
+                    {
+                        count: await this.prisma.hire.count({
+                            where: {
+                                talentOrCreativeId: sub,
+                                project: {
+                                    contract: {
+                                        status: 'SIGNED'
+                                    }
+                                }
+                            }
+                        }),
+                        label: 'COMPLETED'
+                    }
+                ]
+
+            for (const { label, status } of statuses) {
+                const count = await this.prisma.hire.count({
+                    where: {
+                        status,
+                        talentOrCreativeId: sub,
+                    }
+                })
+
+                analytics.push({ count, status, label })
+            }
+
             const bookings = await this.prisma.hire.findMany({
                 where: {
                     talentOrCreativeId: sub,
@@ -744,7 +799,7 @@ export class UserService {
                 ] : { updatedAt: 'desc' }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: bookings })
+            this.response.sendSuccess(res, StatusCodes.OK, { data: { bookings, analytics } })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
