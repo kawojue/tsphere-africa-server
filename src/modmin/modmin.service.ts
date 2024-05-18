@@ -1,3 +1,8 @@
+import {
+    UpdateHireStatusDTO,
+    UpdateProjectStatusDTO,
+    UpdateContractStatusDTO,
+} from './dto/status.dto'
 import { Response } from 'express'
 import { $Enums } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
@@ -11,7 +16,6 @@ import {
     AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
 } from './dto/user.dto'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
-import { ToggleProjectStatusDTO } from 'src/client/dto/project.dto'
 
 @Injectable()
 export class ModminService {
@@ -611,7 +615,7 @@ export class ModminService {
     async updateProjectStatus(
         res: Response,
         projectId: string,
-        { q }: ToggleProjectStatusDTO,
+        { q }: UpdateProjectStatusDTO,
     ) {
         try {
             const project = await this.prisma.project.findUnique({
@@ -632,7 +636,63 @@ export class ModminService {
                 message: "Status has been changed"
             })
         } catch (err) {
-            this.misc.handleServerError(res, err, "error changing status")
+            this.misc.handleServerError(res, err, "Error changing status")
+        }
+    }
+
+    async updateHireStatus(
+        res: Response,
+        hireId: string,
+        { q }: UpdateHireStatusDTO,
+    ) {
+        try {
+            const hire = await this.prisma.hire.findUnique({
+                where: { id: hireId }
+            })
+
+            if (!hire) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Request not found")
+            }
+
+            const newHire = await this.prisma.hire.update({
+                where: { id: hire.id },
+                data: { status: q }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: newHire,
+                message: "Status has been changed"
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error changing status")
+        }
+    }
+
+    async updateContractStatus(
+        res: Response,
+        contractId: string,
+        { q }: UpdateContractStatusDTO,
+    ) {
+        try {
+            const contract = await this.prisma.contract.findUnique({
+                where: { id: contractId }
+            })
+
+            if (!contract) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Request not found")
+            }
+
+            const newHire = await this.prisma.contract.update({
+                where: { id: contractId },
+                data: { status: q }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: newHire,
+                message: "Status has been changed"
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error changing status")
         }
     }
 }

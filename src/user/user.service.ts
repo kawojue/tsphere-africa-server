@@ -7,9 +7,9 @@ import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { PrismaService } from 'lib/prisma.service'
+import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { FectchContractsDTO } from './dto/contract.dto'
 import { $Enums, ContractStatus } from '@prisma/client'
-import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 
@@ -714,7 +714,10 @@ export class UserService {
                         { project: { brief: { category: { contains: s, mode: 'insensitive' } } } },
                     ]
                 },
-                include: {
+                select: {
+                    id: true,
+                    status: true,
+                    createdAt: true,
                     project: {
                         select: {
                             id: true,
@@ -743,7 +746,7 @@ export class UserService {
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: bookings })
         } catch (err) {
-
+            this.misc.handleServerError(res, err)
         }
     }
 }

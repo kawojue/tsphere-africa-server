@@ -4,6 +4,8 @@ import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { ModminService } from './modmin.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
+import { UpdateContractStatusDTO, UpdateHireStatusDTO, UpdateProjectStatusDTO } from './dto/status.dto'
 import {
   AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
 } from './dto/user.dto'
@@ -11,8 +13,6 @@ import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
 import {
   Body, Controller, Get, Param, Patch, Post, Query, Res, UseGuards
 } from '@nestjs/common'
-import { ToggleProjectStatusDTO } from 'src/client/dto/project.dto'
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 
 @ApiTags('Admin')
 @Controller('modmin')
@@ -139,15 +139,36 @@ export class ModminController {
     return await this.modminService.fetchReferral(res, referralId)
   }
 
-  @ApiOperation({
-    summary: "Update project status"
-  })
-  @Patch('/projects/:projectId')
+  @Patch('/projects/:projectId/status')
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   async updateProjectStatus(
     @Res() res: Response,
-    @Query() q: ToggleProjectStatusDTO,
+    @Query() q: UpdateProjectStatusDTO,
     @Param('projectId') projectId: string
   ) {
     await this.modminService.updateProjectStatus(res, projectId, q)
+  }
+
+  @Patch('/contracts/:hireId/status')
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async updateHireStatus(
+    @Res() res: Response,
+    @Query() q: UpdateHireStatusDTO,
+    @Param('hireId') hireId: string,
+  ) {
+    await this.modminService.updateHireStatus(res, hireId, q)
+  }
+
+  @Patch('/hires/:contractId/status')
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async updateContractStatus(
+    @Res() res: Response,
+    @Query() q: UpdateContractStatusDTO,
+    @Param('contractId') contractId: string,
+  ) {
+    await this.modminService.updateContractStatus(res, contractId, q)
   }
 }

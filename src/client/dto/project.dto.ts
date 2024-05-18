@@ -233,11 +233,3 @@ export class CreateProjectFillDTO extends CompulsoryFieldsDTO {
     @IsOptional()
     brief_time_expiry: string
 }
-
-export class ToggleProjectStatusDTO {
-    @ApiProperty({
-        enum: ProjectStatus
-    })
-    @IsEnum(ProjectStatus)
-    q: ProjectStatus
-}
