@@ -4,17 +4,16 @@ import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { ClientService } from './client.service'
 import { FundWalletDTO } from './dto/wallet.dto'
+import {
+  CreateProjectDocumentDTO, CreateProjectFillDTO
+} from './dto/project.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import {
-  UploadedFiles, Post, UseInterceptors, Param, Get,
-  Body, Controller, UseGuards, Res, Req, Query, Patch,
-  UploadedFile,
+  Body, Controller, UseGuards, Res, Req, Query, Post,
+  UploadedFiles, UseInterceptors, Param, Get, UploadedFile,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
-import {
-  CreateProjectDocumentDTO, CreateProjectFillDTO, ToggleProjectStatusDTO
-} from './dto/project.dto'
 import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
 
 @ApiTags("Client")
@@ -80,18 +79,6 @@ export class ClientController {
     @Param('projectId') projectId: string
   ) {
     await this.clientService.fetchProject(res, projectId, req.user)
-  }
-
-  @ApiOperation({
-    summary: "Change project status"
-  })
-  @Patch('/projects/:projectId')
-  async toggleStatus(
-    @Res() res: Response,
-    @Query() q: ToggleProjectStatusDTO,
-    @Param('projectId') projectId: string
-  ) {
-    await this.clientService.toggleStatus(res, projectId, q)
   }
 
   @Post('/deposit')

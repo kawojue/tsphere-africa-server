@@ -7,10 +7,11 @@ import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { PrismaService } from 'lib/prisma.service'
-import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
-import { PaystackService } from 'lib/Paystack/paystack.service'
 import { FectchContractsDTO } from './dto/contract.dto'
 import { $Enums, ContractStatus } from '@prisma/client'
+import { SortUserDto } from 'src/modmin/dto/user.dto'
+import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
+import { PaystackService } from 'lib/Paystack/paystack.service'
 
 @Injectable()
 export class UserService {
@@ -688,6 +689,61 @@ export class UserService {
             this.response.sendSuccess(res, StatusCodes.OK, { data: contracts })
         } catch (err) {
             this.misc.handleServerError(res, err)
+        }
+    }
+
+    async fetchBookings(
+        res: Response,
+        { sub }: ExpressUser,
+        {
+            q, s = '',
+            page = 1,
+            limit = 50
+        }: SortUserDto
+    ) {
+        try {
+            limit = Number(limit)
+            const offset = (Number(page) - 1) * limit
+
+            const bookings = await this.prisma.hire.findMany({
+                where: {
+                    talentOrCreativeId: sub,
+                    OR: [
+                        { project: { brief: { type: { contains: s, mode: 'insensitive' } } } },
+                        { project: { brief: { title: { contains: s, mode: 'insensitive' } } } },
+                        { project: { brief: { category: { contains: s, mode: 'insensitive' } } } },
+                    ]
+                },
+                include: {
+                    project: {
+                        select: {
+                            id: true,
+                            brief: {
+                                select: {
+                                    id: true,
+                                    type: true,
+                                    city: true,
+                                    state: true,
+                                    title: true,
+                                    category: true,
+                                    role_name: true,
+                                    createdAt: true,
+                                }
+                            }
+                        }
+                    }
+                },
+                take: limit,
+                skip: offset,
+                orderBy: q === "name" ? [
+                    { project: { brief: { title: 'asc' } } },
+                    { project: { brief: { type: 'asc' } } },
+                ] : { updatedAt: 'desc' }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: bookings })
+        } catch (err) {
+
         }
     }
 }

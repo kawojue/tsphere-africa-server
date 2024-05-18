@@ -11,6 +11,7 @@ import {
     AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
 } from './dto/user.dto'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
+import { ToggleProjectStatusDTO } from 'src/client/dto/project.dto'
 
 @Injectable()
 export class ModminService {
@@ -562,7 +563,6 @@ export class ModminService {
         }
     }
 
-
     async fetchReferral(res: Response, referralId: string) {
         const referral = await this.prisma.referral.findUnique({
             where: { id: referralId },
@@ -606,5 +606,33 @@ export class ModminService {
         }
 
         this.response.sendSuccess(res, StatusCodes.OK, { data: referral })
+    }
+
+    async updateProjectStatus(
+        res: Response,
+        projectId: string,
+        { q }: ToggleProjectStatusDTO,
+    ) {
+        try {
+            const project = await this.prisma.project.findUnique({
+                where: { id: projectId }
+            })
+
+            if (!project) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
+            }
+
+            const newProject = await this.prisma.project.update({
+                where: { id: project.id },
+                data: { status: q }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: newProject,
+                message: "Status has been changed"
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "error changing status")
+        }
     }
 }

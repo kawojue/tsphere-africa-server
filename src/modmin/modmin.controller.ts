@@ -4,7 +4,6 @@ import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { ModminService } from './modmin.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import {
   AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
 } from './dto/user.dto'
@@ -12,6 +11,8 @@ import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
 import {
   Body, Controller, Get, Param, Patch, Post, Query, Res, UseGuards
 } from '@nestjs/common'
+import { ToggleProjectStatusDTO } from 'src/client/dto/project.dto'
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 
 @ApiTags('Admin')
 @Controller('modmin')
@@ -136,5 +137,17 @@ export class ModminController {
     @Param('referralId') referralId: string,
   ) {
     return await this.modminService.fetchReferral(res, referralId)
+  }
+
+  @ApiOperation({
+    summary: "Update project status"
+  })
+  @Patch('/projects/:projectId')
+  async updateProjectStatus(
+    @Res() res: Response,
+    @Query() q: ToggleProjectStatusDTO,
+    @Param('projectId') projectId: string
+  ) {
+    await this.modminService.updateProjectStatus(res, projectId, q)
   }
 }

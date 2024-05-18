@@ -1,8 +1,3 @@
-import {
-    CreateProjectFillDTO,
-    ToggleProjectStatusDTO,
-    CreateProjectDocumentDTO,
-} from './dto/project.dto'
 import { Response } from 'express'
 import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
@@ -14,6 +9,9 @@ import { FundWalletDTO } from './dto/wallet.dto'
 import { genFileName } from 'helpers/genFilename'
 import { extractTime } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
+import {
+    CreateProjectFillDTO, CreateProjectDocumentDTO,
+} from './dto/project.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { $Enums, BriefForm, TxStatus } from '@prisma/client'
 import { PaystackService } from 'lib/Paystack/paystack.service'
@@ -475,34 +473,6 @@ export class ClientService {
         }
     }
 
-    async toggleStatus(
-        res: Response,
-        projectId: string,
-        { q }: ToggleProjectStatusDTO,
-    ) {
-        try {
-            const project = await this.prisma.project.findUnique({
-                where: { id: projectId }
-            })
-
-            if (!project) {
-                return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
-            }
-
-            const newProject = await this.prisma.project.update({
-                where: { id: project.id },
-                data: { status: q }
-            })
-
-            this.response.sendSuccess(res, StatusCodes.OK, {
-                data: newProject,
-                message: "Status has been changed"
-            })
-        } catch (err) {
-            this.misc.handleServerError(res, err, "error changing status")
-        }
-    }
-
     async fundWallet(
         res: Response,
         { sub }: ExpressUser,
@@ -643,7 +613,23 @@ export class ClientService {
         }
     }
 
-    async existingBreifForm() {
+    async existingBreifForm(
+        res: Response,
+        { }: ExpressUser,
+        projectId: string
+    ) {
+        try {
+            const project = await this.prisma.project.findUnique({
+                where: { id: projectId },
+                select: { brief: true }
+            })
 
+            if (!project) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
+            }
+
+        } catch (err) {
+
+        }
     }
 }

@@ -11,9 +11,10 @@ import { UserService } from './user.service'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { FectchContractsDTO } from './dto/contract.dto'
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 
 @ApiTags("User")
 @Controller('user')
@@ -114,5 +115,19 @@ export class UserController {
     @Query() query: FectchContractsDTO
   ) {
     await this.userService.fetchContracts(res, req.user, query)
+  }
+
+  @Get('/bookings')
+  @ApiOperation({
+    summary: "Only for talent and creative"
+  })
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.client, Roles.creative)
+  async fetchBookings(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Query() query: SortUserDto
+  ) {
+    await this.userService.fetchBookings(res, req.user, query)
   }
 }
