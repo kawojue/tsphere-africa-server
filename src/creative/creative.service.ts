@@ -45,6 +45,10 @@ export class CreativeService {
                 }
             })
 
+            if (user.verified) {
+                return this.response.sendError(res, StatusCodes.Unauthorized, "Can't edit since you're verified")
+            }
+
             const personalInfo = user.creative?.personalInfo
 
             if (!personalInfo?.proofOfId?.path) {

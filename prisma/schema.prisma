@@ -325,23 +325,26 @@ model Client {
 }
 
 model ClientSetup {
-    id          String          @id @default(auto()) @map("_id") @db.ObjectId
-    type        ClientSetupType
-    address     String
-    country     String
-    lga         String
-    state       String
-    prof_title  String?
-    dob         String?
-    instagram   String?
-    facebook    String?
-    website     String?
-    linkedIn    String?
-    cacDocument File?
-    id_type     String?
-    proof_of_Id File[]
-    client      Client          @relation(fields: [clientId], references: [id])
-    clientId    String          @unique @db.ObjectId
+    id            String          @id @default(auto()) @map("_id") @db.ObjectId
+    type          ClientSetupType
+    address       String
+    country       String
+    state         String
+    lga           String
+    prof_title    String?
+    dob           String?
+    website       String?
+    instagram     String?
+    facebook      String?
+    linkedIn      String?
+    document_type String?
+    document      File?
+    id_type       String?
+    proof_of_id   File[]
+    reg_type      String?
+    reg_no        String?
+    client        Client          @relation(fields: [clientId], references: [id])
+    clientId      String          @unique @db.ObjectId
 }
 
 model Talent {

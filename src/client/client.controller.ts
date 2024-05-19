@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
+import { ClientProfileSetupDTO, ClientProfileSetupQueryDTO } from './dto/profile.dto'
 
 @ApiTags("Client")
 @ApiBearerAuth()
@@ -23,6 +24,25 @@ import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
 export class ClientController {
   constructor(private readonly clientService: ClientService) { }
 
+  @ApiOperation({
+    summary: "The formdata keys should be doc - (object), proofOfId - (array)"
+  })
+  @Role(Roles.client)
+  @Post('/profile-setup')
+  @UseInterceptors(AnyFilesInterceptor())
+  async profileSetup(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() body: ClientProfileSetupDTO,
+    @Query() q: ClientProfileSetupQueryDTO,
+    @UploadedFiles() files: Array<Express.Multer.File>
+  ) {
+    await this.clientService.profileSetup(res, req.user, files || [], q, body)
+  }
+
+  @ApiOperation({
+    summary: "The formdata keys should be docs, images, videos"
+  })
   @Post('/brief-form/document')
   @Role(Roles.client)
   @UseInterceptors(AnyFilesInterceptor())
@@ -30,13 +50,9 @@ export class ClientController {
     @Res() res: Response,
     @Req() req: IRequest,
     @Body() body: CreateProjectDocumentDTO,
-    @UploadedFiles() files: {
-      docs?: Array<Express.Multer.File>,
-      videos?: Array<Express.Multer.File>,
-      images?: Array<Express.Multer.File>,
-    }
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    await this.clientService.createProjectDocument(res, req.user, files, body)
+    await this.clientService.createProjectDocument(res, req.user, files || [], body)
   }
 
   @Role(Roles.client)

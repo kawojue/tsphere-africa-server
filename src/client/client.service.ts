@@ -7,14 +7,15 @@ import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { FundWalletDTO } from './dto/wallet.dto'
 import { genFileName } from 'helpers/genFilename'
-import { extractTime } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
 import {
     CreateProjectFillDTO, CreateProjectDocumentDTO,
 } from './dto/project.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
+import { extractTime, titleText } from 'helpers/formatTexts'
 import { PaystackService } from 'lib/Paystack/paystack.service'
-import { $Enums, BriefForm, ProjectStatus, TxStatus } from '@prisma/client'
+import { ClientProfileSetupDTO, ClientProfileSetupQueryDTO } from './dto/profile.dto'
+import { $Enums, BriefForm, ClientSetup, ProjectStatus, TxStatus } from '@prisma/client'
 
 @Injectable()
 export class ClientService {
@@ -46,26 +47,172 @@ export class ClientService {
         return client
     }
 
+    async profileSetup(
+        res: Response,
+        { sub }: ExpressUser,
+        files: Array<Express.Multer.File>,
+        { type }: ClientProfileSetupQueryDTO,
+        {
+            address, country, website, firstname, lastname,
+            lga, state, dob, document_type, facebook, id_type,
+            instagram, linkedIn, reg_type, reg_no, prof_title,
+        }: ClientProfileSetupDTO,
+    ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: sub }
+            })
+
+            if (user.verified) {
+                return this.response.sendError(res, StatusCodes.Unauthorized, "Can't edit since you're verified")
+            }
+
+            if (firstname && firstname?.trim()) {
+                firstname = titleText(firstname)
+            } else {
+                firstname = user.firstname
+            }
+
+            if (lastname && lastname?.trim()) {
+                lastname = titleText(lastname)
+            } else {
+                lastname = user.lastname
+            }
+
+            const filteredDoc = files.find(file => file.fieldname === "doc")
+            const filteredProof = files.filter(file => file.fieldname === "proofOfId")
+
+            const client = await this.getClient(sub)
+            const setup = await this.prisma.clientSetup.findUnique({
+                where: { clientId: client.id }
+            })
+
+            if (!filteredProof.length && !setup.proof_of_id?.length) {
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Upload your proof of ID')
+            }
+
+            if (filteredProof.length > 2) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "Only the front and back of the ID")
+            }
+
+            let document: IFile
+            let proof_of_id: IFile[] = []
+
+            let clientSetup: ClientSetup
+
+            if (filteredProof.length > 0) {
+                const results = await Promise.all(filteredProof.map(async file => {
+                    const result = validateFile(file, 10 << 20, 'png', 'jpg', 'jpeg')
+
+                    if (result?.status) {
+                        return this.response.sendError(res, result.status, result.message)
+                    }
+
+                    const path = `profile/${sub}/${genFileName()}`
+                    await this.aws.uploadS3(result.file, path)
+                    return {
+                        path,
+                        type: file.mimetype,
+                        url: this.aws.getS3(path),
+                    }
+                }))
+
+                proof_of_id = results.filter((result): result is IFile => !!result)
+            }
+
+            if (type === "PERSONAL") {
+                const [_,] = await this.prisma.$transaction([
+                    this.prisma.clientSetup.upsert({
+                        where: { clientId: client.id },
+                        create: {
+                            state, facebook, id_type, lga, type,
+                            instagram, linkedIn, dob, prof_title,
+                            address, country, website, proof_of_id,
+                            client: { connect: { id: client.id } },
+                        },
+                        update: {
+                            lga, type, instagram, linkedIn, dob, prof_title,
+                            address, country, website, state, facebook, id_type,
+                        }
+                    }),
+                    this.prisma.user.update({
+                        where: { id: sub },
+                        data: { firstname, lastname }
+                    })
+                ])
+
+                clientSetup = _
+            }
+
+            if (type === "COMPANY") {
+                if (!filteredDoc) {
+                    return this.response.sendError(res, StatusCodes.BadRequest, "Company's proof of document is required")
+                }
+
+                const result = validateFile(filteredDoc, 10 << 20, 'png', 'jpg', 'jpeg')
+
+                if (result?.status) {
+                    return this.response.sendError(res, result.status, result.message)
+                }
+
+                const path = `profile/${sub}/${genFileName()}`
+                await this.aws.uploadS3(result.file, path)
+
+                document = {
+                    path,
+                    url: this.aws.getS3(path),
+                    type: result.file.mimetype,
+                }
+
+                const [_,] = await this.prisma.$transaction([
+                    this.prisma.clientSetup.upsert({
+                        where: { clientId: client.id },
+                        create: {
+                            client: { connect: { id: client.id } },
+                            address, country, website, proof_of_id, document,
+                            instagram, linkedIn, dob, prof_title, document_type,
+                            state, facebook, id_type, lga, type, reg_type, reg_no,
+                        },
+                        update: {
+                            address, country, website, instagram, linkedIn, dob, prof_title,
+                            document_type, state, facebook, id_type, lga, type, reg_type, reg_no,
+                        }
+                    }),
+                    this.prisma.user.update({
+                        where: { id: sub },
+                        data: { firstname, lastname }
+                    })
+                ])
+
+                clientSetup = _
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: clientSetup })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
     async createProjectDocument(
         res: Response,
         { sub }: ExpressUser,
-        files: {
-            docs?: Array<Express.Multer.File>,
-            videos?: Array<Express.Multer.File>,
-            images?: Array<Express.Multer.File>,
-        },
+        files: Array<Express.Multer.File>,
         { category, title, type }: CreateProjectDocumentDTO
     ) {
         try {
             const client = await this.getClient(sub)
 
+            const filteredDocs = files.filter(file => file.fieldname === "docs")
+            const filteredImages = files.filter(file => file.fieldname === "images")
+            const filteredVideos = files.filter(file => file.fieldname === "videos")
+
             let docs = [] as IFile[]
             let videos = [] as IFile[]
             let images = [] as IFile[]
 
-            if (files.docs?.length) {
+            if (filteredDocs.length) {
                 try {
-                    const results = await Promise.all(files.docs.map(async file => {
+                    const results = await Promise.all(filteredDocs.map(async file => {
                         const result = validateFile(file, 5 << 20, 'pdf', 'docx')
 
                         if (result?.status) {
@@ -91,9 +238,9 @@ export class ClientService {
                 }
             }
 
-            if (files.images?.length) {
+            if (filteredImages.length) {
                 try {
-                    const results = await Promise.all(files.images.map(async file => {
+                    const results = await Promise.all(filteredImages.map(async file => {
                         const result = validateFile(file, 10 << 20, 'jpg', 'png')
 
                         if (result?.status) {
@@ -119,9 +266,9 @@ export class ClientService {
                 }
             }
 
-            if (files.videos?.length) {
+            if (filteredVideos.length) {
                 try {
-                    const results = await Promise.all(files.videos.map(async file => {
+                    const results = await Promise.all(filteredVideos.map(async file => {
                         const result = validateFile(file, 20 << 20, 'mp4',)
 
                         if (result?.status) {
