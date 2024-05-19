@@ -317,10 +317,31 @@ model CreativeCertification {
 }
 
 model Client {
-    id          String      @id @default(auto()) @map("_id") @db.ObjectId
+    id          String       @id @default(auto()) @map("_id") @db.ObjectId
     brief_forms BriefForm[]
-    user        User        @relation(fields: [userId], references: [id])
-    userId      String      @unique @db.ObjectId
+    setup       ClientSetup?
+    user        User         @relation(fields: [userId], references: [id])
+    userId      String       @unique @db.ObjectId
+}
+
+model ClientSetup {
+    id          String          @id @default(auto()) @map("_id") @db.ObjectId
+    type        ClientSetupType
+    address     String
+    country     String
+    lga         String
+    state       String
+    prof_title  String?
+    dob         String?
+    instagram   String?
+    facebook    String?
+    website     String?
+    linkedIn    String?
+    cacDocument File?
+    id_type     String?
+    proof_of_Id File[]
+    client      Client          @relation(fields: [clientId], references: [id])
+    clientId    String          @unique @db.ObjectId
 }
 
 model Talent {
@@ -559,6 +580,11 @@ enum YesOrNo {
 enum Gender {
     Male
     Female
+}
+
+enum ClientSetupType {
+    PERSONAL
+    COMPANY
 }
 
 enum ChargeTime {

@@ -9,9 +9,9 @@ import { MiscService } from 'lib/misc.service'
 import { PrismaService } from 'lib/prisma.service'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { FectchContractsDTO } from './dto/contract.dto'
-import { $Enums, ContractStatus, HireStatus } from '@prisma/client'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
+import { $Enums, ContractStatus, HireStatus } from '@prisma/client'
 
 @Injectable()
 export class UserService {

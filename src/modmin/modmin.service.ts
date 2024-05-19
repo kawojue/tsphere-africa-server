@@ -149,6 +149,7 @@ export class ModminService {
         { q, s = "", page = 1, limit = 200, type }: FetchUserDto,
     ) {
         try {
+            s = s.trim()
             let users: {
                 firstname: string
                 username: string
@@ -197,21 +198,12 @@ export class ModminService {
                     { email: { contains: s, mode: 'insensitive' } }
                 ]
 
-            const select: {
-                id: true
-                role: true
-                email: true
-                avatar: true
-                username: true
-                lastname: true
-                firstname: true,
-                createdAt: true,
-                primarySkill: true,
-            } = {
+            const select = {
                 id: true,
                 role: true,
                 email: true,
                 avatar: true,
+                verified: true,
                 username: true,
                 lastname: true,
                 firstname: true,
@@ -273,11 +265,7 @@ export class ModminService {
             const totalPages = Math.ceil(total / limit)
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: {
-                    users,
-                    total,
-                    totalPages
-                }
+                data: { users, total, totalPages }
             })
         } catch (err) {
             this.misc.handleServerError(res, err)
