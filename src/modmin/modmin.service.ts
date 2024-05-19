@@ -201,25 +201,23 @@ export class ModminService {
             const select: {
                 id: true
                 role: true
-                skill: true
                 email: true
                 avatar: true
                 username: true
                 lastname: true
                 firstname: true,
                 createdAt: true,
-                primarySkills: true,
+                primarySkill: true,
             } = {
                 id: true,
                 role: true,
-                skill: true,
                 email: true,
                 avatar: true,
                 username: true,
                 lastname: true,
                 firstname: true,
                 createdAt: true,
-                primarySkills: true,
+                primarySkill: true,
             }
 
             const orderBy: {
