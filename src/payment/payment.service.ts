@@ -397,9 +397,9 @@ export class PaymentService {
                         user: { connect: { id: sub } },
                         destinationBankCode: bank.bankCode,
                         destinationBankName: bank.bankName,
-                        status: transfer.status as TxStatus,
                         destinationAccountName: bank.accountName,
                         destinationAccountNumber: bank.accountNumber,
+                        status: transfer.status.toUpperCase() as TxStatus,
                     }
                 })
             ])

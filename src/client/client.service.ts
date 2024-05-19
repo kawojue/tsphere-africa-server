@@ -12,10 +12,14 @@ import {
     CreateProjectFillDTO, CreateProjectDocumentDTO,
 } from './dto/project.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
+import {
+    ClientProfileSetupDTO, ClientProfileSetupQueryDTO
+} from './dto/profile.dto'
+import {
+    $Enums, BriefForm, ClientSetup, ProjectStatus, TxStatus
+} from '@prisma/client'
 import { extractTime, titleText } from 'helpers/formatTexts'
 import { PaystackService } from 'lib/Paystack/paystack.service'
-import { ClientProfileSetupDTO, ClientProfileSetupQueryDTO } from './dto/profile.dto'
-import { $Enums, BriefForm, ClientSetup, ProjectStatus, TxStatus } from '@prisma/client'
 
 @Injectable()
 export class ClientService {
