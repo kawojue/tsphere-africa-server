@@ -163,8 +163,7 @@ export class ModminService {
                 }
                 role: $Enums.Role
                 createdAt: Date
-                skill: never
-                primarySkills: never
+                primarySkill: string | null
             }[]
 
             let total: number
