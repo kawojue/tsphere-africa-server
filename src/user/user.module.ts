@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { AwsService } from 'lib/aws.service'
 import { UserService } from './user.service'
 import { SendRes } from 'lib/sendRes.service'
 import { JwtModule } from 'src/jwt/jwt.module'
@@ -13,6 +14,6 @@ import { PaystackService } from 'lib/Paystack/paystack.service'
     PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule,
   ],
   controllers: [UserController],
-  providers: [UserService, PrismaService, SendRes, MiscService, PaystackService],
+  providers: [UserService, PrismaService, SendRes, MiscService, PaystackService, AwsService],
 })
 export class UserModule { }

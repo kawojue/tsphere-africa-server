@@ -197,7 +197,7 @@ export class ClientService {
         }
     }
 
-    async createProjectDocument(
+    async createBriefDocument(
         res: Response,
         { sub }: ExpressUser,
         files: Array<Express.Multer.File>,
@@ -315,7 +315,7 @@ export class ClientService {
         }
     }
 
-    async createProjectFill(
+    async createBriefFill(
         res: Response,
         { sub }: ExpressUser,
         body: CreateProjectFillDTO
@@ -762,8 +762,7 @@ export class ClientService {
                         url,
                         path,
                         type: file.mimetype
-                    },
-                    user: { connect: { id: sub } }
+                    }
                 }
             })
 

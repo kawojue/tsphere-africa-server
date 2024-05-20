@@ -2,10 +2,13 @@ import { Response } from 'express'
 import {
     FetchProfilesDto, InfiniteScrollDto
 } from './dto/infinite-scroll.dto'
+import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
+import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
+import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { FectchContractsDTO } from './dto/contract.dto'
@@ -16,6 +19,7 @@ import { $Enums, ContractStatus, HireStatus } from '@prisma/client'
 @Injectable()
 export class UserService {
     constructor(
+        private readonly aws: AwsService,
         private readonly response: SendRes,
         private readonly misc: MiscService,
         private readonly prisma: PrismaService,
@@ -802,6 +806,56 @@ export class UserService {
             this.response.sendSuccess(res, StatusCodes.OK, { data: { bookings, analytics } })
         } catch (err) {
             this.misc.handleServerError(res, err)
+        }
+    }
+
+    async appendSignature(
+        res: Response,
+        contractId: string,
+        { sub }: ExpressUser,
+        file: Express.Multer.File
+    ) {
+        try {
+            if (!file) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "Signature is required")
+            }
+
+            const contract = await this.prisma.contract.findUnique({
+                where: {
+                    userId: sub,
+                    id: contractId,
+                }
+            })
+
+            if (!contract) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Contract not found")
+            }
+
+            const re = validateFile(file, 3 << 20, 'png', 'jpg', 'jpeg')
+            if (re?.status) {
+                return this.response.sendError(res, re.status, re.message)
+            }
+
+            const path = `contract/${sub}/${genFileName()}`
+            await this.aws.uploadS3(re.file, path)
+
+            const newContract = await this.prisma.contract.update({
+                where: { id: contract.id },
+                data: {
+                    signedAt: new Date(),
+                    signature: {
+                        path,
+                        type: re.file.mimetype,
+                        url: this.aws.getS3(path)
+                    },
+                    signedByUser: true,
+                    status: 'SIGNED',
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: newContract })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error appending signature")
         }
     }
 }

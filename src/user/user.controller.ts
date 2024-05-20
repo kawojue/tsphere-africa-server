@@ -3,8 +3,10 @@ import {
   FetchProfilesDto, InfiniteScrollDto
 } from './dto/infinite-scroll.dto'
 import {
-  Param, Req, Res, Query, UseGuards,
-  Body, Controller, Delete, Get, Post,
+  Controller, Delete, Get, Post, Patch,
+  Param, Req, Res, Query, UseGuards, Body,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common'
 import { Role } from 'src/role.decorator'
 import { UserService } from './user.service'
@@ -15,6 +17,7 @@ import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { FectchContractsDTO } from './dto/contract.dto'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { FileInterceptor } from '@nestjs/platform-express'
 
 @ApiTags("User")
 @Controller('user')
@@ -119,15 +122,31 @@ export class UserController {
 
   @Get('/bookings')
   @ApiOperation({
-    summary: "Only for talent and creative"
+    summary: "Only for the talent and the creative"
   })
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Role(Roles.client, Roles.creative)
+  @Role(Roles.talent, Roles.creative)
   async fetchBookings(
     @Res() res: Response,
     @Req() req: IRequest,
     @Query() query: SortUserDto
   ) {
     await this.userService.fetchBookings(res, req.user, query)
+  }
+
+  @ApiOperation({
+    summary: 'The formdata key should be signature'
+  })
+  @Patch('/contracts/:contractId/append-signature')
+  @UseInterceptors(FileInterceptor('signature'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.talent, Roles.creative)
+  async appendSignature(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Param('contractId') contractId: string,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    await this.userService.appendSignature(res, contractId, req.user, file)
   }
 }

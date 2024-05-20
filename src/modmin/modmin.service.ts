@@ -664,17 +664,41 @@ export class ModminService {
             })
 
             if (!contract) {
-                return this.response.sendError(res, StatusCodes.NotFound, "Request not found")
+                return this.response.sendError(res, StatusCodes.NotFound, "Contract not found")
             }
 
-            const newHire = await this.prisma.contract.update({
+            const newContract = await this.prisma.contract.update({
                 where: { id: contractId },
                 data: { status: q }
             })
 
+            if (newContract && newContract.status === "APPROVED") {
+                const hires = await this.prisma.hire.findMany({
+                    where: { projectId: contract.projectId }
+                })
+
+                for (const hire of hires) {
+                    if (hire.status === "APPROVED") {
+                        await this.prisma.contract.update({
+                            where: { id: contract.id },
+                            data: {
+                                user: { connect: { id: hire.talentOrCreativeId } }
+                            }
+                        })
+                    }
+                }
+            } else if (newContract.status === "REJECTED") {
+                await this.prisma.contract.update({
+                    where: { id: contractId },
+                    data: {
+                        user: { disconnect: true }
+                    }
+                })
+            }
+
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: newHire,
-                message: "Status has been changed"
+                data: newContract,
+                message: "Status has been updated"
             })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error changing status")

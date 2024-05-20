@@ -52,7 +52,7 @@ export class ClientController {
     @Body() body: CreateProjectDocumentDTO,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    await this.clientService.createProjectDocument(res, req.user, files || [], body)
+    await this.clientService.createBriefDocument(res, req.user, files || [], body)
   }
 
   @Role(Roles.client)
@@ -62,7 +62,7 @@ export class ClientController {
     @Req() req: IRequest,
     @Body() body: CreateProjectFillDTO,
   ) {
-    await this.clientService.createProjectFill(res, req.user, body)
+    await this.clientService.createBriefFill(res, req.user, body)
   }
 
   @Get('/projects')

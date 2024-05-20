@@ -36,22 +36,22 @@ model User {
     jobs                Job[]
     likes               Like[]
     skillAttachments    File[]
+    hires               Hire[]               @relation("ClientHires")
+    bookings            Hire[]               @relation("UserHires")
     skills              Skill[]
     raters              Rating[]             @relation("RaterUser")
     ratings             Rating[]             @relation("TargetUser")
     messages            Message[]
     comments            Comment[]
     articles            Article[]
+    projectsAsUser      Project[]            @relation("UserProjects")
+    projectsAsClient    Project[]            @relation("ClientProjects")
     contracts           Contract[]
     referred            Referred[]
     txHistories         TxHistory[]
     experiences         Experience[]
     bankDetails         BankDetails[]
     jobApplications     JobApplication[]
-    projectsAsClient    Project[]            @relation("ClientProjects")
-    projectsAsUser      Project[]            @relation("UserProjects")
-    hires               Hire[]               @relation("ClientHires")
-    bookings            Hire[]               @relation("UserHires")
 }
 
 model BriefForm {
@@ -484,8 +484,8 @@ model Project {
     briefId            String        @db.ObjectId
     client             User          @relation("ClientProjects", fields: [clientId], references: [id])
     clientId           String        @db.ObjectId
-    talentOrCreative   User          @relation("UserProjects", fields: [talentOrCreativeId], references: [id])
-    talentOrCreativeId String        @unique @db.ObjectId
+    talentOrCreative   User?         @relation("UserProjects", fields: [talentOrCreativeId], references: [id])
+    talentOrCreativeId String?       @unique @db.ObjectId
     status             ProjectStatus @default(PENDING)
     hires              Hire[]
     createdAt          DateTime      @default(now())
@@ -603,6 +603,7 @@ enum ApplicantStatus {
 }
 
 enum ContractStatus {
+    APPROVED
     PENDING
     SIGNED
     REJECTED
