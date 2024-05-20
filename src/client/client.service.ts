@@ -333,9 +333,6 @@ export class ClientService {
                 data: {
                     ...body,
                     projectType: 'fill',
-                    shoot_time: extractTime(body.shoot_time),
-                    audition_time: extractTime(body.audition_time),
-                    brief_time_expiry: extractTime(body.brief_time_expiry),
                     client: { connect: { id: client.id } }
                 }
             })

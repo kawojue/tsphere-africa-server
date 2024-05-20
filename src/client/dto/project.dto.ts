@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { ChargeTime, Gender, ProjectStatus, YesOrNo } from '@prisma/client'
+import { ChargeTime, Gender, YesOrNo } from '@prisma/client'
 import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class CompulsoryFieldsDTO {
@@ -130,7 +130,6 @@ export class CreateProjectFillDTO extends CompulsoryFieldsDTO {
     @ApiProperty({
         example: now
     })
-    @IsDateString()
     @IsOptional()
     shoot_time: string
 
@@ -159,7 +158,6 @@ export class CreateProjectFillDTO extends CompulsoryFieldsDTO {
     @ApiProperty({
         example: now
     })
-    @IsDateString()
     @IsOptional()
     audition_time: string
 
@@ -229,7 +227,6 @@ export class CreateProjectFillDTO extends CompulsoryFieldsDTO {
     @ApiProperty({
         example: sevenDays
     })
-    @IsDateString()
     @IsOptional()
     brief_time_expiry: string
 }

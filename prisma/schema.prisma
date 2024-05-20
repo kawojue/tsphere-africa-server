@@ -72,12 +72,12 @@ model BriefForm {
     duration             String?
     rate_type            ChargeTime?
     compensation         String?
-    shoot_date           DateTime?
-    shoot_time           DateTime?
+    shoot_date           String?
+    shoot_time           String?
     shoot_address        String?
     shoot_info           String?
-    audition_date        DateTime?
-    audition_time        DateTime?
+    audition_date        String?
+    audition_time        String?
     audition_options     String?
     audition_type        String?
     venue                String?
@@ -86,8 +86,8 @@ model BriefForm {
     audition_address     String?
     pre_screen           YesOrNo?
     audition_instruction String?
-    brief_date_expiry    DateTime?
-    brief_time_expiry    DateTime?
+    brief_date_expiry    String?
+    brief_time_expiry    String?
     attachments          File[]
     projectType          BriefFormType
     createdAt            DateTime      @default(now())
