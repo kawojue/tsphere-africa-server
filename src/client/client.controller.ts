@@ -16,6 +16,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
 import { ClientProfileSetupDTO, ClientProfileSetupQueryDTO } from './dto/profile.dto'
+import { CreateProjectDTO, ExistingProjectDTO } from './dto/project.dto'
 
 @ApiTags("Client")
 @ApiBearerAuth()
@@ -65,6 +66,28 @@ export class ClientController {
     await this.clientService.createBriefFill(res, req.user, body)
   }
 
+  @Role(Roles.client)
+  @Post('/project/new')
+  async createProject(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() body: CreateProjectDTO,
+    @UploadedFiles() files: Array<Express.Multer.File>
+  ) {
+    await this.clientService.createProject(res, req.user, files || [], body)
+  }
+
+  @Post('project/existing/projectId')
+  @Role(Roles.client)
+  async existingProject(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() body: ExistingProjectDTO,
+    @Param('projectId') projectId: string
+  ) {
+    await this.clientService.existingProject(res, projectId, req.user, body)
+  }
+
   @Get('/projects')
   @Role(Roles.client, Roles.admin)
   async fetchProjects(
@@ -87,14 +110,23 @@ export class ClientController {
     await this.clientService.analytics(res, req.user)
   }
 
-  @Get('/projects/:projectId')
-  @Role(Roles.client, Roles.admin)
+  @Get('/projects/:projectId/get')
   async fetchProject(
     @Res() res: Response,
     @Req() req: IRequest,
     @Param('projectId') projectId: string
   ) {
     await this.clientService.fetchProject(res, projectId, req.user)
+  }
+
+  @Get('/projects/:projectId/applicants')
+  @Role(Roles.client, Roles.admin)
+  async fetchProjectApplicants(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Param('projectId') projectId: string
+  ) {
+    await this.clientService.fetchProjectApplicants(res, projectId, req.user)
   }
 
   @Post('/deposit')

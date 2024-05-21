@@ -483,13 +483,13 @@ model Project {
     proj_type          String
     role_name          String
     role_type          String
-    offer              String
-    payment_option     String
+    offer              Float?
+    payment_option     String?
     proj_date          DateTime
     proj_duration      String?
     location           String
     proj_time          String
-    additional_note    String
+    additional_note    String?
     attachments        String[]
     additionalInfo     AdditionalInfoProject?
     client             User                   @relation("ClientProjects", fields: [clientId], references: [id])
@@ -506,7 +506,7 @@ model Project {
 model AdditionalInfoProject {
     id           String  @id @default(auto()) @map("_id") @db.ObjectId
     org_name     String
-    job_title    String
+    job_title    String?
     country      String
     phone_number String
     means_of_id  String

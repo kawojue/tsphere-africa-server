@@ -5,13 +5,13 @@ import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
+import {
+    CreateBriefFillDTO, CreateBriefDocumentDTO,
+} from './dto/brief.dto'
 import { titleText } from 'helpers/formatTexts'
 import { FundWalletDTO } from './dto/wallet.dto'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
-import {
-    CreateBriefFillDTO, CreateBriefDocumentDTO,
-} from './dto/brief.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import {
     ClientProfileSetupDTO, ClientProfileSetupQueryDTO
@@ -20,6 +20,7 @@ import {
     BriefForm, ClientSetup, Project, ProjectStatus, TxStatus
 } from '@prisma/client'
 import { PaystackService } from 'lib/Paystack/paystack.service'
+import { CreateProjectDTO, ExistingProjectDTO } from './dto/project.dto'
 
 @Injectable()
 export class ClientService {
@@ -410,25 +411,186 @@ export class ClientService {
         }
     }
 
+    async createProject(
+        res: Response,
+        { sub }: ExpressUser,
+        files: Array<Express.Multer.File>,
+        {
+            role_type, role_name, proj_type, proj_title,
+            additional_note, proj_duration, phone_number,
+            proj_time, proj_date, payment_option, location,
+            org_name, means_of_id, job_title, country, offer,
+        }: CreateProjectDTO
+    ) {
+        try {
+            const extractedProofOfId = files.filter(file => file.fieldname === "proof_of_id")
+            const extractedAttachments = files.filter(file => file.fieldname === "attachments")
+
+            const user = await this.prisma.user.findUnique({
+                where: { id: sub }
+            })
+
+            if (!user.verified && extractedProofOfId.length === 0) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "You're not verified yet. Upload your proof of ID with the project")
+            }
+
+            let attachments: IFile[]
+            let proof_of_id: IFile[]
+
+            if (extractedAttachments.length) {
+                try {
+                    const results = await Promise.all(extractedAttachments.map(async file => {
+                        const result = validateFile(file, 5 << 20, 'jpg', 'png', 'mp4', 'wav', 'aac', 'mp3')
+
+                        if (result?.status) {
+                            return this.response.sendError(res, result.status, result.message)
+                        }
+
+                        const path = `brief_form/${sub}/${genFileName()}`
+                        await this.aws.uploadS3(result.file, path)
+                        return {
+                            path,
+                            type: file.mimetype,
+                            url: this.aws.getS3(path),
+                        }
+                    }))
+
+                    attachments = results.filter((result): result is IFile => !!result)
+                } catch {
+                    try {
+                        await this.removeFiles(attachments)
+                    } catch (err) {
+                        this.misc.handleServerError(res, err, err?.message)
+                    }
+                }
+            }
+
+            const project = await this.prisma.project.create({
+                data: {
+                    proj_time, payment_option, location,
+                    additional_note, proj_duration, offer,
+                    role_type, role_name, proj_type, proj_title,
+                    proj_date: proj_date ? new Date(proj_date) : null,
+                    client: { connect: { id: user.id } },
+                }
+            })
+
+            if (project && !user.verified) {
+                try {
+                    const results = await Promise.all(extractedProofOfId.map(async file => {
+                        const result = validateFile(file, 5 << 20, 'jpg', 'png')
+
+                        if (result?.status) {
+                            return this.response.sendError(res, result.status, result.message)
+                        }
+
+                        const path = `brief_form/${sub}/${genFileName()}`
+                        await this.aws.uploadS3(result.file, path)
+                        return {
+                            path,
+                            type: file.mimetype,
+                            url: this.aws.getS3(path),
+                        }
+                    }))
+
+                    attachments = results.filter((result): result is IFile => !!result)
+                } catch {
+                    try {
+                        await this.removeFiles(attachments)
+                    } catch (err) {
+                        this.misc.handleServerError(res, err, err?.message)
+                    }
+                }
+
+                await this.prisma.additionalInfoProject.create({
+                    data: {
+                        org_name, means_of_id, job_title, country, proof_of_id,
+                        phone_number, project: { connect: { id: project.id } }
+                    }
+                })
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: project })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async existingProject(
+        res: Response,
+        projectId: string,
+        { sub }: ExpressUser,
+        {
+            role_type, offer
+        }: ExistingProjectDTO,
+    ) {
+        try {
+            const project = await this.prisma.project.findUnique({
+                where: { id: projectId, clientId: sub },
+                select: {
+                    offer: true,
+                    status: true,
+                    location: true,
+                    proj_date: true,
+                    proj_type: true,
+                    proj_title: true,
+                    proj_time: true,
+                    role_name: true,
+                    role_type: true,
+                    attachments: true,
+                    proj_duration: true,
+                    payment_option: true,
+                    additional_note: true,
+                }
+            })
+
+            if (!project) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
+            }
+
+            if (project.status === "CANCELLED" || project.status === "ONHOLD") {
+                return this.response.sendError(res, StatusCodes.Unauthorized, "Selected project is either cancelled or onhold")
+            }
+
+            const newProject = await this.prisma.project.create({
+                data: {
+                    ...project,
+                    status: 'PENDING',
+                    role_type, offer,
+                    client: { connect: { id: sub } }
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: newProject })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
     async fetchProject(
         res: Response,
         projectId: string,
         { role, sub }: ExpressUser,
     ) {
         try {
-            let project: BriefForm
+            let project: Project
 
             if (role === "admin") {
-                project = await this.prisma.briefForm.findUnique({
+                project = await this.prisma.project.findUnique({
                     where: { id: projectId }
                 })
-            } else {
-                const client = await this.getClient(sub)
-
-                project = await this.prisma.briefForm.findUnique({
+            } else if (role === "client") {
+                project = await this.prisma.project.findUnique({
                     where: {
                         id: projectId,
-                        clientId: client.id,
+                        clientId: sub,
+                    }
+                })
+            } else {
+                project = await this.prisma.project.findUnique({
+                    where: {
+                        id: projectId,
+                        talentOrCreativeId: sub,
                     }
                 })
             }
@@ -443,12 +605,62 @@ export class ClientService {
         }
     }
 
+    async fetchProjectApplicants(
+        res: Response,
+        projectId: string,
+        { role, sub }: ExpressUser,
+    ) {
+        try {
+            let project: Project
+
+            if (role === "admin") {
+                project = await this.prisma.project.findUnique({
+                    where: { id: projectId }
+                })
+            } else {
+                project = await this.prisma.project.findUnique({
+                    where: {
+                        id: projectId,
+                        clientId: sub,
+                    },
+                })
+            }
+
+            if (!project) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
+            }
+
+            const hires = await this.prisma.hire.findMany({
+                where: { projectId },
+                include: {
+                    talentOrCreative: {
+                        select: {
+                            role: true,
+                            email: true,
+                            avatar: true,
+                            lastname: true,
+                            username: true,
+                            firstname: true,
+                            primarySkill: true,
+                        }
+                    }
+                }
+            })
+
+            if (!project) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: hires })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
     async fetchProjectsDropdown(res: Response, { sub }: ExpressUser) {
         try {
-            const client = await this.getClient(sub)
-
             const projects = await this.prisma.project.findMany({
-                where: { clientId: client.userId },
+                where: { clientId: sub },
                 orderBy: { updatedAt: 'desc' },
                 select: {
                     id: true,
@@ -476,30 +688,29 @@ export class ClientService {
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
-            let projects: Project[]
-
             let length = 0
+            let projects: Project[]
 
             const OR: ({
                 proj_title: {
-                    contains: string;
-                    mode: "insensitive";
-                };
+                    contains: string
+                    mode: "insensitive"
+                }
             } | {
                 proj_type: {
-                    contains: string;
-                    mode: "insensitive";
-                };
+                    contains: string
+                    mode: "insensitive"
+                }
             } | {
                 role_name: {
-                    contains: string;
-                    mode: "insensitive";
-                };
+                    contains: string
+                    mode: "insensitive"
+                }
             } | {
                 role_type: {
-                    contains: string;
-                    mode: "insensitive";
-                };
+                    contains: string
+                    mode: "insensitive"
+                }
             })[] = [
                     { proj_title: { contains: s, mode: 'insensitive' } },
                     { proj_type: { contains: s, mode: 'insensitive' } },
@@ -509,11 +720,11 @@ export class ClientService {
 
             const query: {
                 orderBy: ({
-                    proj_title: "asc";
+                    proj_title: "asc"
                 } | {
-                    proj_type: "asc";
+                    proj_type: "asc"
                 })[] | {
-                    updatedAt: "desc";
+                    updatedAt: "desc"
                 }
                 skip: number
                 take: number
@@ -553,8 +764,17 @@ export class ClientService {
 
             const totalPages = Math.ceil(length / limit)
 
+            const projectsWithTotalApplied = await Promise.all(
+                projects.map(async (project) => {
+                    const totalApplied = await this.prisma.hire.count({
+                        where: { projectId: project.id },
+                    })
+                    return { ...project, totalApplied }
+                })
+            )
+
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: { projects, length, totalPages }
+                data: { projects: projectsWithTotalApplied, length, totalPages }
             })
         } catch (err) {
             this.misc.handleServerError(res, err)
@@ -669,7 +889,7 @@ export class ClientService {
                 return this.response.sendError(res, StatusCodes.BadRequest, "Blank Contract")
             }
 
-            const re = validateFile(file, 5 << 20, '.pdf')
+            const re = validateFile(file, 5 << 20, 'pdf', 'png', 'jpg', 'jpeg')
             if (re?.status) {
                 return this.response.sendError(res, re.status, re.message)
             }
@@ -709,25 +929,6 @@ export class ClientService {
             this.response.sendSuccess(res, StatusCodes.OK, { data: contract })
         } catch (err) {
             this.misc.handleServerError(res, err)
-        }
-    }
-
-    async existingBreifForm(
-        res: Response,
-        { }: ExpressUser,
-        projectId: string
-    ) {
-        try {
-            const project = await this.prisma.project.findUnique({
-                where: { id: projectId },
-            })
-
-            if (!project) {
-                return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
-            }
-
-        } catch (err) {
-
         }
     }
 }
