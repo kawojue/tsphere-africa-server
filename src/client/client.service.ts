@@ -11,15 +11,16 @@ import {
 import { titleText } from 'helpers/formatTexts'
 import { FundWalletDTO } from './dto/wallet.dto'
 import { genFileName } from 'helpers/genFilename'
+import {
+    ClientSetup, Project, ProjectStatus, TxStatus
+} from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import {
     ClientProfileSetupDTO, ClientProfileSetupQueryDTO
 } from './dto/profile.dto'
-import {
-    BriefForm, ClientSetup, Project, ProjectStatus, TxStatus
-} from '@prisma/client'
 import { PaystackService } from 'lib/Paystack/paystack.service'
+import { UpdateHireStatusDTO } from 'src/modmin/dto/status.dto'
 import { CreateProjectDTO, ExistingProjectDTO } from './dto/project.dto'
 
 @Injectable()
@@ -411,8 +412,9 @@ export class ClientService {
         }
     }
 
-    async createProject(
+    async directHire(
         res: Response,
+        profileId: string,
         { sub }: ExpressUser,
         files: Array<Express.Multer.File>,
         {
@@ -430,6 +432,14 @@ export class ClientService {
                 where: { id: sub }
             })
 
+            const profile = await this.prisma.user.findUnique({
+                where: { id: profileId }
+            })
+
+            if (!profile || profile.userStatus === "suspended") {
+                return this.response.sendError(res, StatusCodes.NotFound, "User not found")
+            }
+
             if (!user.verified && extractedProofOfId.length === 0) {
                 return this.response.sendError(res, StatusCodes.BadRequest, "You're not verified yet. Upload your proof of ID with the project")
             }
@@ -446,7 +456,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `brief_form/${sub}/${genFileName()}`
+                        const path = `project/${sub}/${genFileName()}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -467,11 +477,10 @@ export class ClientService {
 
             const project = await this.prisma.project.create({
                 data: {
-                    proj_time, payment_option, location,
-                    additional_note, proj_duration, offer,
-                    role_type, role_name, proj_type, proj_title,
+                    additional_note, proj_duration, role_name,
+                    proj_time, payment_option, location, proj_type,
+                    proj_title, client: { connect: { id: user.id } },
                     proj_date: proj_date ? new Date(proj_date) : null,
-                    client: { connect: { id: user.id } },
                 }
             })
 
@@ -510,33 +519,50 @@ export class ClientService {
                 })
             }
 
+            if (project) {
+                await this.prisma.projectRoleInfo.create({
+                    data: {
+                        role_type, offer,
+                        project: { connect: { id: project.id } },
+                        talentOrCreative: { connect: { id: profile.id } }
+                    }
+                })
+            }
+
             this.response.sendSuccess(res, StatusCodes.OK, { data: project })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
     }
 
-    async existingProject(
+    async directHireWithExistingProject(
         res: Response,
         projectId: string,
+        profileId: string,
         { sub }: ExpressUser,
         {
             role_type, offer
         }: ExistingProjectDTO,
     ) {
         try {
+            const profile = await this.prisma.user.findUnique({
+                where: { id: profileId }
+            })
+
+            if (!profile || profile.userStatus === "suspended") {
+                return this.response.sendError(res, StatusCodes.NotFound, "User not found")
+            }
+
             const project = await this.prisma.project.findUnique({
                 where: { id: projectId, clientId: sub },
                 select: {
-                    offer: true,
+                    id: true,
                     status: true,
                     location: true,
                     proj_date: true,
                     proj_type: true,
-                    proj_title: true,
                     proj_time: true,
-                    role_name: true,
-                    role_type: true,
+                    proj_title: true,
                     attachments: true,
                     proj_duration: true,
                     payment_option: true,
@@ -552,18 +578,46 @@ export class ClientService {
                 return this.response.sendError(res, StatusCodes.Unauthorized, "Selected project is either cancelled or onhold")
             }
 
-            const newProject = await this.prisma.project.create({
+            await this.prisma.projectRoleInfo.create({
                 data: {
-                    ...project,
-                    status: 'PENDING',
                     role_type, offer,
-                    client: { connect: { id: sub } }
+                    project: { connect: { id: project.id } },
+                    talentOrCreative: { connect: { id: profile.id } }
                 }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: newProject })
+            this.response.sendSuccess(res, StatusCodes.OK, { data: project })
         } catch (err) {
             this.misc.handleServerError(res, err)
+        }
+    }
+
+    async updateHireStatus(
+        res: Response,
+        hireId: string,
+        { sub }: ExpressUser,
+        { q }: UpdateHireStatusDTO,
+    ) {
+        try {
+            const hire = await this.prisma.hire.findUnique({
+                where: { id: hireId, clientId: sub }
+            })
+
+            if (!hire) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Request not found")
+            }
+
+            const newHire = await this.prisma.hire.update({
+                where: { id: hire.id },
+                data: { status: q }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: newHire,
+                message: "Status has been updated"
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error updating status")
         }
     }
 
@@ -590,7 +644,9 @@ export class ClientService {
                 project = await this.prisma.project.findUnique({
                     where: {
                         id: projectId,
-                        talentOrCreativeId: sub,
+                        roleInfo: {
+                            talentOrCreativeId: sub
+                        },
                     }
                 })
             }
@@ -706,16 +762,10 @@ export class ClientService {
                     contains: string
                     mode: "insensitive"
                 }
-            } | {
-                role_type: {
-                    contains: string
-                    mode: "insensitive"
-                }
             })[] = [
                     { proj_title: { contains: s, mode: 'insensitive' } },
                     { proj_type: { contains: s, mode: 'insensitive' } },
                     { role_name: { contains: s, mode: 'insensitive' } },
-                    { role_type: { contains: s, mode: 'insensitive' } },
                 ]
 
             const query: {
@@ -755,11 +805,11 @@ export class ClientService {
                 length = await this.prisma.project.count({ where: { clientId: client.id, OR } })
             } else {
                 projects = await this.prisma.project.findMany({
-                    where: { talentOrCreativeId: sub, OR },
+                    where: { roleInfo: { talentOrCreativeId: sub }, OR },
                     ...query,
                 })
 
-                length = await this.prisma.project.count({ where: { talentOrCreativeId: sub, OR } })
+                length = await this.prisma.project.count({ where: { roleInfo: { talentOrCreativeId: sub }, OR } })
             }
 
             const totalPages = Math.ceil(length / limit)
@@ -829,52 +879,6 @@ export class ClientService {
             this.response.sendSuccess(res, StatusCodes.OK, { data: tx })
         } catch (err) {
             this.misc.handlePaystackAndServerError(res, err)
-        }
-    }
-
-    async createHire(
-        res: Response,
-        projectId: string,
-        profileId: string,
-        { sub }: ExpressUser,
-    ) {
-        try {
-            const client = this.getClient(sub)
-            if (!client) {
-                return this.response.sendError(res, StatusCodes.NotFound, 'Client not found')
-            }
-
-            const profile = await this.prisma.user.findUnique({
-                where: { id: profileId }
-            })
-
-            if (!profile) {
-                return this.response.sendError(res, StatusCodes.NotFound, "User profile not found")
-            }
-
-            if (profile.role === "admin" || profile.role === "client") return
-
-            const project = await this.prisma.project.findUnique({
-                where: { id: projectId }
-            })
-            if (!project) {
-                return this.response.sendError(res, StatusCodes.NotFound, "Brief form not found")
-            }
-
-            const hire = await this.prisma.hire.create({
-                data: {
-                    client: { connect: { id: sub } },
-                    project: { connect: { id: projectId } },
-                    talentOrCreative: { connect: { id: profileId } },
-                }
-            })
-
-            this.response.sendSuccess(res, StatusCodes.OK, {
-                data: hire,
-                message: "Successful"
-            })
-        } catch (err) {
-            this.misc.handleServerError(res, err)
         }
     }
 

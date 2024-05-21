@@ -1,8 +1,3 @@
-import {
-    UpdateHireStatusDTO,
-    UpdateProjectStatusDTO,
-    UpdateContractStatusDTO,
-} from './dto/status.dto'
 import { Response } from 'express'
 import { $Enums } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
@@ -11,6 +6,9 @@ import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleText } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
+import {
+    UpdateProjectStatusDTO, UpdateContractStatusDTO
+} from './dto/status.dto'
 import { EncryptionService } from 'lib/encryption.service'
 import {
     AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
@@ -618,34 +616,6 @@ export class ModminService {
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 data: newProject,
-                message: "Status has been changed"
-            })
-        } catch (err) {
-            this.misc.handleServerError(res, err, "Error changing status")
-        }
-    }
-
-    async updateHireStatus(
-        res: Response,
-        hireId: string,
-        { q }: UpdateHireStatusDTO,
-    ) {
-        try {
-            const hire = await this.prisma.hire.findUnique({
-                where: { id: hireId }
-            })
-
-            if (!hire) {
-                return this.response.sendError(res, StatusCodes.NotFound, "Request not found")
-            }
-
-            const newHire = await this.prisma.hire.update({
-                where: { id: hire.id },
-                data: { status: q }
-            })
-
-            this.response.sendSuccess(res, StatusCodes.OK, {
-                data: newHire,
                 message: "Status has been changed"
             })
         } catch (err) {

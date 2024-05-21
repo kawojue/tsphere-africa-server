@@ -44,7 +44,7 @@ model User {
     messages            Message[]
     comments            Comment[]
     articles            Article[]
-    projectsAsUser      Project[]            @relation("UserProjects")
+    projectsAsUser      ProjectRoleInfo[]    @relation("UserProjects")
     projectsAsClient    Project[]            @relation("ClientProjects")
     contracts           Contract[]
     referred            Referred[]
@@ -478,29 +478,36 @@ model Like {
 }
 
 model Project {
-    id                 String                 @id @default(auto()) @map("_id") @db.ObjectId
-    proj_title         String
-    proj_type          String
-    role_name          String
+    id              String                 @id @default(auto()) @map("_id") @db.ObjectId
+    proj_title      String
+    proj_type       String
+    role_name       String
+    payment_option  String?
+    roleInfo        ProjectRoleInfo?
+    proj_date       DateTime
+    proj_duration   String?
+    location        String
+    proj_time       String
+    additional_note String?
+    attachments     String[]
+    additionalInfo  AdditionalInfoProject?
+    client          User                   @relation("ClientProjects", fields: [clientId], references: [id])
+    clientId        String                 @db.ObjectId
+    status          ProjectStatus          @default(PENDING)
+    hires           Hire[]
+    createdAt       DateTime               @default(now())
+    updatedAt       DateTime               @updatedAt
+    contract        Contract?
+}
+
+model ProjectRoleInfo {
+    id                 String  @id @default(auto()) @map("_id") @db.ObjectId
     role_type          String
     offer              Float?
-    payment_option     String?
-    proj_date          DateTime
-    proj_duration      String?
-    location           String
-    proj_time          String
-    additional_note    String?
-    attachments        String[]
-    additionalInfo     AdditionalInfoProject?
-    client             User                   @relation("ClientProjects", fields: [clientId], references: [id])
-    clientId           String                 @db.ObjectId
-    talentOrCreative   User?                  @relation("UserProjects", fields: [talentOrCreativeId], references: [id])
-    talentOrCreativeId String?                @unique @db.ObjectId
-    status             ProjectStatus          @default(PENDING)
-    hires              Hire[]
-    createdAt          DateTime               @default(now())
-    updatedAt          DateTime               @updatedAt
-    contract           Contract?
+    project            Project @relation(fields: [projectId], references: [id])
+    projectId          String  @unique @db.ObjectId
+    talentOrCreative   User    @relation("UserProjects", fields: [talentOrCreativeId], references: [id])
+    talentOrCreativeId String  @unique @db.ObjectId
 }
 
 model AdditionalInfoProject {

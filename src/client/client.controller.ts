@@ -7,9 +7,10 @@ import { FundWalletDTO } from './dto/wallet.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import {
-  Body, Controller, UseGuards, Res, Req, Query, Post,
   UploadedFiles, UseInterceptors, Param, Get, UploadedFile,
+  Body, Controller, UseGuards, Res, Req, Query, Post, Patch,
 } from '@nestjs/common'
+import { UpdateHireStatusDTO } from 'src/modmin/dto/status.dto'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { CreateProjectDTO, ExistingProjectDTO } from './dto/project.dto'
 import { CreateBriefDocumentDTO, CreateBriefFillDTO } from './dto/brief.dto'
@@ -65,26 +66,28 @@ export class ClientController {
   }
 
   @Role(Roles.client)
-  @Post('/project/new')
+  @Post('/hire/new/:profileId')
   @UseInterceptors(AnyFilesInterceptor())
-  async createProject(
+  async directHire(
     @Res() res: Response,
     @Req() req: IRequest,
     @Body() body: CreateProjectDTO,
+    @Param('profileId') profileId: string,
     @UploadedFiles() files: Array<Express.Multer.File>
   ) {
-    await this.clientService.createProject(res, req.user, files || [], body)
+    await this.clientService.directHire(res, profileId, req.user, files || [], body)
   }
 
-  @Post('project/existing/projectId')
+  @Post('hire/existing/:profileId/:projectId')
   @Role(Roles.client)
-  async existingProject(
+  async directHireWithExistingProject(
     @Res() res: Response,
     @Req() req: IRequest,
     @Body() body: ExistingProjectDTO,
-    @Param('projectId') projectId: string
+    @Param('profileId') profileId: string,
+    @Param('projectId') projectId: string,
   ) {
-    await this.clientService.existingProject(res, projectId, req.user, body)
+    await this.clientService.directHireWithExistingProject(res, projectId, profileId, req.user, body)
   }
 
   @Get('/projects')
@@ -153,14 +156,15 @@ export class ClientController {
     await this.clientService.uploadContract(res, projectId, req.user, file)
   }
 
-  @Post('/hire/:projectId/:profileId')
+  @Patch('/hires/:hireId/status')
   @Role(Roles.client)
-  async createHire(
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async updateHireStatus(
     @Res() res: Response,
     @Req() req: IRequest,
-    @Param('projectId') projectId: string,
-    @Param('profileId') profileId: string,
+    @Query() q: UpdateHireStatusDTO,
+    @Param('hireId') hireId: string,
   ) {
-    await this.clientService.createHire(res, projectId, profileId, req.user)
+    await this.clientService.updateHireStatus(res, hireId, req.user, q)
   }
 }

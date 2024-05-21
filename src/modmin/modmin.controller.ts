@@ -3,9 +3,11 @@ import { Role } from 'src/role.decorator'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { ModminService } from './modmin.service'
+import {
+  UpdateContractStatusDTO, UpdateProjectStatusDTO
+} from './dto/status.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
-import { UpdateContractStatusDTO, UpdateHireStatusDTO, UpdateProjectStatusDTO } from './dto/status.dto'
 import {
   AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
 } from './dto/user.dto'
@@ -148,17 +150,6 @@ export class ModminController {
     @Param('projectId') projectId: string
   ) {
     await this.modminService.updateProjectStatus(res, projectId, q)
-  }
-
-  @Patch('/contracts/:hireId/status')
-  @Role(Roles.admin)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async updateHireStatus(
-    @Res() res: Response,
-    @Query() q: UpdateHireStatusDTO,
-    @Param('hireId') hireId: string,
-  ) {
-    await this.modminService.updateHireStatus(res, hireId, q)
   }
 
   @Patch('/hires/:contractId/status')

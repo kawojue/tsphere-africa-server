@@ -1,6 +1,8 @@
 import { IsEnum } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
-import { ContractStatus, HireStatus, ProjectStatus } from '@prisma/client'
+import {
+    ContractStatus, HireStatus, ProjectStatus
+} from '@prisma/client'
 
 export class UpdateProjectStatusDTO {
     @ApiProperty({
