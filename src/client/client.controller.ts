@@ -1,8 +1,5 @@
 import { Response } from 'express'
 import { Role } from 'src/role.decorator'
-import {
-  CreateBriefDocumentDTO, CreateBriefFillDTO
-} from './dto/brief.dto'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { ClientService } from './client.service'
@@ -14,9 +11,10 @@ import {
   UploadedFiles, UseInterceptors, Param, Get, UploadedFile,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { CreateProjectDTO, ExistingProjectDTO } from './dto/project.dto'
+import { CreateBriefDocumentDTO, CreateBriefFillDTO } from './dto/brief.dto'
 import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
 import { ClientProfileSetupDTO, ClientProfileSetupQueryDTO } from './dto/profile.dto'
-import { CreateProjectDTO, ExistingProjectDTO } from './dto/project.dto'
 
 @ApiTags("Client")
 @ApiBearerAuth()
@@ -68,6 +66,7 @@ export class ClientController {
 
   @Role(Roles.client)
   @Post('/project/new')
+  @UseInterceptors(AnyFilesInterceptor())
   async createProject(
     @Res() res: Response,
     @Req() req: IRequest,
