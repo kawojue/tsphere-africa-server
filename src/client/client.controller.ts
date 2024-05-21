@@ -1,12 +1,12 @@
 import { Response } from 'express'
 import { Role } from 'src/role.decorator'
+import {
+  CreateBriefDocumentDTO, CreateBriefFillDTO
+} from './dto/brief.dto'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { ClientService } from './client.service'
 import { FundWalletDTO } from './dto/wallet.dto'
-import {
-  CreateProjectDocumentDTO, CreateProjectFillDTO
-} from './dto/project.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import {
@@ -46,10 +46,10 @@ export class ClientController {
   @Post('/brief-form/document')
   @Role(Roles.client)
   @UseInterceptors(AnyFilesInterceptor())
-  async createProjectDocument(
+  async createBriefDocument(
     @Res() res: Response,
     @Req() req: IRequest,
-    @Body() body: CreateProjectDocumentDTO,
+    @Body() body: CreateBriefDocumentDTO,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
     await this.clientService.createBriefDocument(res, req.user, files || [], body)
@@ -57,10 +57,10 @@ export class ClientController {
 
   @Role(Roles.client)
   @Post('/brief-form/fill')
-  async createProjectFill(
+  async createBriefFill(
     @Res() res: Response,
     @Req() req: IRequest,
-    @Body() body: CreateProjectFillDTO,
+    @Body() body: CreateBriefFillDTO,
   ) {
     await this.clientService.createBriefFill(res, req.user, body)
   }

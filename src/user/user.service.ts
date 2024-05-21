@@ -14,7 +14,7 @@ import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { FectchContractsDTO } from './dto/contract.dto'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
-import { $Enums, ContractStatus, HireStatus } from '@prisma/client'
+import { $Enums, ContractStatus, HireStatus, Project } from '@prisma/client'
 
 @Injectable()
 export class UserService {
@@ -525,46 +525,10 @@ export class UserService {
             let contracts: {
                 id: string
                 createdAt: Date
-                status: $Enums.ContractStatus
-                project: {
-                    id: string
-                    brief: {
-                        id: string
-                        createdAt: Date
-                        type: string
-                        title: string
-                        category: string
-                        projectType: $Enums.BriefFormType
-                    }
-                }
+                project: Project
                 totalApplied?: number
+                status: $Enums.ContractStatus
             }[]
-
-            let orderBy: ({
-                project: {
-                    brief: {
-                        type: "asc"
-                    }
-                }
-            } | {
-                project: {
-                    brief: {
-                        title: "asc"
-                    }
-                }
-            } | {
-                project: {
-                    brief: {
-                        category: "asc"
-                    }
-                }
-            })[] | {
-                updatedAt: "desc"
-            } = sortBy === "name" ? [
-                { project: { brief: { type: 'asc' } } },
-                { project: { brief: { title: 'asc' } } },
-                { project: { brief: { category: 'asc' } } },
-            ] : { updatedAt: 'desc' }
 
             const statuses: ContractStatus[] = ['REJECTED', 'PENDING', 'SIGNED']
             let analytics: {
@@ -594,59 +558,57 @@ export class UserService {
 
             const OR: ({
                 project: {
-                    brief: {
-                        title: {
-                            contains: string
-                            mode: "insensitive"
-                        }
+                    proj_title: {
+                        contains: string
+                        mode: "insensitive"
                     }
                 }
             } | {
                 project: {
-                    brief: {
-                        type: {
-                            contains: string
-                            mode: "insensitive"
-                        }
+                    proj_type: {
+                        contains: string
+                        mode: "insensitive"
                     }
                 }
             } | {
                 project: {
-                    brief: {
-                        category: {
-                            contains: string
-                            mode: "insensitive"
-                        }
+                    role_name: {
+                        contains: string
+                        mode: "insensitive"
                     }
                 }
             })[] = [
-                    { project: { brief: { title: { contains: search, mode: 'insensitive' } } } },
-                    { project: { brief: { type: { contains: search, mode: 'insensitive' } } } },
-                    { project: { brief: { category: { contains: search, mode: 'insensitive' } } } },
+                    { project: { proj_title: { contains: search, mode: 'insensitive' } } },
+                    { project: { proj_type: { contains: search, mode: 'insensitive' } } },
+                    { project: { role_name: { contains: search, mode: 'insensitive' } } },
                 ]
+
+            const orderBy: ({
+                project: {
+                    proj_title: "asc";
+                };
+            } | {
+                project: {
+                    proj_type: "asc";
+                };
+            })[] | {
+                updatedAt: "desc";
+            } = sortBy === "name" ? [
+                { project: { proj_title: 'asc' } },
+                { project: { proj_type: 'asc' } },
+            ] : { updatedAt: 'desc' }
 
             if (!tab && (role === "creative" || role === "talent")) {
                 contracts = await this.prisma.contract.findMany({
-                    where: { OR, userId: sub },
+                    where: {
+                        userId: sub,
+                        OR
+                    },
                     select: {
                         id: true,
                         status: true,
                         createdAt: true,
-                        project: {
-                            select: {
-                                id: true,
-                                brief: {
-                                    select: {
-                                        id: true,
-                                        type: true,
-                                        title: true,
-                                        category: true,
-                                        createdAt: true,
-                                        projectType: true,
-                                    }
-                                }
-                            }
-                        }
+                        project: true,
                     },
                     orderBy,
                     take: limit,
@@ -659,21 +621,7 @@ export class UserService {
                         id: true,
                         status: true,
                         createdAt: true,
-                        project: {
-                            select: {
-                                id: true,
-                                brief: {
-                                    select: {
-                                        id: true,
-                                        type: true,
-                                        title: true,
-                                        category: true,
-                                        createdAt: true,
-                                        projectType: true,
-                                    }
-                                }
-                            }
-                        }
+                        project: true,
                     },
                     orderBy,
                     take: limit,
@@ -764,42 +712,49 @@ export class UserService {
                 analytics.push({ count, status, label })
             }
 
+            const OR: ({
+                project: {
+                    proj_title: {
+                        contains: string
+                        mode: "insensitive"
+                    }
+                }
+            } | {
+                project: {
+                    proj_type: {
+                        contains: string
+                        mode: "insensitive"
+                    }
+                }
+            } | {
+                project: {
+                    role_name: {
+                        contains: string
+                        mode: "insensitive"
+                    }
+                }
+            })[] = [
+                    { project: { proj_title: { contains: s, mode: 'insensitive' } } },
+                    { project: { proj_type: { contains: s, mode: 'insensitive' } } },
+                    { project: { role_name: { contains: s, mode: 'insensitive' } } },
+                ]
+
             const bookings = await this.prisma.hire.findMany({
                 where: {
                     talentOrCreativeId: sub,
-                    OR: [
-                        { project: { brief: { type: { contains: s, mode: 'insensitive' } } } },
-                        { project: { brief: { title: { contains: s, mode: 'insensitive' } } } },
-                        { project: { brief: { category: { contains: s, mode: 'insensitive' } } } },
-                    ]
+                    OR
                 },
                 select: {
                     id: true,
                     status: true,
+                    project: true,
                     createdAt: true,
-                    project: {
-                        select: {
-                            id: true,
-                            brief: {
-                                select: {
-                                    id: true,
-                                    type: true,
-                                    city: true,
-                                    state: true,
-                                    title: true,
-                                    category: true,
-                                    role_name: true,
-                                    createdAt: true,
-                                }
-                            }
-                        }
-                    }
                 },
                 take: limit,
                 skip: offset,
                 orderBy: q === "name" ? [
-                    { project: { brief: { title: 'asc' } } },
-                    { project: { brief: { type: 'asc' } } },
+                    { project: { proj_title: 'asc' } },
+                    { project: { proj_type: 'asc' } },
                 ] : { updatedAt: 'desc' }
             })
 

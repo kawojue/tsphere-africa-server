@@ -25,7 +25,7 @@ export class CompulsoryFieldsDTO {
     type: string
 }
 
-export class CreateProjectDocumentDTO extends CompulsoryFieldsDTO {
+export class CreateBriefDocumentDTO extends CompulsoryFieldsDTO {
     @ApiProperty({
         type: Array<Express.Multer.File>
     })
@@ -49,7 +49,7 @@ const now = new Date()
 const sevenDays = new Date(now)
 sevenDays.setDate(now.getDate() + 7)
 
-export class CreateProjectFillDTO extends CompulsoryFieldsDTO {
+export class CreateBriefFillDTO extends CompulsoryFieldsDTO {
     @ApiProperty({
         example: 'Well..'
     })

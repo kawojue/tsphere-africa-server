@@ -5,20 +5,20 @@ import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
+import { titleText } from 'helpers/formatTexts'
 import { FundWalletDTO } from './dto/wallet.dto'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import {
-    CreateProjectFillDTO, CreateProjectDocumentDTO,
-} from './dto/project.dto'
+    CreateBriefFillDTO, CreateBriefDocumentDTO,
+} from './dto/brief.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import {
     ClientProfileSetupDTO, ClientProfileSetupQueryDTO
 } from './dto/profile.dto'
 import {
-    $Enums, BriefForm, ClientSetup, ProjectStatus, TxStatus
+    BriefForm, ClientSetup, Project, ProjectStatus, TxStatus
 } from '@prisma/client'
-import { extractTime, titleText } from 'helpers/formatTexts'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 
 @Injectable()
@@ -201,7 +201,7 @@ export class ClientService {
         res: Response,
         { sub }: ExpressUser,
         files: Array<Express.Multer.File>,
-        { category, title, type }: CreateProjectDocumentDTO
+        { category, title, type }: CreateBriefDocumentDTO
     ) {
         try {
             const client = await this.getClient(sub)
@@ -302,7 +302,7 @@ export class ClientService {
                 data: {
                     docs, images, videos,
                     client: { connect: { id: client.id } },
-                    category, title, type, projectType: 'doc',
+                    category, title, type, briefType: 'doc',
                 }
             })
 
@@ -318,7 +318,7 @@ export class ClientService {
     async createBriefFill(
         res: Response,
         { sub }: ExpressUser,
-        body: CreateProjectFillDTO
+        body: CreateBriefFillDTO
     ) {
         try {
             // @ts-ignore
@@ -332,7 +332,7 @@ export class ClientService {
             const briefForm = await this.prisma.briefForm.create({
                 data: {
                     ...body,
-                    projectType: 'fill',
+                    briefType: 'fill',
                     client: { connect: { id: client.id } }
                 }
             })
@@ -454,14 +454,8 @@ export class ClientService {
                     id: true,
                     status: true,
                     clientId: true,
-                    brief: {
-                        select: {
-                            id: true,
-                            type: true,
-                            title: true,
-                            category: true,
-                        }
-                    }
+                    proj_type: true,
+                    proj_title: true,
                 }
             })
 
@@ -482,108 +476,54 @@ export class ClientService {
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
-            let projects: {
-                id: string
-                status: $Enums.ProjectStatus
-                brief: {
-                    type: string
-                    title: string
-                    category: string
-                    createdAt: Date
-                    id: string
-                    projectType: $Enums.BriefFormType
-                }
-            }[]
+            let projects: Project[]
 
             let length = 0
 
             const OR: ({
-                brief: {
-                    type: {
-                        contains: string
-                        mode: "insensitive"
-                    }
-                }
+                proj_title: {
+                    contains: string;
+                    mode: "insensitive";
+                };
             } | {
-                brief: {
-                    title: {
-                        contains: string
-                        mode: "insensitive"
-                    }
-                }
+                proj_type: {
+                    contains: string;
+                    mode: "insensitive";
+                };
             } | {
-                brief: {
-                    category: {
-                        contains: string
-                        mode: "insensitive"
-                    }
-                }
+                role_name: {
+                    contains: string;
+                    mode: "insensitive";
+                };
+            } | {
+                role_type: {
+                    contains: string;
+                    mode: "insensitive";
+                };
             })[] = [
-                    {
-                        brief: { type: { contains: s, mode: 'insensitive' } },
-                    },
-                    {
-                        brief: { title: { contains: s, mode: 'insensitive' } },
-                    },
-                    {
-                        brief: { category: { contains: s, mode: 'insensitive' } },
-                    },
+                    { proj_title: { contains: s, mode: 'insensitive' } },
+                    { proj_type: { contains: s, mode: 'insensitive' } },
+                    { role_name: { contains: s, mode: 'insensitive' } },
+                    { role_type: { contains: s, mode: 'insensitive' } },
                 ]
 
             const query: {
-                select: {
-                    id: true
-                    status: true
-                    brief: {
-                        select: {
-                            id: true
-                            type: true
-                            title: true
-                            category: true
-                            createdAt: true
-                            projectType: true
-                        }
-                    }
-                }
                 orderBy: ({
-                    brief: {
-                        type: "asc"
-                    }
+                    proj_title: "asc";
                 } | {
-                    brief: {
-                        title: "asc"
-                    }
-                } | {
-                    brief: {
-                        category: "asc"
-                    }
+                    proj_type: "asc";
                 })[] | {
-                    createdAt: "desc"
+                    updatedAt: "desc";
                 }
                 skip: number
                 take: number
             } = {
-                select: {
-                    id: true,
-                    status: true,
-                    brief: {
-                        select: {
-                            id: true,
-                            type: true,
-                            title: true,
-                            category: true,
-                            createdAt: true,
-                            projectType: true,
-                        }
-                    }
-                },
                 take: limit,
                 skip: offset,
                 orderBy: q === "name" ? [
-                    { brief: { type: 'asc' } },
-                    { brief: { title: 'asc' } },
-                    { brief: { category: 'asc' } },
-                ] : { createdAt: 'desc' }
+                    { proj_title: 'asc' },
+                    { proj_type: 'asc' },
+                ] : { updatedAt: 'desc' }
             }
 
             if (role === "admin") {
@@ -684,12 +624,15 @@ export class ClientService {
                 return this.response.sendError(res, StatusCodes.NotFound, 'Client not found')
             }
 
-            const profile = this.prisma.user.findUnique({
+            const profile = await this.prisma.user.findUnique({
                 where: { id: profileId }
             })
+
             if (!profile) {
                 return this.response.sendError(res, StatusCodes.NotFound, "User profile not found")
             }
+
+            if (profile.role === "admin" || profile.role === "client") return
 
             const project = await this.prisma.project.findUnique({
                 where: { id: projectId }
@@ -777,7 +720,6 @@ export class ClientService {
         try {
             const project = await this.prisma.project.findUnique({
                 where: { id: projectId },
-                select: { brief: true }
             })
 
             if (!project) {

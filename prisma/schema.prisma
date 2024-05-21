@@ -89,12 +89,11 @@ model BriefForm {
     brief_date_expiry    String?
     brief_time_expiry    String?
     attachments          File[]
-    projectType          BriefFormType
+    briefType            BriefFormType
     createdAt            DateTime      @default(now())
     updatedAt            DateTime      @updatedAt
     client               Client        @relation(fields: [clientId], references: [id])
     clientId             String        @unique @db.ObjectId
-    projects             Project[]
 }
 
 model Referral {
@@ -479,18 +478,41 @@ model Like {
 }
 
 model Project {
-    id                 String        @id @default(auto()) @map("_id") @db.ObjectId
-    brief              BriefForm     @relation(fields: [briefId], references: [id])
-    briefId            String        @db.ObjectId
-    client             User          @relation("ClientProjects", fields: [clientId], references: [id])
-    clientId           String        @db.ObjectId
-    talentOrCreative   User?         @relation("UserProjects", fields: [talentOrCreativeId], references: [id])
-    talentOrCreativeId String?       @unique @db.ObjectId
-    status             ProjectStatus @default(PENDING)
+    id                 String                 @id @default(auto()) @map("_id") @db.ObjectId
+    proj_title         String
+    proj_type          String
+    role_name          String
+    role_type          String
+    offer              String
+    payment_option     String
+    proj_date          DateTime
+    proj_duration      String?
+    location           String
+    proj_time          String
+    additional_note    String
+    attachments        String[]
+    additionalInfo     AdditionalInfoProject?
+    client             User                   @relation("ClientProjects", fields: [clientId], references: [id])
+    clientId           String                 @db.ObjectId
+    talentOrCreative   User?                  @relation("UserProjects", fields: [talentOrCreativeId], references: [id])
+    talentOrCreativeId String?                @unique @db.ObjectId
+    status             ProjectStatus          @default(PENDING)
     hires              Hire[]
-    createdAt          DateTime      @default(now())
-    updatedAt          DateTime      @updatedAt
+    createdAt          DateTime               @default(now())
+    updatedAt          DateTime               @updatedAt
     contract           Contract?
+}
+
+model AdditionalInfoProject {
+    id           String  @id @default(auto()) @map("_id") @db.ObjectId
+    org_name     String
+    job_title    String
+    country      String
+    phone_number String
+    means_of_id  String
+    proof_of_id  File[]
+    project      Project @relation(references: [id], fields: [projectId])
+    projectId    String  @unique @db.ObjectId
 }
 
 model Hire {
