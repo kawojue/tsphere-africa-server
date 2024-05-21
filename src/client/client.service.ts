@@ -520,13 +520,23 @@ export class ClientService {
             }
 
             if (project) {
-                await this.prisma.projectRoleInfo.create({
+                const roleInfo = await this.prisma.projectRoleInfo.create({
                     data: {
                         role_type, offer,
                         project: { connect: { id: project.id } },
                         talentOrCreative: { connect: { id: profile.id } }
                     }
                 })
+
+                if (roleInfo) {
+                    await this.prisma.hire.create({
+                        data: {
+                            client: { connect: { id: sub } },
+                            project: { connect: { id: project.id } },
+                            talentOrCreative: { connect: { id: profile.id } }
+                        }
+                    })
+                }
             }
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: project })
@@ -578,13 +588,23 @@ export class ClientService {
                 return this.response.sendError(res, StatusCodes.Unauthorized, "Selected project is either cancelled or onhold")
             }
 
-            await this.prisma.projectRoleInfo.create({
+            const roleInfo = await this.prisma.projectRoleInfo.create({
                 data: {
                     role_type, offer,
                     project: { connect: { id: project.id } },
                     talentOrCreative: { connect: { id: profile.id } }
                 }
             })
+
+            if (roleInfo) {
+                await this.prisma.hire.create({
+                    data: {
+                        client: { connect: { id: sub } },
+                        project: { connect: { id: project.id } },
+                        talentOrCreative: { connect: { id: profile.id } }
+                    }
+                })
+            }
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: project })
         } catch (err) {
