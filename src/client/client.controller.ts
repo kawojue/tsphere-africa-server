@@ -65,6 +65,9 @@ export class ClientController {
     await this.clientService.createBriefFill(res, req.user, body)
   }
 
+  @ApiOperation({
+    summary: "The formdata key should be attachments, proof_of_id"
+  })
   @Role(Roles.client)
   @Post('/hire/new/:profileId')
   @UseInterceptors(AnyFilesInterceptor())
