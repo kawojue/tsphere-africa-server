@@ -3,21 +3,21 @@ import {
   FetchProfilesDto, InfiniteScrollDto
 } from './dto/infinite-scroll.dto'
 import {
-  Controller, Delete, Get, Post, Patch,
+  Controller, Delete, Post, Patch,
+  UploadedFile, UseInterceptors, Get,
   Param, Req, Res, Query, UseGuards, Body,
-  UploadedFile,
-  UseInterceptors,
 } from '@nestjs/common'
 import { Role } from 'src/role.decorator'
 import { UserService } from './user.service'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { HandleBookingDTO } from './dto/booking.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { FectchContractsDTO } from './dto/contract.dto'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { FileInterceptor } from '@nestjs/platform-express'
 
 @ApiTags("User")
 @Controller('user')
@@ -132,6 +132,29 @@ export class UserController {
     @Query() query: SortUserDto
   ) {
     await this.userService.fetchBookings(res, req.user, query)
+  }
+
+  @Get('/bookings/:bookingId')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.talent, Roles.creative)
+  async getBooking(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Param('bookingId') bookingId: string,
+  ) {
+    await this.userService.getBooking(res, bookingId, req.user)
+  }
+
+  @Patch('/bookings/:bookingId/response')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.talent, Roles.creative)
+  async handleBookingResponse(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Body() body: HandleBookingDTO,
+    @Param('bookingId') bookingId: string,
+  ) {
+    await this.userService.handleBookingResponse(res, bookingId, req.user, body)
   }
 
   @ApiOperation({

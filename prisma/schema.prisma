@@ -632,9 +632,9 @@ enum ApplicantStatus {
 }
 
 enum ContractStatus {
-    APPROVED
-    PENDING
     SIGNED
+    PENDING
+    APPROVED
     REJECTED
 }
 
@@ -645,8 +645,9 @@ enum TxType {
 
 enum HireStatus {
     PENDING
-    ACCEPTED
     APPROVED
+    REJECTED
+    ACCEPTED
     DECLINED
 }
 

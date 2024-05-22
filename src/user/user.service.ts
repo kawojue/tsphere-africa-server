@@ -10,6 +10,7 @@ import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { HandleBookingDTO } from './dto/booking.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { FectchContractsDTO } from './dto/contract.dto'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
@@ -830,6 +831,112 @@ export class UserService {
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: newContract })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error appending signature")
+        }
+    }
+
+    async getBooking(
+        res: Response,
+        bookingId: string,
+        { sub }: ExpressUser,
+    ) {
+        try {
+            const booking = await this.prisma.hire.findUnique({
+                where: {
+                    id: bookingId,
+                    talentOrCreativeId: sub
+                },
+                select: {
+                    id: true,
+                    status: true,
+                    createdAt: true,
+
+                    project: {
+                        select: {
+                            id: true,
+                            proj_date: true,
+                            proj_type: true,
+                            role_name: true,
+                            proj_title: true,
+                            additional_note: true,
+                            client: {
+                                select: {
+                                    avatar: true,
+                                    lastname: true,
+                                    firstname: true,
+                                }
+                            },
+                            roleInfo: {
+                                select: {
+                                    offer: true,
+                                    role_type: true,
+                                }
+                            }
+                        }
+                    },
+                }
+            })
+
+            if (!booking) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Booking not found")
+            }
+
+            const data = {
+                ...booking,
+                numberOfHires: await this.prisma.projectRoleInfo.count({
+                    where: {
+                        projectId: booking.project.id
+                    }
+                })
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error appending signature")
+        }
+    }
+
+    async handleBookingResponse(
+        res: Response,
+        bookingId: string,
+        { sub }: ExpressUser,
+        {
+            reason, action
+        }: HandleBookingDTO
+    ) {
+        try {
+            const booking = await this.prisma.hire.findUnique({
+                where: {
+                    id: bookingId,
+                    talentOrCreativeId: sub
+                }
+            })
+
+            if (!booking) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Booking not found")
+            }
+
+            if (booking.status !== "APPROVED") {
+                return this.response.sendError(res, StatusCodes.Unauthorized, "Booking is not approved")
+            }
+
+            if (action === false && !reason) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "Decline reason is required")
+            }
+
+            const newBooking = await this.prisma.hire.update({
+                where: {
+                    id: bookingId,
+                    talentOrCreativeId: sub
+                },
+                data: {
+                    declineReason: reason ?? '',
+                    status: action === true ? 'ACCEPTED' : 'DECLINED',
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: newBooking })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error appending signature")
         }
