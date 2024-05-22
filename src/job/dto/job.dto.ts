@@ -1,6 +1,8 @@
 import { Gender } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsOptional, IsString, Matches, MaxLength } from 'class-validator'
+import {
+    IsDateString, IsEnum, IsOptional, IsString, Matches, MaxLength
+} from 'class-validator'
 
 export class PostJobDto {
     @ApiProperty({
@@ -42,14 +44,14 @@ export class PostJobDto {
     @ApiProperty({
         example: new Date()
     })
-    @IsString()
     @IsOptional()
+    @IsDateString()
     duration: string
 
     @ApiProperty({
         example: new Date()
     })
-    @IsString()
+    @IsDateString()
     applicaion_deadline: string
 
     @ApiProperty({
