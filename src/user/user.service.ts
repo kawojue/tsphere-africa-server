@@ -146,20 +146,28 @@ export class UserService {
                 include: {
                     creative: {
                         select: {
+                            bio: true,
                             personalInfo: true,
 
                         }
                     },
                     talent: {
                         select: {
+                            bioStats: {
+                                select: { bio: true }
+                            },
                             personalInfo: true
                         }
-                    }
+                    },
                 }
             })
 
             if (!user) {
                 return this.response.sendError(res, StatusCodes.NotFound, "Profile not found")
+            }
+
+            if (!['talent', 'creative'].includes(user.role)) {
+                return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid user role')
             }
 
             const simiarProfiles = await this.prisma.user.findMany({
@@ -171,7 +179,7 @@ export class UserService {
                             [user.role]: {
                                 personalInfo: {
                                     state: {
-                                        contains: user[user.role].personalInfo.state ?? '',
+                                        contains: user[user.role]?.personalInfo?.state ?? '',
                                         mode: 'insensitive'
                                     }
                                 }
@@ -180,15 +188,15 @@ export class UserService {
                         {
                             [user.role]: {
                                 personalInfo: {
-                                    languages: { hasSome: user[user.role].personalInfo.languages }
+                                    languages: { hasSome: user[user.role]?.personalInfo?.languages }
                                 }
                             }
                         },
                         {
                             [user.role]: {
                                 personalInfo: {
-                                    localGovt: {
-                                        contains: user[user.role].personalInfo.localGovt ?? '',
+                                    country: {
+                                        contains: user[user.role]?.personalInfo?.country ?? '',
                                         mode: 'insensitive'
                                     }
                                 }
@@ -197,13 +205,27 @@ export class UserService {
                         {
                             [user.role]: {
                                 personalInfo: {
-                                    address: {
-                                        contains: user[user.role].personalInfo.address ?? '',
-                                        mode: 'insensitive'
-                                    }
+                                    religion: user[user.role]?.personalInfo?.religion ?? ''
                                 }
                             }
                         },
+                        {
+                            ...(user.role === "talent" ? {
+                                talent: {
+                                    bioStats: {
+                                        bio: {
+                                            contains: user.talent?.bioStats?.bio ?? ''
+                                        }
+                                    }
+                                }
+                            } : {
+                                creative: {
+                                    bio: {
+                                        contains: user.creative?.bio ?? ''
+                                    }
+                                }
+                            })
+                        }
                     ]
                 },
                 select: {
