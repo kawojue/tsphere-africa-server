@@ -131,7 +131,6 @@ export class ExistingProjectDTO {
     @ApiProperty({
         example: 500_000
     })
-    @IsNumber()
     @IsOptional()
     offer: number
 }
