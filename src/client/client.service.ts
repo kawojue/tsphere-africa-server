@@ -666,7 +666,9 @@ export class ClientService {
                     where: {
                         id: projectId,
                         roleInfo: {
-                            talentOrCreativeId: sub
+                            some: {
+                                talentOrCreativeId: sub
+                            }
                         },
                     }
                 })
@@ -827,11 +829,23 @@ export class ClientService {
                 length = await this.prisma.project.count({ where: { clientId: client.id, OR } })
             } else {
                 projects = await this.prisma.project.findMany({
-                    where: { roleInfo: { talentOrCreativeId: sub }, OR },
+                    where: {
+                        roleInfo: {
+                            some: {
+                                talentOrCreativeId: sub
+                            }
+                        }, OR
+                    },
                     ...query,
                 })
 
-                length = await this.prisma.project.count({ where: { roleInfo: { talentOrCreativeId: sub }, OR } })
+                length = await this.prisma.project.count({
+                    where: {
+                        roleInfo: {
+                            some: { talentOrCreativeId: sub }
+                        }, OR
+                    }
+                })
             }
 
             const totalPages = Math.ceil(length / limit)
