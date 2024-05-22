@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import {
-    IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString,
+    IsDateString, IsNotEmpty, IsOptional, IsString,
     MaxLength
 } from 'class-validator'
 
@@ -36,7 +36,6 @@ export class CreateProjectDTO {
     @ApiProperty({
         example: 500_000
     })
-    @IsNumber()
     @IsOptional()
     offer: number
 
