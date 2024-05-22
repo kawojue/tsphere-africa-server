@@ -522,7 +522,7 @@ export class ClientService {
             if (project) {
                 const roleInfo = await this.prisma.projectRoleInfo.create({
                     data: {
-                        role_type, offer,
+                        role_type, offer: Number(offer),
                         project: { connect: { id: project.id } },
                         talentOrCreative: { connect: { id: profile.id } }
                     }
@@ -590,7 +590,7 @@ export class ClientService {
 
             const roleInfo = await this.prisma.projectRoleInfo.create({
                 data: {
-                    role_type, offer,
+                    role_type, offer: Number(offer),
                     project: { connect: { id: project.id } },
                     talentOrCreative: { connect: { id: profile.id } }
                 }
