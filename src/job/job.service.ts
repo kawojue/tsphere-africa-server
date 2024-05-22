@@ -273,6 +273,7 @@ export class JobService {
             // @ts-ignore
             const userId = req.user?.sub
 
+            search = search?.trim() ?? ''
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 

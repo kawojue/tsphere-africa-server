@@ -144,7 +144,7 @@ export class ModminService {
 
     async fetchUsers(
         res: Response,
-        { q, s = "", page = 1, limit = 200, type }: FetchUserDto,
+        { q, s = '', page = 1, limit = 200, type }: FetchUserDto,
     ) {
         try {
             s = s.trim()
@@ -166,6 +166,7 @@ export class ModminService {
             }[]
 
             let total: number
+            s = s?.trim() ?? ''
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
@@ -471,6 +472,7 @@ export class ModminService {
         { q, s = '', page = 1, limit = 50 }: SortUserDto
     ) {
         try {
+            s = s?.trim() ?? ''
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 

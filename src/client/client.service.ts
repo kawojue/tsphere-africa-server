@@ -762,6 +762,7 @@ export class ClientService {
         }: SortUserDto
     ) {
         try {
+            s = s?.trim() ?? ''
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
