@@ -489,7 +489,7 @@ model Project {
     location        String
     proj_time       String
     additional_note String?
-    attachments     String[]
+    attachments     File[]
     additionalInfo  AdditionalInfoProject?
     client          User                   @relation("ClientProjects", fields: [clientId], references: [id])
     clientId        String                 @db.ObjectId

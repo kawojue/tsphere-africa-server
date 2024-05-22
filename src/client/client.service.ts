@@ -477,8 +477,9 @@ export class ClientService {
 
             const project = await this.prisma.project.create({
                 data: {
-                    additional_note, proj_duration, role_name,
-                    proj_time, payment_option, location, proj_type,
+                    additional_note, proj_duration,
+                    role_name, attachments, proj_time,
+                    payment_option, location, proj_type,
                     proj_title, client: { connect: { id: user.id } },
                     proj_date: proj_date ? new Date(proj_date) : null,
                 }
@@ -502,10 +503,10 @@ export class ClientService {
                         }
                     }))
 
-                    attachments = results.filter((result): result is IFile => !!result)
+                    proof_of_id = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
-                        await this.removeFiles(attachments)
+                        await this.removeFiles(proof_of_id)
                     } catch (err) {
                         this.misc.handleServerError(res, err, err?.message)
                     }
