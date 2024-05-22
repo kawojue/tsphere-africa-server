@@ -173,6 +173,7 @@ export class UserService {
             const simiarProfiles = await this.prisma.user.findMany({
                 where: {
                     OR: [
+                        { role: { equals: user.role } },
                         { primarySkill: { equals: user.primarySkill, mode: 'insensitive' } },
                         { lastname: { equals: user.lastname, mode: 'insensitive' } },
                         {
@@ -182,13 +183,6 @@ export class UserService {
                                         contains: user[user.role]?.personalInfo?.state ?? '',
                                         mode: 'insensitive'
                                     }
-                                }
-                            }
-                        },
-                        {
-                            [user.role]: {
-                                personalInfo: {
-                                    languages: { hasSome: user[user.role]?.personalInfo?.languages }
                                 }
                             }
                         },
