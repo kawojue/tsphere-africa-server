@@ -1,5 +1,5 @@
 import { Response } from 'express'
-import { $Enums } from '@prisma/client'
+import { $Enums, ContractStatus } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
@@ -639,6 +639,11 @@ export class ModminService {
                 return this.response.sendError(res, StatusCodes.NotFound, "Contract not found")
             }
 
+            const allowedStatuses: ContractStatus[] = ['APPROVED', 'REJECTED']
+            if (!allowedStatuses.includes(q)) {
+                return this.response.sendError(res, StatusCodes.BadRequest, "The only available statuses are APPROVED/REJECTED")
+            }
+
             const newContract = await this.prisma.contract.update({
                 where: { id: contractId },
                 data: { status: q }
@@ -650,7 +655,7 @@ export class ModminService {
                 })
 
                 for (const hire of hires) {
-                    if (hire.status === "APPROVED") {
+                    if (hire.status === "ACCEPTED") {
                         await this.prisma.contract.update({
                             where: { id: contract.id },
                             data: {

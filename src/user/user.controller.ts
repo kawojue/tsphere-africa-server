@@ -120,18 +120,25 @@ export class UserController {
     await this.userService.fetchContracts(res, req.user, query)
   }
 
-  @Get('/bookings')
-  @ApiOperation({
-    summary: "Only for the talent and the creative"
-  })
+  @ApiBearerAuth()
+  @Get('/contracts/:contractId')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Role(Roles.talent, Roles.creative)
+  async getContract(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Param('contractId') contractId: string,
+  ) {
+    await this.userService.getContract(res, contractId, req.user)
+  }
+
+  @Get('/bookings')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   async fetchBookings(
     @Res() res: Response,
     @Req() req: IRequest,
     @Query() query: SortUserDto
   ) {
-    await this.userService.fetchBookings(res, req.user, query)
+    await this.userService.fetchBookings(res, query, req.user)
   }
 
   @Get('/bookings/:bookingId')
@@ -147,7 +154,6 @@ export class UserController {
 
   @Patch('/bookings/:bookingId/response')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Role(Roles.talent, Roles.creative)
   async handleBookingResponse(
     @Res() res: Response,
     @Req() req: IRequest,

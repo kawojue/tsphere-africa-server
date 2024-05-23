@@ -942,12 +942,12 @@ export class ClientService {
                 return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
             }
 
-            const statuses: ProjectStatus[] = ['CANCELLED', 'PENDING', 'ONHOLD', 'COMPLETED']
+            const statuses: ProjectStatus[] = ['CANCELLED', 'PENDING', 'ONHOLD', 'COMPLETED',]
             if (statuses.includes(project.status)) {
                 if (project.status === "COMPLETED" || project.status === "CANCELLED") {
                     return this.response.sendError(res, StatusCodes.Unauthorized, `Project has been ${project.status.toLowerCase()}`)
                 } else {
-                    return this.response.sendError(res, StatusCodes.Unauthorized, `Project is ${project.status.toLowerCase()}`)
+                    return this.response.sendError(res, StatusCodes.Unauthorized, `Project is currently ${project.status.toLowerCase()}`)
                 }
             }
 

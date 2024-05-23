@@ -492,7 +492,7 @@ model Project {
     attachments     File[]
     additionalInfo  AdditionalInfoProject?
     client          User                   @relation("ClientProjects", fields: [clientId], references: [id])
-    clientId        String                 @db.ObjectId
+    clientId        String                 @unique @db.ObjectId
     status          ProjectStatus          @default(PENDING)
     hires           Hire[]
     createdAt       DateTime               @default(now())
@@ -537,18 +537,20 @@ model Hire {
 }
 
 model Contract {
-    id           String         @id @default(auto()) @map("_id") @db.ObjectId
-    file         File
-    signature    File?
-    status       ContractStatus @default(PENDING)
-    signedByUser Boolean        @default(false)
-    signedAt     DateTime?
-    user         User?          @relation(fields: [userId], references: [id])
-    userId       String?        @db.ObjectId
-    project      Project        @relation(fields: [projectId], references: [id])
-    projectId    String         @unique @db.ObjectId
-    createdAt    DateTime       @default(now())
-    updatedAt    DateTime       @updatedAt
+    id            String         @id @default(auto()) @map("_id") @db.ObjectId
+    file          File
+    signature     File?
+    status        ContractStatus @default(PENDING)
+    signedByUser  Boolean        @default(false)
+    signedAt      DateTime?
+    declineReason String?
+    declinedAt    DateTime?
+    user          User?          @relation(fields: [userId], references: [id])
+    userId        String?        @db.ObjectId
+    project       Project        @relation(fields: [projectId], references: [id])
+    projectId     String         @unique @db.ObjectId
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
 }
 
 model Rating {
@@ -636,6 +638,7 @@ enum ContractStatus {
     PENDING
     APPROVED
     REJECTED
+    DECLINED
 }
 
 enum TxType {

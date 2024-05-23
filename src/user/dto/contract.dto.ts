@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEnum, IsOptional } from 'class-validator'
 import { SortUser, UserRole } from 'enums/base.enum'
 import { InfiniteScrollDto } from './infinite-scroll.dto'
+import { IsEnum, IsOptional, IsString } from 'class-validator'
 
 export class FectchContractsDTO extends InfiniteScrollDto {
     @ApiProperty({
@@ -16,4 +16,12 @@ export class FectchContractsDTO extends InfiniteScrollDto {
     })
     @IsOptional()
     sortBy: SortUser
+}
+
+export class DeclineContractDTO {
+    @ApiProperty({
+        example: "I am not available to work on Saturday and Sunday"
+    })
+    @IsString()
+    reason: string
 }

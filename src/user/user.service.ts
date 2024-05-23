@@ -12,9 +12,9 @@ import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { HandleBookingDTO } from './dto/booking.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
-import { FectchContractsDTO } from './dto/contract.dto'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
+import { DeclineContractDTO, FectchContractsDTO } from './dto/contract.dto'
 import { $Enums, ContractStatus, HireStatus, Project } from '@prisma/client'
 
 @Injectable()
@@ -667,12 +667,12 @@ export class UserService {
 
     async fetchBookings(
         res: Response,
-        { sub }: ExpressUser,
         {
             q, s = '',
             page = 1,
             limit = 50
-        }: SortUserDto
+        }: SortUserDto,
+        { sub, role }: ExpressUser,
     ) {
         try {
             s = s?.trim() ?? ''
@@ -708,24 +708,30 @@ export class UserService {
                         }),
                         label: 'TOTAL',
                     },
-                    {
-                        count: await this.prisma.hire.count({
-                            where: {
-                                talentOrCreativeId: sub,
-                                project: {
-                                    contract: {
-                                        status: 'SIGNED'
-                                    }
+                ]
+
+            if (role === "talent" || role === "creative") {
+                analytics.push({
+                    count: await this.prisma.hire.count({
+                        where: {
+                            talentOrCreativeId: sub,
+                            project: {
+                                contract: {
+                                    status: 'SIGNED'
                                 }
                             }
-                        }),
-                        label: 'COMPLETED'
-                    }
-                ]
+                        }
+                    }),
+                    label: 'COMPLETED'
+                })
+            }
 
             for (const { label, status } of statuses) {
                 const count = await this.prisma.hire.count({
-                    where: {
+                    where: role === "admin" ? {} : role === "client" ? {
+                        status,
+                        clientId: sub,
+                    } : {
                         status,
                         talentOrCreativeId: sub,
                     }
@@ -762,9 +768,12 @@ export class UserService {
                 ]
 
             const bookings = await this.prisma.hire.findMany({
-                where: {
+                where: role === "admin" ? { OR } : role === "client" ? {
+                    OR,
+                    clientId: sub,
+                } : {
+                    OR,
                     talentOrCreativeId: sub,
-                    OR
                 },
                 select: {
                     id: true,
@@ -790,7 +799,7 @@ export class UserService {
         res: Response,
         contractId: string,
         { sub }: ExpressUser,
-        file: Express.Multer.File
+        file: Express.Multer.File,
     ) {
         try {
             if (!file) {
@@ -806,6 +815,10 @@ export class UserService {
 
             if (!contract) {
                 return this.response.sendError(res, StatusCodes.NotFound, "Contract not found")
+            }
+
+            if (contract.status !== "APPROVED") {
+                return this.response.sendError(res, StatusCodes.OK, 'Contract is not approved')
             }
 
             const re = validateFile(file, 3 << 20, 'png', 'jpg', 'jpeg')
@@ -836,14 +849,104 @@ export class UserService {
         }
     }
 
+    async declineContract(
+        res: Response,
+        contractId: string,
+        { sub }: ExpressUser,
+        { reason }: DeclineContractDTO
+    ) {
+        try {
+            const contract = await this.prisma.contract.findUnique({
+                where: {
+                    id: contractId,
+                    userId: sub
+                }
+            })
+
+            if (!contract) {
+                return this.response.sendError(res, StatusCodes.OK, "Contract not found")
+            }
+
+            if (contract.status !== "APPROVED") {
+                return this.response.sendError(res, StatusCodes.Unauthorized, "Contract has not been approved")
+            }
+
+            const newContract = await this.prisma.contract.update({
+                where: {
+                    id: contractId,
+                    userId: sub
+                },
+                data: {
+                    status: 'DECLINED',
+                    declineReason: reason,
+                    declinedAt: new Date(),
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: newContract })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async getContract(
+        res: Response,
+        contractId: string,
+        { sub, role }: ExpressUser,
+    ) {
+        try {
+            const contract = await this.prisma.contract.findUnique({
+                where: role === "admin" ? {
+                    id: contractId
+                } : role === "client" ? {
+                    id: contractId,
+                    project: { clientId: sub }
+                } : {
+                    id: contractId,
+                    userId: sub
+                },
+                include: {
+                    project: {
+                        select: {
+                            id: true,
+                            status: true,
+                            role_name: true,
+                            proj_title: true,
+                            proj_type: true,
+                            roleInfo: {
+                                select: {
+                                    offer: true,
+                                    role_type: true,
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+
+            if (!contract) {
+                return this.response.sendError(res, StatusCodes.OK, "Contract not found")
+            }
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: contract })
+        } catch (err) {
+
+        }
+    }
+
     async getBooking(
         res: Response,
         bookingId: string,
-        { sub }: ExpressUser,
+        { sub, role }: ExpressUser,
     ) {
         try {
             const booking = await this.prisma.hire.findUnique({
-                where: {
+                where: role === "admin" ? {
+                    id: bookingId,
+                } : role === "client" ? {
+                    id: bookingId,
+                    clientId: sub
+                } : {
                     id: bookingId,
                     talentOrCreativeId: sub
                 },
@@ -851,7 +954,6 @@ export class UserService {
                     id: true,
                     status: true,
                     createdAt: true,
-
                     project: {
                         select: {
                             id: true,
@@ -893,7 +995,7 @@ export class UserService {
 
             this.response.sendSuccess(res, StatusCodes.OK, { data })
         } catch (err) {
-            this.misc.handleServerError(res, err, "Error appending signature")
+            this.misc.handleServerError(res, err)
         }
     }
 
@@ -938,7 +1040,7 @@ export class UserService {
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: newBooking })
         } catch (err) {
-            this.misc.handleServerError(res, err, "Error appending signature")
+            this.misc.handleServerError(res, err, "Error sending booking response")
         }
     }
 }
