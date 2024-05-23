@@ -159,15 +159,15 @@ export class ClientController {
     await this.clientService.uploadContract(res, projectId, req.user, file)
   }
 
-  @Patch('/hires/:hireId/status')
+  @Patch('/hires/:id/status')
   @Role(Roles.client)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async updateHireStatus(
     @Res() res: Response,
     @Req() req: IRequest,
+    @Param('id') id: string,
     @Query() q: UpdateHireStatusDTO,
-    @Param('hireId') hireId: string,
   ) {
-    await this.clientService.updateHireStatus(res, hireId, req.user, q)
+    await this.clientService.updateHireStatus(res, id, req.user, q)
   }
 }

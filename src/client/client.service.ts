@@ -12,7 +12,7 @@ import { titleText } from 'helpers/formatTexts'
 import { FundWalletDTO } from './dto/wallet.dto'
 import { genFileName } from 'helpers/genFilename'
 import {
-    ClientSetup, Project, ProjectStatus, TxStatus
+    ClientSetup, HireStatus, Project, ProjectStatus, TxStatus
 } from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
@@ -615,21 +615,27 @@ export class ClientService {
 
     async updateHireStatus(
         res: Response,
-        hireId: string,
-        { sub }: ExpressUser,
+        id: string,
+        { sub, role }: ExpressUser,
         { q }: UpdateHireStatusDTO,
     ) {
         try {
             const hire = await this.prisma.hire.findUnique({
-                where: { id: hireId, clientId: sub }
+                where: { id, clientId: sub }
             })
+
+            if (role === "admin") {
+                const statuses: HireStatus[] = ['CANCELLED', 'APPROVED']
+            } else {
+                const statuses: HireStatus[] = ['HIRED', 'REJECTED']
+            }
 
             if (!hire) {
                 return this.response.sendError(res, StatusCodes.NotFound, "Request not found")
             }
 
             const newHire = await this.prisma.hire.update({
-                where: { id: hire.id },
+                where: { id },
                 data: { status: q }
             })
 
@@ -830,6 +836,7 @@ export class ClientService {
             } else {
                 projects = await this.prisma.project.findMany({
                     where: {
+                        status: { notIn: ['PENDING', 'CANCELLED'] },
                         roleInfo: {
                             some: {
                                 talentOrCreativeId: sub
@@ -929,7 +936,7 @@ export class ClientService {
                 return this.response.sendError(res, StatusCodes.BadRequest, "Blank Contract")
             }
 
-            const re = validateFile(file, 5 << 20, 'pdf', 'png', 'jpg', 'jpeg')
+            const re = validateFile(file, 10 << 20, 'pdf', 'png', 'jpg', 'jpeg')
             if (re?.status) {
                 return this.response.sendError(res, re.status, re.message)
             }
@@ -951,7 +958,7 @@ export class ClientService {
                 }
             }
 
-            const path = `${sub}/${projectId}/${genFileName()}`
+            const path = `contract/${projectId}/${genFileName()}`
             const url = this.aws.getS3(path)
             await this.aws.uploadS3(file, path)
 

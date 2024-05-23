@@ -647,11 +647,13 @@ enum TxType {
 }
 
 enum HireStatus {
+    HIRED
     PENDING
-    APPROVED
     REJECTED
+    APPROVED
     ACCEPTED
     DECLINED
+    CANCELLED
 }
 
 enum TxStatus {

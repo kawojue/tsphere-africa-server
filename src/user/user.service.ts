@@ -606,14 +606,14 @@ export class UserService {
 
             const orderBy: ({
                 project: {
-                    proj_title: "asc";
-                };
+                    proj_title: "asc"
+                }
             } | {
                 project: {
-                    proj_type: "asc";
-                };
+                    proj_type: "asc"
+                }
             })[] | {
-                updatedAt: "desc";
+                updatedAt: "desc"
             } = sortBy === "name" ? [
                 { project: { proj_title: 'asc' } },
                 { project: { proj_type: 'asc' } },
@@ -623,7 +623,8 @@ export class UserService {
                 contracts = await this.prisma.contract.findMany({
                     where: {
                         userId: sub,
-                        OR
+                        OR,
+                        status: { notIn: ['DECLINED', 'PENDING'] }
                     },
                     select: {
                         id: true,
@@ -774,6 +775,7 @@ export class UserService {
                 } : {
                     OR,
                     talentOrCreativeId: sub,
+                    status: { in: ['HIRED', 'DECLINED', 'ACCEPTED'] },
                 },
                 select: {
                     id: true,
@@ -810,6 +812,14 @@ export class UserService {
                 where: {
                     userId: sub,
                     id: contractId,
+                    project: {
+                        hires: {
+                            some: {
+                                status: 'ACCEPTED',
+                                talentOrCreativeId: sub
+                            }
+                        }
+                    }
                 }
             })
 
@@ -818,7 +828,7 @@ export class UserService {
             }
 
             if (contract.status !== "APPROVED") {
-                return this.response.sendError(res, StatusCodes.OK, 'Contract is not approved')
+                return this.response.sendError(res, StatusCodes.Unauthorized, "Contract has not been approved")
             }
 
             const re = validateFile(file, 3 << 20, 'png', 'jpg', 'jpeg')
@@ -858,13 +868,20 @@ export class UserService {
         try {
             const contract = await this.prisma.contract.findUnique({
                 where: {
+                    userId: sub,
                     id: contractId,
-                    userId: sub
+                    project: {
+                        hires: {
+                            some: {
+                                talentOrCreativeId: sub
+                            }
+                        }
+                    }
                 }
             })
 
             if (!contract) {
-                return this.response.sendError(res, StatusCodes.OK, "Contract not found")
+                return this.response.sendError(res, StatusCodes.NotFound, "Contract not found")
             }
 
             if (contract.status !== "APPROVED") {
@@ -1019,8 +1036,8 @@ export class UserService {
                 return this.response.sendError(res, StatusCodes.NotFound, "Booking not found")
             }
 
-            if (booking.status !== "APPROVED") {
-                return this.response.sendError(res, StatusCodes.Unauthorized, "Booking is not approved")
+            if (booking.status !== "HIRED") {
+                return this.response.sendError(res, StatusCodes.Unauthorized, "You're not hired by the client")
             }
 
             if (action === false && !reason) {
