@@ -132,7 +132,9 @@ export class UserController {
   }
 
   @Get('/bookings')
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.talent, Roles.admin, Roles.client, Roles.creative)
   async fetchBookings(
     @Res() res: Response,
     @Req() req: IRequest,
@@ -141,6 +143,7 @@ export class UserController {
     await this.userService.fetchBookings(res, query, req.user)
   }
 
+  @ApiBearerAuth()
   @Get('/bookings/:bookingId')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.talent, Roles.creative)
@@ -152,6 +155,7 @@ export class UserController {
     await this.userService.getBooking(res, bookingId, req.user)
   }
 
+  @ApiBearerAuth()
   @Patch('/bookings/:bookingId/response')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async handleBookingResponse(
@@ -166,6 +170,7 @@ export class UserController {
   @ApiOperation({
     summary: 'The formdata key should be signature'
   })
+  @ApiBearerAuth()
   @Patch('/contracts/:contractId/append-signature')
   @UseInterceptors(FileInterceptor('signature'))
   @UseGuards(AuthGuard('jwt'), RolesGuard)
