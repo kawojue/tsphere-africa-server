@@ -1,5 +1,5 @@
 import { Response } from 'express'
-import { $Enums, ContractStatus } from '@prisma/client'
+import { $Enums, ContractStatus, ProjectStatus } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
