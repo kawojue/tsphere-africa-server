@@ -88,7 +88,8 @@ export class ModminService {
                 access_token: await this.misc.generateAccessToken({
                     role: admin.role,
                     sub: admin.id,
-                })
+                }),
+                data: { email, fullname: admin.fullName }
             })
         } catch (err) {
             this.misc.handleServerError(res, err)
