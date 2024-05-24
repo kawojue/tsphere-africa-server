@@ -4,6 +4,7 @@ import { Request, Response } from 'express'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
+import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { ApplyJobDTO, PostJobDto } from './dto/job.dto'
 import { AnyFilesInterceptor } from '@nestjs/platform-express'
 import {
@@ -30,7 +31,7 @@ export class JobController {
     @Body() body: PostJobDto,
     @UploadedFiles() files: Array<Express.Multer.File>
   ) {
-    return await this.jobService.postJob(res, req.user, files || [], body)
+    await this.jobService.postJob(res, req.user, files || [], body)
   }
 
   @Delete('/remove/:jobId')
@@ -42,7 +43,7 @@ export class JobController {
     @Req() req: IRequest,
     @Param('jobId') jobId: string,
   ) {
-    return await this.jobService.removeJob(res, jobId, req.user)
+    await this.jobService.removeJob(res, jobId, req.user)
   }
 
   @Patch('/approve-job/:jobId')
@@ -53,7 +54,7 @@ export class JobController {
     @Res() res: Response,
     @Param('jobId') jobId: string,
   ) {
-    return await this.jobService.approveJob(res, jobId)
+    await this.jobService.approveJob(res, jobId)
   }
 
   @Put('/apply-job/:jobId')
@@ -73,7 +74,7 @@ export class JobController {
       })
     ) attachments: Array<Express.Multer.File>,
   ) {
-    return await this.jobService.applyJob(res, jobId, req.user, body, attachments || [])
+    await this.jobService.applyJob(res, jobId, req.user, body, attachments || [])
   }
 
   @Get('/fetch')
@@ -83,8 +84,9 @@ export class JobController {
   async fetchJobs(
     @Res() res: Response,
     @Req() req: IRequest,
+    @Query() query: SortUserDto
   ) {
-    return await this.jobService.fetchJobs(res, req.user)
+    await this.jobService.fetchJobs(res, req.user, query)
   }
 
   @Get('/job-list')
@@ -93,12 +95,12 @@ export class JobController {
     @Res() res: Response,
     @Query() query: InfiniteScrollDto,
   ) {
-    return await this.jobService.jobList(req, res, query)
+    await this.jobService.jobList(req, res, query)
   }
 
   @Get('/job-list/:jobId')
   async getJob(@Res() res: Response, @Param('jobId') jobId: string) {
-    return await this.jobService.getJob(res, jobId)
+    await this.jobService.getJob(res, jobId)
   }
 
   @Get('/job-applicants/:jobId')
@@ -110,14 +112,14 @@ export class JobController {
     @Res() res: Response,
     @Param('jobId') jobId: string
   ) {
-    return await this.jobService.fetchJobApplicants(res, jobId, req.user)
+    await this.jobService.fetchJobApplicants(res, jobId, req.user)
   }
 
   @Get('/all-job-applicants')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.admin)
-  async fetchAllJobApplicants(@Res() res: Response) {
-    return await this.jobService.fetchAllJobApplicants(res)
+  async fetchAllJobApplicants(@Res() res: Response, @Query() query: InfiniteScrollDto,) {
+    await this.jobService.fetchAllJobApplicants(res, query)
   }
 }

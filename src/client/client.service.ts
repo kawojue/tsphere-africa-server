@@ -624,10 +624,16 @@ export class ClientService {
                 where: { id, clientId: sub }
             })
 
+            let statuses: HireStatus[]
+
             if (role === "admin") {
-                const statuses: HireStatus[] = ['CANCELLED', 'APPROVED']
+                statuses = ['CANCELLED', 'APPROVED']
             } else {
-                const statuses: HireStatus[] = ['HIRED', 'REJECTED']
+                statuses = ['HIRED', 'REJECTED']
+            }
+
+            if (!statuses.includes(q)) {
+                return this.response.sendError(res, StatusCodes.Unauthorized, "Invalid status")
             }
 
             if (!hire) {
@@ -775,7 +781,18 @@ export class ClientService {
             const offset = (Number(page) - 1) * limit
 
             let length = 0
-            let projects: Project[]
+            let projects: {
+                id: string,
+                status: string
+                role_name: string
+                proj_type: string
+                proj_title: string
+                client: {
+                    lastname: string
+                    firstname: string
+                }
+                totalApplied?: number
+            }[]
 
             const OR: ({
                 proj_title: {
@@ -807,20 +824,59 @@ export class ClientService {
                     updatedAt: "desc"
                 }
                 skip: number
-                take: number
+                take: number,
+                select: {
+                    id: true,
+                    status: true
+                    role_name: true
+                    proj_type: true
+                    proj_title: true
+                    client: {
+                        select: {
+                            lastname: true
+                            firstname: true
+                        }
+                    }
+                }
             } = {
                 take: limit,
                 skip: offset,
                 orderBy: q === "name" ? [
                     { proj_title: 'asc' },
                     { proj_type: 'asc' },
-                ] : { updatedAt: 'desc' }
+                ] : { updatedAt: 'desc' },
+                select: {
+                    id: true,
+                    status: true,
+                    role_name: true,
+                    proj_type: true,
+                    proj_title: true,
+                    client: {
+                        select: {
+                            lastname: true,
+                            firstname: true,
+                        }
+                    }
+                }
             }
 
             if (role === "admin") {
                 projects = await this.prisma.project.findMany({
                     where: { OR },
                     ...query,
+                    select: {
+                        id: true,
+                        status: true,
+                        role_name: true,
+                        proj_type: true,
+                        proj_title: true,
+                        client: {
+                            select: {
+                                lastname: true,
+                                firstname: true,
+                            }
+                        }
+                    }
                 })
 
                 length = await this.prisma.project.count({ where: { OR } })
@@ -838,9 +894,7 @@ export class ClientService {
                     where: {
                         status: { notIn: ['PENDING', 'CANCELLED'] },
                         roleInfo: {
-                            some: {
-                                talentOrCreativeId: sub
-                            }
+                            some: { talentOrCreativeId: sub }
                         }, OR
                     },
                     ...query,
@@ -857,7 +911,7 @@ export class ClientService {
 
             const totalPages = Math.ceil(length / limit)
 
-            const projectsWithTotalApplied = await Promise.all(
+            projects = await Promise.all(
                 projects.map(async (project) => {
                     const totalApplied = await this.prisma.hire.count({
                         where: { projectId: project.id },
@@ -867,7 +921,7 @@ export class ClientService {
             )
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: { projects: projectsWithTotalApplied, length, totalPages }
+                data: { projects, length, totalPages }
             })
         } catch (err) {
             this.misc.handleServerError(res, err)
@@ -974,6 +1028,98 @@ export class ClientService {
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: contract })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
+    async directJobCastingRequests(
+        res: Response,
+        { sub, role }: ExpressUser,
+        { q, s = '', page = 1, limit = 50 }: SortUserDto
+    ) {
+        try {
+            s = s?.trim() ?? ''
+            limit = Number(limit)
+            const offset = (Number(page) - 1) * limit
+
+            const OR: ({
+                project: {
+                    proj_title: {
+                        contains: string
+                        mode: "insensitive"
+                    }
+                }
+            } | {
+                project: {
+                    role_name: {
+                        contains: string
+                        mode: "insensitive"
+                    }
+                }
+            })[] = [
+                    { project: { proj_title: { contains: s, mode: 'insensitive' } } },
+                    { project: { role_name: { contains: s, mode: 'insensitive' } } },
+                ]
+
+            const hires = await this.prisma.hire.findMany({
+                where: role === "admin" ? { OR } : role === "client" ? {
+                    OR,
+                    clientId: sub
+                } : {
+                    OR,
+                    status: { in: ['APPROVED', 'HIRED', 'DECLINED', 'ACCEPTED'] },
+                    talentOrCreativeId: sub
+                },
+                select: {
+                    id: true,
+                    talentOrCreative: {
+                        select: {
+                            id: true,
+                            avatar: true,
+                            lastname: true,
+                            firstname: true,
+                        }
+                    },
+                    status: true,
+                    createdAt: true,
+                    project: {
+                        select: {
+                            id: true,
+                            proj_title: true,
+                        }
+                    },
+                    client: {
+                        select: {
+                            id: true,
+                            avatar: true,
+                            lastname: true,
+                            firstname: true,
+                        }
+                    }
+                },
+                take: limit,
+                skip: offset,
+                orderBy: q === "name" ? [
+                    { project: { proj_title: 'asc' } },
+                    { project: { role_name: 'asc' } }
+                ] : { updatedAt: 'desc' }
+            })
+
+            const length = await this.prisma.hire.count({
+                where: role === "admin" ? { OR } : role === "client" ? {
+                    OR,
+                    clientId: sub
+                } : {
+                    OR,
+                    status: { in: ['APPROVED', 'HIRED', 'DECLINED', 'ACCEPTED'] },
+                    talentOrCreativeId: sub
+                },
+            })
+
+            const totalPages = Math.ceil(length / limit)
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: hires, totalPages, length })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }

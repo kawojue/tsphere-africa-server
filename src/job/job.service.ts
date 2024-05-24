@@ -8,6 +8,7 @@ import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { ApplyJobDTO, PostJobDto } from './dto/job.dto'
 import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
 
@@ -242,24 +243,31 @@ export class JobService {
 
     async fetchJobs(
         res: Response,
-        { sub, role }: ExpressUser
+        { sub, role }: ExpressUser,
+        { page = 1, limit = 50, s = '', q }: SortUserDto
     ) {
-        let jobs: Job[]
+        s = s?.trim() ?? ''
+        limit = Number(limit)
+        const offset = (Number(page) - 1) * limit
 
-        if (role === "client") {
-            jobs = await this.prisma.job.findMany({
-                where: { userId: sub },
-                orderBy: [{ status: 'desc' }, { postedAt: 'desc' }]
-            })
-        } else if (role === "admin") {
-            jobs = await this.prisma.job.findMany({
-                orderBy: [{ status: 'desc' }, { postedAt: 'desc' }]
-            })
-        } else {
-            return this.response.sendError(res, StatusCodes.Forbidden, "Invalid role")
-        }
+        let jobs = await this.prisma.job.findMany({
+            where: role === "client" ? { userId: sub } : {},
+            skip: offset,
+            take: limit,
+            orderBy: q === "name" ? { title: 'asc' } : { postedAt: 'desc' }
+        })
 
-        this.response.sendSuccess(res, StatusCodes.OK, { data: jobs })
+        const jobsWithTotalApplicants = await Promise.all(
+            jobs.map(async (job) => {
+                const applicants = await this.prisma.jobApplication.count({
+                    where: { jobId: job.id }
+                })
+
+                return { ...job, totalApplied: applicants }
+            })
+        )
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: jobsWithTotalApplicants })
     }
 
     async jobList(
@@ -379,28 +387,15 @@ export class JobService {
         { role, sub }: ExpressUser,
     ) {
         try {
-            let job: Job
-            let applicants = []
+            const job = await this.prisma.job.findUnique({
+                where: role === "client" ? { id: jobId, userId: sub } : { id: jobId }
+            })
 
-            if (role === "client") {
-                let job = await this.prisma.job.findUnique({
-                    where: { id: jobId, userId: sub }
-                })
-
-                if (!job) {
-                    return this.response.sendError(res, StatusCodes.NotFound, 'Job not found')
-                }
-            } else if (role === "admin") {
-                let job = await this.prisma.job.findUnique({
-                    where: { id: jobId }
-                })
-
-                if (!job) {
-                    return this.response.sendError(res, StatusCodes.NotFound, 'Job not found')
-                }
-            } else {
-                return this.response.sendError(res, StatusCodes.Forbidden, "Invalid role")
+            if (!job) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'Job not found')
             }
+
+            let applicants = []
 
             if (job) {
                 applicants = await this.prisma.jobApplication.findMany({
@@ -430,7 +425,14 @@ export class JobService {
         }
     }
 
-    async fetchAllJobApplicants(res: Response) {
+    async fetchAllJobApplicants(
+        res: Response,
+        { page = 1, limit = 50, search = '' }: InfiniteScrollDto
+    ) {
+        search = search?.trim() ?? ''
+        limit = Number(limit)
+        const offset = (Number(page) - 1) * limit
+
         const applicants = await this.prisma.jobApplication.findMany({
             include: {
                 job: true,
@@ -448,6 +450,8 @@ export class JobService {
                     }
                 }
             },
+            skip: offset,
+            take: limit,
             orderBy: { appliedAt: 'desc' }
         })
 

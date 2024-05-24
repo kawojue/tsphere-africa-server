@@ -17,8 +17,8 @@ import { CreateBriefDocumentDTO, CreateBriefFillDTO } from './dto/brief.dto'
 import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
 import { ClientProfileSetupDTO, ClientProfileSetupQueryDTO } from './dto/profile.dto'
 
-@ApiTags("Client")
 @ApiBearerAuth()
+@ApiTags("Client")
 @Controller('client')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class ClientController {
@@ -94,7 +94,6 @@ export class ClientController {
   }
 
   @Get('/projects')
-  @Role(Roles.client, Roles.admin)
   async fetchProjects(
     @Res() res: Response,
     @Req() req: IRequest,
@@ -160,8 +159,7 @@ export class ClientController {
   }
 
   @Patch('/hires/:id/status')
-  @Role(Roles.client)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.admin, Roles.client)
   async updateHireStatus(
     @Res() res: Response,
     @Req() req: IRequest,
@@ -169,5 +167,14 @@ export class ClientController {
     @Query() q: UpdateHireStatusDTO,
   ) {
     await this.clientService.updateHireStatus(res, id, req.user, q)
+  }
+
+  @Get('/job-casting/requests')
+  async directJobCastingRequests(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Query() q: SortUserDto,
+  ) {
+    await this.clientService.directJobCastingRequests(res, req.user, q)
   }
 }
