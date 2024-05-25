@@ -11,14 +11,14 @@ import {
 import { titleText } from 'helpers/formatTexts'
 import { FundWalletDTO } from './dto/wallet.dto'
 import { genFileName } from 'helpers/genFilename'
-import {
-    ClientSetup, HireStatus, Project, ProjectStatus, TxStatus
-} from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import {
     ClientProfileSetupDTO, ClientProfileSetupQueryDTO
 } from './dto/profile.dto'
+import {
+    ClientSetup, HireStatus, Project, ProjectStatus, TxStatus
+} from '@prisma/client'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 import { UpdateHireStatusDTO } from 'src/modmin/dto/status.dto'
 import { CreateProjectDTO, ExistingProjectDTO } from './dto/project.dto'
@@ -438,6 +438,10 @@ export class ClientService {
 
             if (!profile || profile.userStatus === "suspended") {
                 return this.response.sendError(res, StatusCodes.NotFound, "User not found")
+            }
+
+            if (profile.role !== "talent" && profile.role !== "creative") {
+                return this.response.sendError(res, StatusCodes.BadRequest, "You can only hire a Talent/Creative")
             }
 
             if (!user.verified && extractedProofOfId.length === 0) {
