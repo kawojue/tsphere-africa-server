@@ -568,6 +568,10 @@ export class ClientService {
                 return this.response.sendError(res, StatusCodes.NotFound, "User not found")
             }
 
+            if (profile.role !== "talent" && profile.role !== "creative") {
+                return this.response.sendError(res, StatusCodes.BadRequest, "You can only hire a Talent/Creative")
+            }
+
             const project = await this.prisma.project.findUnique({
                 where: { id: projectId, clientId: sub },
                 select: {
@@ -585,12 +589,31 @@ export class ClientService {
                 }
             })
 
+            const hire = await this.prisma.hire.findFirst({
+                where: {
+                    clientId: sub,
+                    project: {
+                        id: projectId,
+                        roleInfo: {
+                            some: {
+                                talentOrCreativeId: profile.id
+                            }
+                        }
+                    },
+                    talentOrCreativeId: profile.id,
+                }
+            })
+
+            if (hire) {
+                return this.response.sendError(res, StatusCodes.Conflict, "Error hiring same user for the same project and role")
+            }
+
             if (!project) {
                 return this.response.sendError(res, StatusCodes.NotFound, "Project not found")
             }
 
-            if (project.status === "CANCELLED" || project.status === "ONHOLD") {
-                return this.response.sendError(res, StatusCodes.Unauthorized, "Selected project is either cancelled or onhold")
+            if (project.status === "CANCELLED" || project.status === "ONHOLD" || project.status === "COMPLETED") {
+                return this.response.sendError(res, StatusCodes.Unauthorized, "Selected project is either cancelled, onhold, or completed")
             }
 
             const roleInfo = await this.prisma.projectRoleInfo.create({
