@@ -1113,6 +1113,10 @@ export class ClientService {
                     project: {
                         select: {
                             id: true,
+                            status: true,
+                            proj_type: true,
+                            role_name: true,
+                            proj_date: true,
                             proj_title: true,
                         }
                     },
