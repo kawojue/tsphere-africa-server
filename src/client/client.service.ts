@@ -808,18 +808,7 @@ export class ClientService {
             const offset = (Number(page) - 1) * limit
 
             let length = 0
-            let projects: {
-                id: string,
-                status: string
-                role_name: string
-                proj_type: string
-                proj_title: string
-                client: {
-                    lastname: string
-                    firstname: string
-                }
-                totalApplied?: number
-            }[]
+            let projects: any[]
 
             const OR: ({
                 proj_title: {
@@ -852,19 +841,6 @@ export class ClientService {
                 }
                 skip: number
                 take: number,
-                select: {
-                    id: true,
-                    status: true
-                    role_name: true
-                    proj_type: true
-                    proj_title: true
-                    client: {
-                        select: {
-                            lastname: true
-                            firstname: true
-                        }
-                    }
-                }
             } = {
                 take: limit,
                 skip: offset,
@@ -872,17 +848,15 @@ export class ClientService {
                     { proj_title: 'asc' },
                     { proj_type: 'asc' },
                 ] : { updatedAt: 'desc' },
-                select: {
-                    id: true,
-                    status: true,
-                    role_name: true,
-                    proj_type: true,
-                    proj_title: true,
-                    client: {
-                        select: {
-                            lastname: true,
-                            firstname: true,
-                        }
+            }
+
+            const include = {
+                client: {
+                    select: {
+                        id: true,
+                        avatar: true,
+                        lastname: true,
+                        firstname: true,
                     }
                 }
             }
@@ -891,19 +865,7 @@ export class ClientService {
                 projects = await this.prisma.project.findMany({
                     where: { OR },
                     ...query,
-                    select: {
-                        id: true,
-                        status: true,
-                        role_name: true,
-                        proj_type: true,
-                        proj_title: true,
-                        client: {
-                            select: {
-                                lastname: true,
-                                firstname: true,
-                            }
-                        }
-                    }
+                    include,
                 })
 
                 length = await this.prisma.project.count({ where: { OR } })
@@ -913,6 +875,7 @@ export class ClientService {
                 projects = await this.prisma.project.findMany({
                     where: { clientId: client.userId, OR },
                     ...query,
+                    include,
                 })
 
                 length = await this.prisma.project.count({ where: { clientId: client.id, OR } })
@@ -925,6 +888,7 @@ export class ClientService {
                         }, OR
                     },
                     ...query,
+                    include
                 })
 
                 length = await this.prisma.project.count({
