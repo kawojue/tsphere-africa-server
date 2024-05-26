@@ -147,12 +147,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
       },
     })
 
-    const alignment = messageData.senderId === senderId ? 'right' : 'left'
+    const align = messageData.senderId === sender.id ? 'right' : 'left'
     // @ts-ignore
-    message.alignment = alignment
+    message.align = align
 
     client.emit('sent_message', message)
-    client.to(receiverId).emit('receive_message', message)
+    client.to(receiver.id).emit('receive_message', message)
   }
 
   @SubscribeMessage('fetch_messages')
