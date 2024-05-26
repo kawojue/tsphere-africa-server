@@ -199,7 +199,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
 
     const messagesWithAlignment = messages.map(message => ({
       ...message,
-      align: message.senderId === userId ? 'right' : 'left',
+      align: message.receiverId === userId ? 'left' : 'right',
     }))
 
     await this.realtimeService.markMessagesAsRead(messages)
