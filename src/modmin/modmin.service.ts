@@ -1,5 +1,4 @@
 import { Response } from 'express'
-import { $Enums, ContractStatus, ProjectStatus } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
@@ -9,6 +8,7 @@ import { PrismaService } from 'lib/prisma.service'
 import {
     UpdateProjectStatusDTO, UpdateContractStatusDTO
 } from './dto/status.dto'
+import { $Enums, ContractStatus } from '@prisma/client'
 import { EncryptionService } from 'lib/encryption.service'
 import {
     AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
@@ -681,5 +681,77 @@ export class ModminService {
         } catch (err) {
             this.misc.handleServerError(res, err, "Error changing status")
         }
+    }
+
+    async fetchBriefs(
+        res: Response,
+        {
+            q, s = '', page = 1, limit = 50
+        }: SortUserDto
+    ) {
+        try {
+            s = s?.trim()
+            limit = Number(limit)
+            const offset = (Number(page) - 1) * limit
+
+            const briefs = await this.prisma.briefForm.findMany({
+                where: {
+                    OR: [
+                        { title: { contains: s, mode: 'insensitive' } },
+                        { type: { contains: s, mode: 'insensitive' } },
+                        { category: { contains: s, mode: 'insensitive' } },
+                    ]
+                },
+                skip: offset,
+                take: limit,
+                select: {
+                    title: true,
+                    type: true,
+                    category: true,
+                    createdAt: true,
+                    client: {
+                        select: {
+                            user: {
+                                select: {
+                                    avatar: true,
+                                    lastname: true,
+                                    firstname: true,
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: q === "name" ? { title: 'asc' } : { createdAt: 'desc' }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: briefs })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error fetching briefs")
+        }
+    }
+
+    async fetchBrief(res: Response, briefId: string) {
+        const brief = await this.prisma.briefForm.findUnique({
+            where: { id: briefId },
+            include: {
+                client: {
+                    select: {
+                        user: {
+                            select: {
+                                avatar: true,
+                                lastname: true,
+                                firstname: true,
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        if (!brief) {
+            return this.response.sendError(res, StatusCodes.NotFound, "Brief not found")
+        }
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: brief })
     }
 }

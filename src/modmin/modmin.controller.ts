@@ -162,4 +162,18 @@ export class ModminController {
   ) {
     await this.modminService.updateContractStatus(res, contractId, q)
   }
+
+  @Get('/briefs')
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async fetchBriefs(@Res() res: Response, @Query() q: SortUserDto) {
+    await this.modminService.fetchBriefs(res, q)
+  }
+
+  @Get('/briefs/:briefId')
+  @Role(Roles.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async fetchBrief(@Res() res: Response, @Param('briefId') briefId: string) {
+    await this.modminService.fetchBrief(res, briefId)
+  }
 }
