@@ -199,16 +199,22 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
   }
 
   @SubscribeMessage('fetch_inboxes')
-  async fetchInboxes(@ConnectedSocket() client: Socket) {
+  async fetchInboxes(@ConnectedSocket() client: Socket, @MessageBody() body:any) {
     const clientData = this.clients.get(client)
     if (!clientData) return
 
     const { sub: userId, role } = clientData
+    const clientRole = body?.role
 
     let inboxes
     if (role === 'admin') {
       inboxes = await this.prisma.inbox.findMany({
-        where: { adminId: userId },
+        where: {
+           adminId: userId,
+           user: {
+              role: clientRole === "user" ? { in: ["talent", "creative"] }: "client",
+           }
+        },
         include: {
           user: {
             select: {
