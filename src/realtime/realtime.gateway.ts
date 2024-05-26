@@ -139,9 +139,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
 
     const message = await this.prisma.message.create({
       data: {
+        file: messageData.file,
         content: messageData.content,
         inbox: { connect: { id: messageData.inboxId } },
-        file: messageData.file ? messageData.file : undefined,
         sender: messageData.senderId ? { connect: { id: messageData.senderId } } : undefined,
         receiver: messageData.receiverId ? { connect: { id: messageData.receiverId } } : undefined,
       },
