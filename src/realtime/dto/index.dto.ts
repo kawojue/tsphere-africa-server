@@ -3,13 +3,17 @@ import {
     IsBase64, IsNotEmpty, IsOptional, IsString
 } from 'class-validator'
 
-export class InboxDTO {
+export class FetchMessagesDTO {
     @ApiProperty({
         example: '65b..'
     })
     @IsString()
     @IsNotEmpty()
     inboxId: string
+}
+
+export class FetchInboxDTO {
+    role: "user" | "client"
 }
 
 export class MessageDTO {

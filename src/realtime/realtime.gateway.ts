@@ -7,9 +7,11 @@ import {
 import { JwtService } from '@nestjs/jwt'
 import { Server, Socket } from 'socket.io'
 import StatusCodes from 'enums/StatusCodes'
+import {
+  FetchMessagesDTO, MessageDTO, FetchInboxDTO
+} from './dto/index.dto'
 import { PrismaService } from 'lib/prisma.service'
 import { RealtimeService } from './realtime.service'
-import { InboxDTO, MessageDTO } from './dto/index.dto'
 import { Admin, Message, Role, User } from '@prisma/client'
 
 @WebSocketGateway({
@@ -78,7 +80,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     if (!clientData) return
 
     const { sub: senderId, role: senderRole } = clientData
-
     const file = body.file
     const content = body.content
     const receiverId = body.receiverId
@@ -118,16 +119,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
       senderId: senderRole === 'admin' ? null : senderId,
       receiverId: senderRole === 'admin' ? senderId : receiverId,
       inboxId,
-    } as {
-      senderId: string | null
-      receiverId: string | null
-      inboxId: string
-      content: string | null
-      file: IFile
-    }
-
-    if (content) {
-      messageData.content = content
+      content: content || null,
+      file: null,
     }
 
     if (file) {
@@ -150,22 +143,37 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         inbox: { connect: { id: messageData.inboxId } },
         file: messageData.file ? messageData.file : undefined,
         sender: messageData.senderId ? { connect: { id: messageData.senderId } } : undefined,
-        receiver: messageData.receiverId ? { connect: { id: messageData.receiverId } } : undefined
+        receiver: messageData.receiverId ? { connect: { id: messageData.receiverId } } : undefined,
       },
     })
 
+    const alignment = messageData.senderId === senderId ? 'right' : 'left'
+    // @ts-ignore
+    message.alignment = alignment
+
     client.emit('sent_message', message)
-    const targetId = senderRole === 'admin' ? receiverId : senderId
-    client.to(targetId).emit('receive_message', message)
+    client.to(receiverId).emit('receive_message', message)
   }
 
   @SubscribeMessage('fetch_messages')
-  async fetchMessages(@ConnectedSocket() client: Socket, @MessageBody() body: InboxDTO) {
+  async fetchMessages(@ConnectedSocket() client: Socket, @MessageBody() body: FetchMessagesDTO) {
     const clientData = this.clients.get(client)
     if (!clientData) return
 
     const { sub: userId, role: userRole } = clientData
     const { inboxId } = body
+
+    const inbox = await this.prisma.inbox.findUnique({
+      where: { id: inboxId },
+    })
+
+    if (!inbox) {
+      client.emit('error', {
+        status: StatusCodes.NotFound,
+        message: "Inbox not found",
+      })
+      return
+    }
 
     let messages: Message[]
 
@@ -175,14 +183,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         orderBy: { createdAt: 'asc' },
       })
     } else {
-      const inbox = await this.prisma.inbox.findUnique({
-        where: { id: inboxId },
-      })
-
-      if (!inbox || inbox.userId !== userId) {
+      if (inbox.userId !== userId) {
         client.emit('authorization_error', {
           status: StatusCodes.Unauthorized,
-          message: 'You are not authorized to fetch messages from this inbox'
+          message: 'You are not authorized to fetch messages from this inbox',
         })
         return
       }
@@ -191,15 +195,20 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         where: { inboxId },
         orderBy: { createdAt: 'asc' },
       })
-
-      await this.realtimeService.markMessagesAsRead(messages)
     }
 
-    client.emit('messages', messages)
+    const messagesWithAlignment = messages.map(message => ({
+      ...message,
+      align: message.senderId === userId ? 'right' : 'left',
+    }))
+
+    await this.realtimeService.markMessagesAsRead(messages)
+
+    client.emit('messages', messagesWithAlignment)
   }
 
   @SubscribeMessage('fetch_inboxes')
-  async fetchInboxes(@ConnectedSocket() client: Socket, @MessageBody() body:any) {
+  async fetchInboxes(@ConnectedSocket() client: Socket, @MessageBody() body: FetchInboxDTO) {
     const clientData = this.clients.get(client)
     if (!clientData) return
 
@@ -210,10 +219,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     if (role === 'admin') {
       inboxes = await this.prisma.inbox.findMany({
         where: {
-           adminId: userId,
-           user: {
-              role: clientRole === "user" ? { in: ["talent", "creative"] }: "client",
-           }
+          adminId: userId,
+          user: {
+            role: clientRole === "user" ? {
+              in: ["talent", "creative"]
+            } : "client",
+          }
         },
         include: {
           user: {
