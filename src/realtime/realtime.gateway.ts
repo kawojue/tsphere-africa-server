@@ -17,6 +17,7 @@ import { Admin, Message, Role, User } from '@prisma/client'
   cors: {
     origin: [
       'http://localhost:3000',
+      'http://localhost:3001',
       'https://talentsphereafrica.co',
       'https://talentsphereafrica.com',
       'https://www.talentsphereafrica.co',
