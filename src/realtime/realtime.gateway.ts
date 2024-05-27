@@ -169,19 +169,21 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         data: senderRole === "admin" ? {
           content: content || null,
           file: messageData.file ?? null,
-          inbox: { connect: { id: messageData.inboxId } },
           adminSender: { connect: { id: senderId } },
           userReceiver: { connect: { id: receiverId } },
+          inbox: { connect: { id: messageData.inboxId } },
         } : {
           content: content || null,
           file: messageData.file ?? null,
-          inbox: { connect: { id: messageData.inboxId } },
           userSender: { connect: { id: senderId } },
           adminReceiver: { connect: { id: receiverId } },
+          inbox: { connect: { id: messageData.inboxId } },
         },
       })
 
-      const align = (senderRole === 'admin' ? message.adminSenderId : message.userSenderId) === senderId ? 'right' : 'left'
+      // const align = (senderRole === 'admin' ? message.adminSenderId : message.userSenderId) === senderId ? 'right' : 'left'
+      const targetId = senderRole === "admin" ? messageData.userReceiverId : messageData.adminReceiverId
+      const align = targetId !== senderId ? 'left' : 'right'
       const messageWithAlignment = { ...message, align }
 
       client.emit('sent_message', messageWithAlignment)
