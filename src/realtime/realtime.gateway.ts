@@ -166,14 +166,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
       }
 
       const message = await this.prisma.message.create({
-        data: {
+        data: senderRole === "admin" ? {
           content: content || null,
           file: messageData.file ?? null,
           inbox: { connect: { id: messageData.inboxId } },
-          userSender: senderRole !== 'admin' ? { connect: { id: senderId } } : undefined,
-          adminSender: senderRole === 'admin' ? { connect: { id: senderId } } : undefined,
-          userReceiver: senderRole !== 'admin' ? { connect: { id: receiverId } } : undefined,
-          adminReceiver: senderRole === 'admin' ? { connect: { id: receiverId } } : undefined,
+          adminSender: { connect: { id: senderId } },
+          userReceiver: { connect: { id: receiverId } },
+        } : {
+          content: content || null,
+          file: messageData.file ?? null,
+          inbox: { connect: { id: messageData.inboxId } },
+          userSender: { connect: { id: senderId } },
+          adminReceiver: { connect: { id: receiverId } },
         },
       })
 
