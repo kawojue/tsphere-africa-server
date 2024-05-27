@@ -99,7 +99,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     if (senderRole === 'admin') {
       const [sender, receiver] = await Promise.all([
         this.prisma.admin.findUnique({ where: { id: senderId } }),
-        this.prisma.user.findUnique({ where: { id: receiverId } }),
+        this.prisma.user.findUnique({ where: { id: receiverId } })
       ])
 
       if (!sender || !receiver) {
@@ -124,8 +124,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
       messageData.userReceiverId = receiverId
     } else {
       const [sender, receiver] = await Promise.all([
-        this.prisma.admin.findUnique({ where: { id: senderId } }),
-        this.prisma.user.findUnique({ where: { id: receiverId } }),
+        this.prisma.user.findUnique({ where: { id: senderId } }),
+        this.prisma.admin.findUnique({ where: { id: receiverId } })
       ])
 
       if (!sender || !receiver) {
