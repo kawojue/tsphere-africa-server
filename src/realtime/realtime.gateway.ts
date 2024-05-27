@@ -91,14 +91,24 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     }
 
     let messageData: any = {
-      content: content || null,
+      content: content ?? null,
       inboxId: null,
+      file: null,
     }
 
     if (senderRole === 'admin') {
-      const sender = await this.prisma.admin.findUnique({ where: { id: senderId } })
-      const receiver = await this.prisma.user.findUnique({ where: { id: receiverId } })
-      if (!sender || !receiver) return
+      const [sender, receiver] = await Promise.all([
+        this.prisma.admin.findUnique({ where: { id: senderId } }),
+        this.prisma.user.findUnique({ where: { id: receiverId } }),
+      ])
+
+      if (!sender || !receiver) {
+        client.emit('error', {
+          status: StatusCodes.NotFound,
+          message: "Sender or Receiver not found"
+        })
+        return
+      }
 
       const inbox = await this.prisma.inbox.findFirst({
         where: {
@@ -155,7 +165,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         userReceiver: senderRole !== 'admin' ? { connect: { id: receiverId } } : undefined,
         adminReceiver: senderRole === 'admin' ? { connect: { id: receiverId } } : undefined,
       },
-    });
+    })
 
     const align = (senderRole === 'admin' ? message.adminSenderId : message.userSenderId) === senderId ? 'right' : 'left'
     const messageWithAlignment = { ...message, align }
