@@ -76,111 +76,119 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
 
   @SubscribeMessage('send_message')
   async sendMessage(@ConnectedSocket() client: Socket, @MessageBody() body: MessageDTO) {
-    const clientData = this.clients.get(client)
-    if (!clientData) return
+    try {
+      const clientData = this.clients.get(client)
+      if (!clientData) return
 
-    const { sub: senderId, role: senderRole } = clientData
-    const { file, content, receiverId } = body
+      const { sub: senderId, role: senderRole } = clientData
+      const { file, content, receiverId } = body
 
-    if (!file && !content) {
-      client.emit('validation_error', {
-        status: StatusCodes.BadRequest,
-        message: "Content or File is required",
-      })
-      return
-    }
-
-    let messageData: any = {
-      content: content ?? null,
-      inboxId: null,
-      file: null,
-    }
-
-    if (senderRole === 'admin') {
-      const [sender, receiver] = await Promise.all([
-        this.prisma.admin.findUnique({ where: { id: senderId } }),
-        this.prisma.user.findUnique({ where: { id: receiverId } })
-      ])
-
-      if (!sender || !receiver) {
-        client.emit('error', {
-          status: StatusCodes.NotFound,
-          message: "Sender or Receiver not found"
-        })
-        return
-      }
-
-      const inbox = await this.prisma.inbox.findFirst({
-        where: {
-          OR: [
-            { userId: receiverId, adminId: senderId },
-            { userId: senderId, adminId: receiverId },
-          ],
-        },
-      })
-
-      messageData.inboxId = inbox ? inbox.id : await this.realtimeService.createInbox(senderId, receiverId, senderRole)
-      messageData.adminSenderId = senderId
-      messageData.userReceiverId = receiverId
-    } else {
-      const [sender, receiver] = await Promise.all([
-        this.prisma.user.findUnique({ where: { id: senderId } }),
-        this.prisma.admin.findUnique({ where: { id: receiverId } })
-      ])
-
-      if (!sender || !receiver) {
-        client.emit('error', {
-          status: StatusCodes.NotFound,
-          message: "Sender or Receiver not found"
-        })
-        return
-      }
-
-      const inbox = await this.prisma.inbox.findFirst({
-        where: {
-          OR: [
-            { userId: senderId, adminId: receiverId },
-            { userId: receiverId, adminId: senderId },
-          ],
-        },
-      })
-
-      messageData.inboxId = inbox ? inbox.id : await this.realtimeService.createInbox(senderId, receiverId, senderRole)
-      messageData.userSenderId = senderId
-      messageData.adminReceiverId = receiverId
-    }
-
-    if (file) {
-      const validationResult = this.realtimeService.validateFile(file)
-      if (validationResult?.status) {
+      if (!file && !content) {
         client.emit('validation_error', {
-          status: validationResult.status,
-          message: validationResult.message,
+          status: StatusCodes.BadRequest,
+          message: "Content or File is required",
         })
         return
       }
 
-      const serializedFile = await this.realtimeService.saveFile(validationResult.file, senderId)
-      messageData.file = serializedFile
+      let messageData: any = {
+        content: content ?? null,
+        inboxId: null,
+        file: null,
+      }
+
+      if (senderRole === 'admin') {
+        const [sender, receiver] = await Promise.all([
+          this.prisma.admin.findUnique({ where: { id: senderId } }),
+          this.prisma.user.findUnique({ where: { id: receiverId } })
+        ])
+
+        if (!sender || !receiver) {
+          client.emit('error', {
+            status: StatusCodes.NotFound,
+            message: "Sender or Receiver not found"
+          })
+          return
+        }
+
+        const inbox = await this.prisma.inbox.findFirst({
+          where: {
+            OR: [
+              { userId: receiverId, adminId: senderId },
+              { userId: senderId, adminId: receiverId },
+            ],
+          },
+        })
+
+        messageData.inboxId = inbox ? inbox.id : await this.realtimeService.createInbox(senderId, receiverId, senderRole)
+        messageData.adminSenderId = senderId
+        messageData.userReceiverId = receiverId
+      } else {
+        const [sender, receiver] = await Promise.all([
+          this.prisma.user.findUnique({ where: { id: senderId } }),
+          this.prisma.admin.findUnique({ where: { id: receiverId } })
+        ])
+
+        if (!sender || !receiver) {
+          client.emit('error', {
+            status: StatusCodes.NotFound,
+            message: "Sender or Receiver not found"
+          })
+          return
+        }
+
+        const inbox = await this.prisma.inbox.findFirst({
+          where: {
+            OR: [
+              { userId: senderId, adminId: receiverId },
+              { userId: receiverId, adminId: senderId },
+            ],
+          },
+        })
+
+        messageData.inboxId = inbox ? inbox.id : await this.realtimeService.createInbox(senderId, receiverId, senderRole)
+        messageData.userSenderId = senderId
+        messageData.adminReceiverId = receiverId
+      }
+
+      if (file) {
+        const validationResult = this.realtimeService.validateFile(file)
+        if (validationResult?.status) {
+          client.emit('validation_error', {
+            status: validationResult.status,
+            message: validationResult.message,
+          })
+          return
+        }
+
+        const serializedFile = await this.realtimeService.saveFile(validationResult.file, senderId)
+        messageData.file = serializedFile
+      }
+
+      const message = await this.prisma.message.create({
+        data: {
+          content: content || null,
+          file: messageData.file ?? null,
+          inbox: { connect: { id: messageData.inboxId } },
+          userSender: senderRole !== 'admin' ? { connect: { id: senderId } } : undefined,
+          adminSender: senderRole === 'admin' ? { connect: { id: senderId } } : undefined,
+          userReceiver: senderRole !== 'admin' ? { connect: { id: receiverId } } : undefined,
+          adminReceiver: senderRole === 'admin' ? { connect: { id: receiverId } } : undefined,
+        },
+      })
+
+      const align = (senderRole === 'admin' ? message.adminSenderId : message.userSenderId) === senderId ? 'right' : 'left'
+      const messageWithAlignment = { ...message, align }
+
+      client.emit('sent_message', messageWithAlignment)
+      client.to(receiverId).emit('receive_message', messageWithAlignment)
+    } catch (err) {
+      console.error(err)
+      client.emit('error', {
+        status: StatusCodes.InternalServerError,
+        message: "Something went wrong"
+      })
     }
-
-    const message = await this.prisma.message.create({
-      data: {
-        content: content || null,
-        file: messageData.file ?? null,
-        inbox: { connect: { id: messageData.inboxId } },
-        userSender: senderRole !== 'admin' ? { connect: { id: senderId } } : undefined,
-        adminSender: senderRole === 'admin' ? { connect: { id: senderId } } : undefined,
-        userReceiver: senderRole !== 'admin' ? { connect: { id: receiverId } } : undefined,
-        adminReceiver: senderRole === 'admin' ? { connect: { id: receiverId } } : undefined,
-      },
-    })
-
-    const align = (senderRole === 'admin' ? message.adminSenderId : message.userSenderId) === senderId ? 'right' : 'left'
-    const messageWithAlignment = { ...message, align }
-
-    client.emit('sent_message', messageWithAlignment)
-    client.to(receiverId).emit('receive_message', messageWithAlignment)
   }
 
   @SubscribeMessage('fetch_messages')
