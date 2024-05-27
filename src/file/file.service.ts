@@ -22,9 +22,9 @@ export class FileService {
             res.send(data)
         } catch (error) {
             if (error instanceof NotFoundException) {
-                return this.response.sendError(res, StatusCodes.NotFound, 'File not found')
+                this.response.sendError(res, StatusCodes.NotFound, 'File not found')
             } else {
-                return this.response.sendError(res, StatusCodes.InternalServerError, 'Internal server error')
+                this.response.sendError(res, StatusCodes.InternalServerError, 'Internal server error')
             }
         }
     }

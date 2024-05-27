@@ -16,6 +16,6 @@ export class FileController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/download')
   async downloadFile(@Res() res: Response, @Query() q: DownloadFileDTO) {
-    return await this.fileService.downloadFile(res, q.path)
+    await this.fileService.downloadFile(res, q.path)
   }
 }

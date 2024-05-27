@@ -181,9 +181,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         },
       })
 
-      // const align = (senderRole === 'admin' ? message.adminSenderId : message.userSenderId) === senderId ? 'right' : 'left'
-      const targetId = senderRole === "admin" ? messageData.userReceiverId : messageData.adminReceiverId
-      const align = targetId !== senderId ? 'left' : 'right'
+      const align = senderRole === 'admin' ? (message.adminSenderId === senderId ? 'right' : 'left') : (message.userSenderId === senderId ? 'right' : 'left')
       const messageWithAlignment = { ...message, align }
 
       client.emit('sent_message', messageWithAlignment)
@@ -241,9 +239,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
 
     const messagesWithAlignment = messages.map(message => ({
       ...message,
-      align: (userRole === 'admin' && message.adminSenderId === userId) || (userRole !== 'admin' && message.userReceiverId === userId)
-        ? 'left'
-        : 'right',
+      align: (userRole === 'admin' && message.adminSenderId === userId) || (userRole !== 'admin' && message.userSenderId === userId)
+        ? 'right'
+        : 'left',
     }))
 
     await this.realtimeService.markMessagesAsRead(messages)
