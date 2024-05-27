@@ -80,9 +80,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     if (!clientData) return
 
     const { sub: senderId, role: senderRole } = clientData
-    const file = body.file
-    const content = body.content
-    const receiverId = body.receiverId
+    const { file, content, receiverId } = body
 
     if (!file && !content) {
       client.emit('validation_error', {
@@ -92,41 +90,45 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
       return
     }
 
-    let sender: User | Admin, receiver: User | Admin
+    let messageData: any = {
+      content: content || null,
+      inboxId: null,
+    }
 
     if (senderRole === 'admin') {
-      sender = await this.prisma.admin.findUnique({ where: { id: senderId } })
-      receiver = await this.prisma.user.findUnique({ where: { id: receiverId } })
-    } else {
-      sender = await this.prisma.user.findUnique({ where: { id: senderId } })
-      receiver = await this.prisma.admin.findUnique({ where: { id: receiverId } })
-    }
+      const sender = await this.prisma.admin.findUnique({ where: { id: senderId } })
+      const receiver = await this.prisma.user.findUnique({ where: { id: receiverId } })
+      if (!sender || !receiver) return
 
-    if (!sender || !receiver) {
-      client.emit('error', {
-        status: StatusCodes.NotFound,
-        message: "Sender or Receiver not found",
+      const inbox = await this.prisma.inbox.findFirst({
+        where: {
+          OR: [
+            { userId: receiverId, adminId: senderId },
+            { userId: senderId, adminId: receiverId },
+          ],
+        },
       })
-      return
-    }
 
-    const inbox = await this.prisma.inbox.findFirst({
-      where: {
-        OR: [
-          { userId: senderId, adminId: receiverId },
-          { userId: receiverId, adminId: senderId },
-        ],
-      },
-    })
+      messageData.inboxId = inbox ? inbox.id : await this.realtimeService.createInbox(senderId, receiverId, senderRole)
+      messageData.adminSenderId = senderId
+      messageData.userReceiverId = receiverId
+    } else {
+      const sender = await this.prisma.user.findUnique({ where: { id: senderId } })
+      const receiver = await this.prisma.admin.findUnique({ where: { id: receiverId } })
+      if (!sender || !receiver) return
 
-    const inboxId = inbox ? inbox.id : await this.realtimeService.createInbox(senderId, receiverId, senderRole)
+      const inbox = await this.prisma.inbox.findFirst({
+        where: {
+          OR: [
+            { userId: senderId, adminId: receiverId },
+            { userId: receiverId, adminId: senderId },
+          ],
+        },
+      })
 
-    const messageData = {
-      senderId: senderRole === 'admin' ? null : senderId,
-      receiverId: senderRole === 'admin' ? senderId : receiverId,
-      inboxId,
-      content: content || null,
-      file: null,
+      messageData.inboxId = inbox ? inbox.id : await this.realtimeService.createInbox(senderId, receiverId, senderRole)
+      messageData.userSenderId = senderId
+      messageData.adminReceiverId = receiverId
     }
 
     if (file) {
@@ -144,21 +146,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     }
 
     const message = await this.prisma.message.create({
-      data: {
-        file: messageData.file,
-        content: messageData.content,
-        inbox: { connect: { id: messageData.inboxId } },
-        sender: messageData.senderId ? { connect: { id: messageData.senderId } } : undefined,
-        receiver: messageData.receiverId ? { connect: { id: messageData.receiverId } } : undefined,
-      },
+      data: messageData,
     })
 
-    const align = messageData.senderId === sender.id ? 'right' : 'left'
-    // @ts-ignore
-    message.align = align
+    const align = (senderRole === 'admin' ? message.adminSenderId : message.userSenderId) === senderId ? 'right' : 'left'
+    const messageWithAlignment = { ...message, align }
 
-    client.emit('sent_message', message)
-    client.to(receiver.id).emit('receive_message', message)
+    client.emit('sent_message', messageWithAlignment)
+    client.to(receiverId).emit('receive_message', messageWithAlignment)
   }
 
   @SubscribeMessage('fetch_messages')

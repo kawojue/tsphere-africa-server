@@ -41,7 +41,8 @@ model User {
     skills              Skill[]
     raters              Rating[]             @relation("RaterUser")
     ratings             Rating[]             @relation("TargetUser")
-    messages            Message[]
+    sentMessages        Message[]            @relation("UserSentMessages")
+    receivedMessages    Message[]            @relation("UserReceivedMessages")
     comments            Comment[]
     articles            Article[]
     projectsAsUser      ProjectRoleInfo[]    @relation("UserProjects")
@@ -190,15 +191,16 @@ model Contact {
 }
 
 model Admin {
-    id       String    @id @default(auto()) @map("_id") @db.ObjectId
-    fullName String
-    password String
-    email    String    @unique
-    role     Role      @default(admin)
-    job      Job[]
-    Inbox    Inbox[]
-    messages Message[]
-    articles Article[]
+    id               String    @id @default(auto()) @map("_id") @db.ObjectId
+    fullName         String
+    password         String
+    email            String    @unique
+    role             Role      @default(admin)
+    job              Job[]
+    Inbox            Inbox[]
+    sentMessages     Message[] @relation("AdminSentMessages")
+    receivedMessages Message[] @relation("AdminReceivedMessages")
+    articles         Article[]
 }
 
 model Validation {
@@ -569,22 +571,27 @@ model Inbox {
     user     User?     @relation(fields: [userId], references: [id])
     userId   String?   @unique @db.ObjectId
     admin    Admin?    @relation(fields: [adminId], references: [id])
-    adminId  String?   @unique @db.ObjectId
+    adminId  String?   @db.ObjectId
     messages Message[]
 }
 
 model Message {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
-    sender     User?    @relation(fields: [senderId], references: [id])
-    senderId   String?  @db.ObjectId
-    receiver   Admin?   @relation(fields: [receiverId], references: [id])
-    receiverId String?  @db.ObjectId
-    content    String?
-    file       File?
-    createdAt  DateTime @default(now())
-    isRead     Boolean  @default(false)
-    inbox      Inbox    @relation(fields: [inboxId], references: [id])
-    inboxId    String   @unique @db.ObjectId
+    id              String   @id @default(auto()) @map("_id") @db.ObjectId
+    userSenderId    String?  @db.ObjectId
+    adminSenderId   String?  @db.ObjectId
+    userReceiverId  String?  @db.ObjectId
+    adminReceiverId String?  @db.ObjectId
+    content         String?
+    file            File?
+    createdAt       DateTime @default(now())
+    isRead          Boolean  @default(false)
+    inbox           Inbox    @relation(fields: [inboxId], references: [id])
+    inboxId         String   @db.ObjectId
+
+    userSender    User?  @relation("UserSentMessages", fields: [userSenderId], references: [id])
+    adminSender   Admin? @relation("AdminSentMessages", fields: [adminSenderId], references: [id])
+    userReceiver  User?  @relation("UserReceivedMessages", fields: [userReceiverId], references: [id])
+    adminReceiver Admin? @relation("AdminReceivedMessages", fields: [adminReceiverId], references: [id])
 }
 
 type File {
