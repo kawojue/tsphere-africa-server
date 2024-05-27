@@ -576,18 +576,19 @@ model Inbox {
 }
 
 model Message {
-    id              String   @id @default(auto()) @map("_id") @db.ObjectId
-    userSenderId    String?  @db.ObjectId
-    adminSenderId   String?  @db.ObjectId
-    userReceiverId  String?  @db.ObjectId
-    adminReceiverId String?  @db.ObjectId
-    content         String?
-    file            File?
-    createdAt       DateTime @default(now())
-    isRead          Boolean  @default(false)
-    inbox           Inbox    @relation(fields: [inboxId], references: [id])
-    inboxId         String   @db.ObjectId
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    content   String?
+    file      File?
+    createdAt DateTime @default(now())
+    isRead    Boolean  @default(false)
 
+    inboxId         String  @db.ObjectId
+    userSenderId    String? @db.ObjectId
+    adminSenderId   String? @db.ObjectId
+    userReceiverId  String? @db.ObjectId
+    adminReceiverId String? @db.ObjectId
+
+    inbox         Inbox  @relation(fields: [inboxId], references: [id])
     userSender    User?  @relation("UserSentMessages", fields: [userSenderId], references: [id])
     adminSender   Admin? @relation("AdminSentMessages", fields: [adminSenderId], references: [id])
     userReceiver  User?  @relation("UserReceivedMessages", fields: [userReceiverId], references: [id])
