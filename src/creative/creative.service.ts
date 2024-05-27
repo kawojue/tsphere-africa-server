@@ -69,7 +69,7 @@ export class CreativeService {
                     return this.response.sendError(res, result.status, result.message)
                 }
 
-                const path = `${sub}/${genFileName()}`
+                const path = `${sub}/${genFileName()}.${this.misc.getFileExtension(result.file)}`
                 await this.aws.uploadS3(result.file, path)
                 proofOfId = {
                     path,

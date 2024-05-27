@@ -98,7 +98,7 @@ export class ProfileSetupController {
   @UseInterceptors(AnyFilesInterceptor())
   @ApiConsumes(
     'multipart/form-data', 'image/jpeg', 'video/mp4',
-    'audio/mp3', 'audio/wav', 'audio/aac', 'png/image', 'image/png',
+    'audio/mp3', 'audio/wav', 'audio/aac', 'image/png',
   )
   async addSkills(
     @Res() res: Response,

@@ -34,6 +34,55 @@ export class MiscService {
         }
     }
 
+    getFileExtension(file: Express.Multer.File | string) {
+        let mimetype: string
+        if (typeof file === "object") {
+            mimetype = file.mimetype
+        }
+
+        let extension: string
+
+        switch (mimetype) {
+            case 'video/mp4':
+                extension = 'mp4'
+                break
+            case 'video/webm':
+                extension = 'webm'
+                break
+            case 'video/avi':
+                extension = 'avi'
+                break
+            case 'image/png':
+                extension = 'png'
+                break
+            case 'image/jpeg':
+                extension = 'jpg'
+                break
+            case 'audio/mp3':
+                extension = 'mp3'
+                break
+            case 'audio/wav':
+                extension = 'wav'
+                break
+            case 'audio/aac':
+                extension = 'aac'
+                break
+            case 'audio/ogg':
+                extension = 'ogg'
+                break
+            case 'application/pdf':
+                extension = 'pdf'
+                break
+            case 'application/msword':
+                extension = 'doc'
+                break
+            default:
+                break
+        }
+
+        return extension
+    }
+
     async calculateReadingTime(content: string) {
         const base64Pattern: RegExp = /data:image\/[^]+base64[^'"]*/g
         const cleanedContent: string = content.replace(base64Pattern, '')

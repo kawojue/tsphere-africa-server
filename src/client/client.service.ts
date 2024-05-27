@@ -114,7 +114,7 @@ export class ClientService {
                         return this.response.sendError(res, result.status, result.message)
                     }
 
-                    const path = `profile/${sub}/${genFileName()}`
+                    const path = `profile/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
                     await this.aws.uploadS3(result.file, path)
                     return {
                         path,
@@ -161,7 +161,7 @@ export class ClientService {
                     return this.response.sendError(res, result.status, result.message)
                 }
 
-                const path = `profile/${sub}/${genFileName()}`
+                const path = `profile/${sub}/${genFileName()}.${this.misc.getFileExtension(result.file)}`
                 await this.aws.uploadS3(result.file, path)
 
                 document = {
@@ -225,7 +225,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `brief_form/${sub}/${genFileName()}`
+                        const path = `brief_form/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -253,7 +253,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `brief_form/${sub}/${genFileName()}`
+                        const path = `brief_form/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -281,7 +281,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `brief_form/${sub}/${genFileName()}`
+                        const path = `brief_form/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -460,7 +460,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `project/${sub}/${genFileName()}`
+                        const path = `project/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -498,7 +498,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `brief_form/${sub}/${genFileName()}`
+                        const path = `brief_form/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -1003,7 +1003,7 @@ export class ClientService {
                 }
             }
 
-            const path = `contract/${projectId}/${genFileName()}`
+            const path = `contract/${projectId}/${genFileName()}.${this.misc.getFileExtension(file)}`
             const url = this.aws.getS3(path)
             await this.aws.uploadS3(file, path)
 

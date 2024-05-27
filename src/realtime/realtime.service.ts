@@ -3,6 +3,7 @@ import { Message } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
+import { MiscService } from 'lib/misc.service'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 
@@ -20,6 +21,7 @@ export class RealtimeService {
 
     constructor(
         private readonly aws: AwsService,
+        private readonly misc: MiscService,
         private readonly prisma: PrismaService,
     ) { }
 
@@ -61,8 +63,8 @@ export class RealtimeService {
 
     async saveFile(file: string, userId: string) {
         const base64Data = file.replace(/^data:.*;base64,/, '')
-        const filePath = `${userId}/${genFileName()}`
         const fileType = this.getFileType(file)
+        const filePath = `${userId}/${genFileName()}.${this.misc.getFileExtension(fileType)}`
 
         await this.aws.uploadS3Base64(Buffer.from(base64Data, 'base64'), filePath, fileType)
 

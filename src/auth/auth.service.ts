@@ -486,7 +486,7 @@ export class AuthService {
                 return this.response.sendError(res, result.status, result.message)
             }
 
-            const path = `${user.id}/${genFileName()}`
+            const path = `${user.id}/${genFileName()}.${this.misc.getFileExtension(file)}`
             await this.aws.uploadS3(result.file, path)
             const url = this.aws.getS3(path)
 

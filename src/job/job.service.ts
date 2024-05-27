@@ -48,7 +48,7 @@ export class JobService {
                         return this.response.sendError(res, result.status, result.message)
                     }
 
-                    const path = `${sub}/${genFileName()}`
+                    const path = `${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
                     await this.aws.uploadS3(result.file, path)
                     return {
                         path,
@@ -200,7 +200,7 @@ export class JobService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `${sub}/${genFileName()}`
+                        const path = `${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,

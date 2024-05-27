@@ -38,7 +38,7 @@ export class ArticleService {
                 return this.response.sendError(res, StatusCodes.UnsupportedContent, "Cover photo should be in form of image")
             }
 
-            const path = `${sub}/article/${genFileName()}`
+            const path = `${sub}/article/${genFileName()}.${this.misc.getFileExtension(file)}`
             await this.aws.uploadS3(file, path)
             const cover_photo = {
                 path,

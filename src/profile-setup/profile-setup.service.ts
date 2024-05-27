@@ -45,7 +45,7 @@ export class ProfileSetupService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `${user.id}/${genFileName()}`
+                        const path = `${user.id}/${genFileName()}.${this.misc.getFileExtension(file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -121,7 +121,7 @@ export class ProfileSetupService {
                 return this.response.sendError(res, result.status, result.message)
             }
 
-            const path = `${user.id}/${genFileName()}`
+            const path = `${user.id}/${genFileName()}.${this.misc.getFileExtension(file)}`
             await this.aws.uploadS3(result.file, path)
             const video = {
                 path,
@@ -171,7 +171,7 @@ export class ProfileSetupService {
                 return this.response.sendError(res, result.status, result.message)
             }
 
-            const path = `${user.id}/${genFileName()}`
+            const path = `${user.id}/${genFileName()}.${this.misc.getFileExtension(file)}`
             await this.aws.uploadS3(result.file, path)
             const audio = {
                 path,
@@ -268,7 +268,7 @@ export class ProfileSetupService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `${user.id}/${genFileName()}`
+                        const path = `${user.id}/${genFileName()}.${this.misc.getFileExtension(file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,

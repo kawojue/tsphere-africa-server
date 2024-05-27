@@ -836,7 +836,7 @@ export class UserService {
                 return this.response.sendError(res, re.status, re.message)
             }
 
-            const path = `contract/${sub}/${genFileName()}`
+            const path = `contract/${sub}/${genFileName()}.${this.misc.getFileExtension(re.file)}`
             await this.aws.uploadS3(re.file, path)
 
             const newContract = await this.prisma.contract.update({
