@@ -145,11 +145,14 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         },
       })
 
-      const align = (isSenderAdmin && message.adminSenderId === senderId) || (!isSenderAdmin && message.userSenderId === senderId) ? 'right' : 'left'
-      const messageWithAlignment = { ...message, align }
+      const senderAlign = 'right'
+      const receiverAlign = 'left'
 
-      client.emit('sent_message', messageWithAlignment)
-      client.to(receiverId).emit('receive_message', messageWithAlignment)
+      const messageWithSenderAlignment = { ...message, align: senderAlign }
+      const messageWithReceiverAlignment = { ...message, align: receiverAlign }
+
+      client.emit('sent_message', messageWithSenderAlignment)
+      client.to(receiverId).emit('receive_message', messageWithReceiverAlignment)
     } catch (err) {
       console.error(err)
       client.emit('error', {
