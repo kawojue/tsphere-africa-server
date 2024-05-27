@@ -123,9 +123,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
       messageData.adminSenderId = senderId
       messageData.userReceiverId = receiverId
     } else {
-      const sender = await this.prisma.user.findUnique({ where: { id: senderId } })
-      const receiver = await this.prisma.admin.findUnique({ where: { id: receiverId } })
-      if (!sender || !receiver) return
+      const [sender, receiver] = await Promise.all([
+        this.prisma.admin.findUnique({ where: { id: senderId } }),
+        this.prisma.user.findUnique({ where: { id: receiverId } }),
+      ])
+
+      if (!sender || !receiver) {
+        client.emit('error', {
+          status: StatusCodes.NotFound,
+          message: "Sender or Receiver not found"
+        })
+        return
+      }
 
       const inbox = await this.prisma.inbox.findFirst({
         where: {
