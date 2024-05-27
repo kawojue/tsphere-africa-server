@@ -10,9 +10,9 @@ import StatusCodes from 'enums/StatusCodes'
 import {
   FetchMessagesDTO, MessageDTO, FetchInboxDTO
 } from './dto/index.dto'
+import { Message, Role } from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
 import { RealtimeService } from './realtime.service'
-import { Admin, Message, Role, User } from '@prisma/client'
 
 @WebSocketGateway({
   transports: ['polling', 'websocket'],
@@ -146,8 +146,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
     }
 
     const message = await this.prisma.message.create({
-      data: messageData,
-    })
+      data: {
+        content: content || null,
+        file: messageData.file ?? null,
+        inbox: { connect: { id: messageData.inboxId } },
+        userSender: senderRole !== 'admin' ? { connect: { id: senderId } } : undefined,
+        adminSender: senderRole === 'admin' ? { connect: { id: senderId } } : undefined,
+        userReceiver: senderRole !== 'admin' ? { connect: { id: receiverId } } : undefined,
+        adminReceiver: senderRole === 'admin' ? { connect: { id: receiverId } } : undefined,
+      },
+    });
 
     const align = (senderRole === 'admin' ? message.adminSenderId : message.userSenderId) === senderId ? 'right' : 'left'
     const messageWithAlignment = { ...message, align }
