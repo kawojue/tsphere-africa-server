@@ -181,7 +181,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayInit {
         },
       })
 
-      const align = (senderRole === 'admin' ? message.adminSenderId : message.userSenderId) === senderId ? 'right' : 'left'
+      const align = senderRole === 'admin' ? (message.adminSenderId === senderId ? 'right' : 'left') : (message.userSenderId === senderId ? 'right' : 'left')
       const messageWithAlignment = { ...message, align }
 
       client.emit('sent_message', messageWithAlignment)
