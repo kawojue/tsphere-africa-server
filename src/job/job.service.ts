@@ -195,7 +195,7 @@ export class JobService {
             if (attachments.length > 0) {
                 try {
                     const results = await Promise.all(attachments.map(async (file) => {
-                        const result = validateFile(file, 10 << 20, 'jpg', 'png')
+                        const result = validateFile(file, 10 << 20, 'jpg', 'png', 'mp4')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
                         }
