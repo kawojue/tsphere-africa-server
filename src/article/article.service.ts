@@ -88,16 +88,6 @@ export class ArticleService {
             }
 
             const commonQueryOptions = {
-                select: {
-                    id: true,
-                    views: true,
-                    title: true,
-                    shares: true,
-                    category: true,
-                    approvedAt: true,
-                    publishedAt: true,
-                    pending_approval: true,
-                },
                 ...pagination,
                 orderBy: { publishedAt: 'desc' as const }
             }
