@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNumber, IsString, MaxLength, Min, MinLength } from 'class-validator'
+import { IsString, MaxLength, Min, MinLength } from 'class-validator'
 
 const MIN_AMOUNT = 50 as const
 
@@ -7,7 +7,6 @@ export class WithdrawalDto {
     @ApiProperty({
         example: 200.72
     })
-    @IsNumber()
     @Min(MIN_AMOUNT, { message: `Minimum amount is ₦${MIN_AMOUNT}` })
     amount: number
 

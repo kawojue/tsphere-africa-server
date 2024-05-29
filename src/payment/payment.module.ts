@@ -6,6 +6,7 @@ import { BrevoService } from 'lib/brevo.service'
 import { PassportModule } from '@nestjs/passport'
 import { PaymentService } from './payment.service'
 import { PrismaService } from 'lib/prisma.service'
+import { MailService } from 'src/mailer/mailer.service'
 import { PaymentController } from './payment.controller'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 
@@ -19,6 +20,7 @@ import { PaystackService } from 'lib/Paystack/paystack.service'
     PaymentService,
     SendRes,
     MiscService,
+    MailService,
     BrevoService,
     PrismaService,
     PaystackService,

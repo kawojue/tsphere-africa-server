@@ -23,13 +23,12 @@ async function bootstrap() {
       'https://www.talentsphereafrica.com',
       'https://talentsphere-staging.onrender.com',
     ],
-    credentials: true,
     optionsSuccessStatus: 200,
     methods: 'GET,PATCH,POST,PUT,DELETE',
   })
   expressApp.set('trust proxy', true)
   app.use(express.json({ limit: 100 << 20 }))
-  app.useGlobalPipes(new ValidationPipe())
+  app.useGlobalPipes(new ValidationPipe({ transform: true }))
 
   const swaggerOptions = new DocumentBuilder()
     .setTitle('Talent Sphere Africa API')

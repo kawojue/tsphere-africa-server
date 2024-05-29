@@ -11,6 +11,7 @@ import { WithdrawalDto } from './dto/withdraw.dto'
 import { genRandomCode } from 'helpers/genRandStr'
 import { TxHistoriesDto } from './dto/txHistory.dto'
 import { PaymentChartDto } from './dto/analytics.dto'
+import { MailService } from 'src/mailer/mailer.service'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 
 @Injectable()
@@ -18,6 +19,7 @@ export class PaymentService {
     constructor(
         private readonly misc: MiscService,
         private readonly response: SendRes,
+        private readonly mail: MailService,
         private readonly brevo: BrevoService,
         private readonly prisma: PrismaService,
         private readonly paystack: PaystackService,
@@ -284,11 +286,19 @@ export class PaymentService {
 
             res.on('finish', async () => {
                 if (newTotp) {
-                    await this.brevo.sendTransactionalEmail({
+                    await this.mail.sendEmail({
                         to: user.email,
-                        subject: `Withdrawal PIN: ${otp}`,
-                        body: `${otp}. It expires in 5 mins. Ignore if you didn't request for the PIN`,
+                        subject: "Withdrawal PIN",
+                        context: {
+                            pin: otp
+                        },
+                        filename: 'pin'
                     })
+                    // await this.brevo.sendTransactionalEmail({
+                    //     to: user.email,
+                    //     subject: `Withdrawal PIN: ${otp}`,
+                    //     body: `${otp}. It expires in 5 mins. Ignore if you didn't request for the PIN`,
+                    // })
                 }
             })
         } catch (err) {
