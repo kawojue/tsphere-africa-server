@@ -290,9 +290,11 @@ export class PaymentService {
                         to: user.email,
                         subject: "Withdrawal PIN",
                         context: {
-                            pin: otp
+                            pin: otp,
+                            firstname: user.firstname,
+                            year: new Date().getFullYear(),
                         },
-                        filename: 'pin'
+                        filename: 'pin.hbs'
                     })
                     // await this.brevo.sendTransactionalEmail({
                     //     to: user.email,

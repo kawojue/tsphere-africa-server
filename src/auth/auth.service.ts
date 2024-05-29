@@ -11,12 +11,12 @@ import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { BrevoService } from 'lib/brevo.service'
+import { toLowerCase } from 'helpers/formatTexts'
 import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { genReferralKey } from 'helpers/genReferralKey'
 import { MailService } from 'src/mailer/mailer.service'
 import { EncryptionService } from 'lib/encryption.service'
-import { titleText, toLowerCase } from 'helpers/formatTexts'
 import {
     ResetPasswordDto, ResetPasswordTokenDto, UpdatePasswordDto
 } from './dto/reset-password.dto'
@@ -38,8 +38,6 @@ export class AuthService {
         { email }: EmailDto,
     ) {
         try {
-            email = toLowerCase(email)
-
             const user = await this.prisma.user.findUnique({
                 where: { email }
             })
@@ -80,11 +78,6 @@ export class AuthService {
         }: SignupDto
     ) {
         try {
-            email = toLowerCase(email)
-            username = toLowerCase(username)
-            last_name = titleText(last_name)
-            first_name = titleText(first_name)
-
             if (!this.misc.isValidUsername(username)) {
                 this.response.sendError(res, StatusCodes.BadRequest, "Username is not allowed")
                 return
@@ -172,7 +165,7 @@ export class AuthService {
 
                 await Promise.all([
                     this.prisma.isSubscribed(email),
-                    this.mail.sendVerificationEmail(email, tk.token),
+                    this.mail.sendVerificationEmail(email, tk.token, newUser.firstname),
                     // this.brevo.sendVerificationEmail(email, token.token),
                     this.prisma.wallet.create({ data: { user: { connect: { id: newUser.id } } } }),
                 ])
@@ -231,8 +224,7 @@ export class AuthService {
             })
 
             if (!user) {
-                this.response.sendError(res, StatusCodes.NotFound, "There is no account associated with this email")
-                return
+                return this.response.sendError(res, StatusCodes.NotFound, "There is no account associated with this email")
             }
 
             const tk = this.misc.genenerateToken(user.id)
@@ -249,21 +241,25 @@ export class AuthService {
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                message: "New verification link has been sent to your email"
+                message: token_type === "email" ? "New verification link has been sent to your email" : "A new reset password link has been sent to you email"
             })
 
             res.on('finish', async () => {
                 if (token_type === 'email') {
-                    await this.mail.sendVerificationEmail(email, tk.token)
+                    await this.mail.sendVerificationEmail(email, tk.token, user.firstname)
                     // await this.brevo.sendVerificationEmail(email, tk.token)
-                } else if (token_type === 'password') {
+                }
+
+                if (token_type === 'password') {
                     await this.mail.sendEmail({
                         to: email,
                         subject: "Reset Password",
                         context: {
+                            firstname: user.firstname,
+                            year: new Date().getFullYear(),
                             url: `${process.env.CLIENT_URL}/forgot-password/reset?token=${tk.token}&token_type=password`
                         },
-                        filename: 'reset-password'
+                        filename: 'reset-pswd.hbs'
                     })
                     // await this.brevo.sendTransactionalEmail({
                     //     to: email,
@@ -299,13 +295,11 @@ export class AuthService {
             const isMatch = this.prisma.validateToken(token, validation)
 
             if (!validation || !isMatch) {
-                this.response.sendError(res, StatusCodes.Unauthorized, 'Token does not match')
-                return
+                return this.response.sendError(res, StatusCodes.Unauthorized, 'Token does not match')
             }
 
             if ((await this.prisma.isTokenExpired(validation))) {
-                this.response.sendError(res, StatusCodes.Forbidden, 'Token has expired')
-                return
+                return this.response.sendError(res, StatusCodes.Forbidden, 'Token has expired')
             }
 
             const newPassword = await this.encryption.hashAsync(password)
@@ -358,8 +352,6 @@ export class AuthService {
 
     async login(res: Response, { email, password }: LoginDto) {
         try {
-            email = toLowerCase(email)
-
             const user = await this.prisma.user.findUnique({
                 where: {
                     email: email.trim().toLowerCase()
@@ -398,7 +390,7 @@ export class AuthService {
                             update: token
                         }),
 
-                        this.mail.sendVerificationEmail(user.email, token.token)
+                        this.mail.sendVerificationEmail(user.email, token.token, user.firstname)
                     ])
                 }
             }

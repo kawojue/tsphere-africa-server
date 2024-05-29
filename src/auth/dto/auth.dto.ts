@@ -6,12 +6,15 @@ import {
     IsNotEmpty, MaxLength, MinLength, IsEnum,
 } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
+import { titleText, toLowerCase } from 'helpers/formatTexts'
 
 export class EmailDto {
     @ApiProperty({
         example: "kawojue08@gmail.com",
     })
     @IsEmail({}, { message: "Invalid Email" })
+    @Transform(({ value }) => toLowerCase(value))
     email: string
 }
 
@@ -20,8 +23,9 @@ export class UsernameDto {
         example: 'kawojue',
     })
     @IsString()
-    @Matches(USER_REGEX, { message: "Username is not allowed" })
+    @Transform(({ value }) => toLowerCase(value))
     @IsNotEmpty({ message: 'Username is required' })
+    @Matches(USER_REGEX, { message: "Username is not allowed" })
     username: string
 }
 
@@ -64,23 +68,26 @@ export class SignupDto extends EmailDto {
     @ApiProperty({
         example: 'Raheem',
     })
-    @IsNotEmpty({ message: 'First name is required' })
     @IsString()
+    @Transform(({ value }) => titleText(value))
+    @IsNotEmpty({ message: 'First name is required' })
     first_name: string
 
     @ApiProperty({
         example: 'Kawojue',
     })
-    @IsNotEmpty({ message: 'Last name is required' })
     @IsString()
+    @Transform(({ value }) => titleText(value))
+    @IsNotEmpty({ message: 'Last name is required' })
     last_name: string
 
     @ApiProperty({
         example: 'kawojue',
     })
     @IsString()
-    @Matches(USER_REGEX, { message: "Username is not allowed" })
+    @Transform(({ value }) => toLowerCase(value))
     @IsNotEmpty({ message: 'Username is required' })
+    @Matches(USER_REGEX, { message: "Username is not allowed" })
     username: string
 
     @ApiProperty({

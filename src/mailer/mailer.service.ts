@@ -23,11 +23,13 @@ export class MailService {
         await this.mailerService.sendMail({ to, subject, html })
     }
 
-    async sendVerificationEmail(email: string, token: string) {
+    async sendVerificationEmail(email: string, token: string, firstname: string) {
         this.sendEmail({
             to: email,
             subject: "Verify your email",
             context: {
+                firstname,
+                year: new Date().getFullYear(),
                 url: `${process.env.CLIENT_URL}/verify-email?token=${token}&token_type=email`
             },
             filename: 'email-verification.hbs'

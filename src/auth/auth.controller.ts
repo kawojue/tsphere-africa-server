@@ -26,17 +26,17 @@ export class AuthController {
 
   @Post('/subscribe-newsletter')
   async subscribeToNewsletter(@Res() res: Response, @Body() subscribeNews: EmailDto) {
-    return await this.authService.subscribeToNewsletter(res, subscribeNews)
+    await this.authService.subscribeToNewsletter(res, subscribeNews)
   }
 
   @Get('/verify-email')
   async verifyEmail(@Res() res: Response, @Query() { token }: TokenDto) {
-    return await this.authService.verifyEmail(res, token)
+    await this.authService.verifyEmail(res, token)
   }
 
   @Post('request-token')
   async requestToken(@Res() res: Response, @Body() body: RequestTokenDto) {
-    return await this.authService.requestToken(res, body)
+    await this.authService.requestToken(res, body)
   }
 
   @Patch('/reset-password')
@@ -45,17 +45,17 @@ export class AuthController {
     @Body() body: ResetPasswordDto,
     @Query() query: ResetPasswordTokenDto,
   ) {
-    return await this.authService.resetPassword(res, body, query)
+    await this.authService.resetPassword(res, body, query)
   }
 
   @Get('/email-exists')
   async emailExists(@Res() res: Response, @Query() { email }: EmailDto) {
-    return await this.authService.emailExists(res, email)
+    await this.authService.emailExists(res, email)
   }
 
   @Get('/username-exists')
   async usernameExists(@Res() res: Response, @Query() { username }: UsernameDto) {
-    return await this.authService.usernameExists(res, username)
+    await this.authService.usernameExists(res, username)
   }
 
   @Post('/signup')
@@ -64,12 +64,12 @@ export class AuthController {
     @Query() query: ReferralDto,
     @Body() signupDto: SignupDto,
   ) {
-    return await this.authService.signup(res, query, signupDto)
+    await this.authService.signup(res, query, signupDto)
   }
 
   @Post('/login')
   async login(@Res() res: Response, @Body() loginDto: LoginDto) {
-    return await this.authService.login(res, loginDto)
+    await this.authService.login(res, loginDto)
   }
 
   @Patch('/avatar')
@@ -86,7 +86,7 @@ export class AuthController {
     @Req() req: IRequest,
     @UploadedFile() file: Express.Multer.File
   ) {
-    return await this.authService.uploadAvatar(res, req.user, file)
+    await this.authService.uploadAvatar(res, req.user, file)
   }
 
   @ApiBearerAuth()
@@ -98,6 +98,6 @@ export class AuthController {
     @Req() req: IRequest,
     @Body() body: UpdatePasswordDto
   ) {
-    return await this.authService.updatePassword(res, req.user, body)
+    await this.authService.updatePassword(res, req.user, body)
   }
 }
