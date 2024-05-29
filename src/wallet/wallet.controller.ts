@@ -21,17 +21,17 @@ export class WalletController {
 
   @Get('/verify/bank-details')
   async bankAccountVerification(@Res() res: Response, @Query() query: ValidateBankDto) {
-    return await this.walletService.bankAccountVerification(res, query)
+    await this.walletService.bankAccountVerification(res, query)
   }
 
   @Get('/fetch/banks')
   async fetchBanks(@Res() res: Response) {
-    return await this.walletService.fetchBanks(res)
+    await this.walletService.fetchBanks(res)
   }
 
   @Get('/fetch/banks/:bankCode')
   async fetchBank(@Res() res: Response, @Param('bankCode') bankCode: string) {
-    return await this.walletService.fetchBankByBankCode(res, bankCode)
+    await this.walletService.fetchBankByBankCode(res, bankCode)
   }
 
   @ApiBearerAuth()
@@ -42,7 +42,7 @@ export class WalletController {
     @Req() req: IRequest,
     @Res() res: Response,
   ) {
-    return await this.walletService.linkedBanks(res, req.user)
+    await this.walletService.linkedBanks(res, req.user)
   }
 
   @Post('/add/bank-details')
@@ -54,7 +54,7 @@ export class WalletController {
     @Res() res: Response,
     @Body() body: BankDetailsDto
   ) {
-    return await this.walletService.addBankDetail(res, req.user, body)
+    await this.walletService.addBankDetail(res, req.user, body)
   }
 
   @Delete('/remove/bank-details/:id')
@@ -66,7 +66,7 @@ export class WalletController {
     @Res() res: Response,
     @Param('id') id: string
   ) {
-    return await this.walletService.removeBankDetail(res, req.user, id)
+    await this.walletService.removeBankDetail(res, req.user, id)
   }
 
   @Patch('/toggle-primary/bank-details/:id')
@@ -78,7 +78,7 @@ export class WalletController {
     @Res() res: Response,
     @Param('id') id: string
   ) {
-    return await this.walletService.togglePrimaryAccount(res, req.user, id)
+    await this.walletService.togglePrimaryAccount(res, req.user, id)
   }
 
   @ApiOperation({
@@ -98,7 +98,7 @@ export class WalletController {
     }
 
     try {
-      return await this.walletService.manageTransferEvents(req.body)
+      await this.walletService.manageTransferEvents(req.body)
     } catch (err) {
       console.error(err)
       throw new HttpException("Something went wrong", StatusCodes.InternalServerError)
