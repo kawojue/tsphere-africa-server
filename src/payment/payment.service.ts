@@ -312,6 +312,7 @@ export class PaymentService {
         { amount, linkedBankId, pin }: WithdrawalDto
     ) {
         try {
+            amount = Number(amount)
             const user = await this.prisma.user.findUnique({
                 where: { id: sub },
                 select: {
