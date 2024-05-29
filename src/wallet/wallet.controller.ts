@@ -34,7 +34,10 @@ export class WalletController {
     return await this.walletService.fetchBankByBankCode(res, bankCode)
   }
 
+  @ApiBearerAuth()
   @Get('/linked-banks')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.creative, Roles.talent, Roles.client)
   async linkedBanks(
     @Req() req: IRequest,
     @Res() res: Response,
