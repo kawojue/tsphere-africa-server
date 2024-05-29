@@ -313,6 +313,12 @@ export class PaymentService {
     ) {
         try {
             amount = Number(amount)
+            const MIN_AMOUNT = 50 as const
+
+            if (amount < MIN_AMOUNT) {
+                return this.response.sendError(res, StatusCodes.BadRequest, `Minimum amount is ₦${MIN_AMOUNT}`)
+            }
+
             const user = await this.prisma.user.findUnique({
                 where: { id: sub },
                 select: {
