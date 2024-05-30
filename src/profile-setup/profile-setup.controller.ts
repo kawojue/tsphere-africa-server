@@ -37,7 +37,7 @@ export class ProfileSetupController {
     @Res() res: Response,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    return await this.profileSetupService.uploadPortfolioImages(res, req.user, files || [])
+    await this.profileSetupService.uploadPortfolioImages(res, req.user, files || [])
   }
 
   @ApiOperation({
@@ -52,7 +52,7 @@ export class ProfileSetupController {
     @Res() res: Response,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return await this.profileSetupService.uploadPortfolioVideo(res, req.user, file)
+    await this.profileSetupService.uploadPortfolioVideo(res, req.user, file)
   }
 
   @Role(UserRole.talent, UserRole.creative)
@@ -67,7 +67,7 @@ export class ProfileSetupController {
     @Res() res: Response,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return await this.profileSetupService.uploadPortfolioAudio(res, req.user, file)
+    await this.profileSetupService.uploadPortfolioAudio(res, req.user, file)
   }
 
   @Role(UserRole.talent, UserRole.creative)
@@ -77,17 +77,17 @@ export class ProfileSetupController {
     @Req() req: IRequest,
     @Body() experiences: ExperiencesDTO
   ) {
-    return await this.profileSetupService.addExperience(res, req.user, experiences)
+    await this.profileSetupService.addExperience(res, req.user, experiences)
   }
 
-  @Role(UserRole.talent, UserRole.creative)
+  @Role(UserRole.talent, UserRole.creative, UserRole.admin)
   @Delete('/experience/:experienceId')
   async removeExperience(
     @Res() res: Response,
     @Req() req: IRequest,
     @Param('experienceId') experienceId: string
   ) {
-    return await this.profileSetupService.removeExperience(res, req.user, experienceId)
+    await this.profileSetupService.removeExperience(res, req.user, experienceId)
   }
 
   @ApiOperation({
@@ -106,7 +106,16 @@ export class ProfileSetupController {
     @Body() skills: SkillsDto,
     @UploadedFiles() attachments: Array<Express.Multer.File>
   ) {
-    return await this.profileSetupService.addSkills(res, req.user, skills, attachments || [])
+    await this.profileSetupService.addSkills(res, req.user, skills, attachments || [])
+  }
+
+  @Role(UserRole.admin)
+  @Delete('/remove/:userId')
+  async deleteSkills(
+    @Res() res: Response,
+    @Param('userId') userId: string
+  ) {
+    await this.profileSetupService.deleteSkills(res, userId)
   }
 
   @Role(UserRole.talent, UserRole.creative)
@@ -116,6 +125,16 @@ export class ProfileSetupController {
     @Res() res: Response,
     @Body() body: RateAndAvailabilityDto
   ) {
-    return await this.profileSetupService.rateAndAvailability(res, req.user, body)
+    await this.profileSetupService.rateAndAvailability(res, req.user, body)
+  }
+
+  @Role(UserRole.admin)
+  @Put('/rate-and-availability/:userId')
+  async editRateAndAvailability(
+    @Res() res: Response,
+    @Param('userId') userId: string,
+    @Body() body: RateAndAvailabilityDto
+  ) {
+    await this.editRateAndAvailability(res, userId, body)
   }
 }

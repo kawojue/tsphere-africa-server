@@ -220,12 +220,14 @@ export class ProfileSetupService {
 
     async removeExperience(
         res: Response,
-        { sub }: ExpressUser,
+        { sub, role }: ExpressUser,
         experienceId: string
     ) {
         try {
             const experience = await this.prisma.experience.delete({
-                where: {
+                where: role === "admin" ? {
+                    id: experienceId
+                } : {
                     id: experienceId,
                     userId: sub
                 }
@@ -251,7 +253,7 @@ export class ProfileSetupService {
             // @ts-ignore
             const skills = JSON.parse(skillsDto.skills)
             if (files.length > 3) {
-                return this.response.sendError(res, StatusCodes.BadRequest, "Media shouldn't more than three")
+                return this.response.sendError(res, StatusCodes.BadRequest, "Media shouldn't be more than three")
             }
 
             const user = await this.prisma.user.findUnique({
@@ -336,6 +338,46 @@ export class ProfileSetupService {
         }
     }
 
+    async deleteSkills(res: Response, userId: string) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+                include: { skills: true }
+            })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, "User not found")
+            }
+
+            if (user.skillAttachments.length > 0) {
+                try {
+                    for (const attachment of user.skillAttachments) {
+                        if (attachment?.path) {
+                            await this.aws.deleteS3(attachment.path)
+                        }
+                    }
+                } catch (err) {
+                    return this.misc.handleServerError(res, err, "Error deleting attachments")
+                }
+            }
+
+            await this.prisma.skill.deleteMany({
+                where: { userId: user.id }
+            })
+
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { skillAttachments: [] }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                message: "All skills and attachments deleted successfully"
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, "Error deleting skills and attachments")
+        }
+    }
+
     async rateAndAvailability(
         res: Response,
         { sub }: ExpressUser,
@@ -372,6 +414,50 @@ export class ProfileSetupService {
             })
         } catch (err) {
             this.misc.handleServerError(res, err)
+        }
+    }
+
+    async editRateAndAvailability(
+        res: Response,
+        userId: string,
+        {
+            availability, charge,
+            weekdays, chargeTime,
+        }: RateAndAvailabilityDto
+    ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId }
+            })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'User not found')
+            }
+
+            const existingRateAndAvailability = await this.prisma.rateAndAvailability.findUnique({
+                where: { userId }
+            })
+
+            if (!existingRateAndAvailability) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'Rate and availability not found for user')
+            }
+
+            const updatedRates = await this.prisma.rateAndAvailability.update({
+                where: { userId },
+                data: {
+                    availability,
+                    charge,
+                    weekdays,
+                    chargeTime,
+                }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: updatedRates,
+                message: 'Rate and availability updated successfully'
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, 'Error updating rate and availability')
         }
     }
 }

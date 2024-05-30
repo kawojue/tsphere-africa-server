@@ -29,8 +29,8 @@ export class RateAndAvailabilityDto {
         type: [String],
         example: ['Monday', 'Tuesday', 'Wednesday']
     })
-    @Min(1)
-    @Max(7)
     @IsArray()
-    weekdays: []
+    @Min(1, { each: true })
+    @Max(7, { each: true })
+    weekdays: string[]
 }

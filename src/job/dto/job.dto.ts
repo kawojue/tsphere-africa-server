@@ -45,13 +45,11 @@ export class PostJobDto {
         example: new Date()
     })
     @IsOptional()
-    @IsDateString()
     duration: string
 
     @ApiProperty({
         example: new Date()
     })
-    @IsDateString()
     applicaion_deadline: string
 
     @ApiProperty({
