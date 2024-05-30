@@ -22,6 +22,7 @@ import { RealtimeService } from './realtime.service'
       'http://localhost:3001',
       'https://talentsphereafrica.co',
       'https://talentsphereafrica.com',
+      'https://tsphere-admin.vercel.app',
       'https://www.talentsphereafrica.co',
       'https://www.talentsphereafrica.com',
       'https://api.talentsphereafrica.co',

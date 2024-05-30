@@ -17,6 +17,7 @@ async function bootstrap() {
       'https://talentsphereafrica.co',
       'https://talentsphereafrica.com',
       'https://sphere-theta.vercel.app',
+      'https://tsphere-admin.vercel.app',
       'https://www.talentsphereafrica.co',
       'https://api.talentsphereafrica.co',
       'https://api.talentsphereafrica.com',
