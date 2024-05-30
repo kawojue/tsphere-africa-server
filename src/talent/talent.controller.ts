@@ -1,10 +1,10 @@
 import { Response } from 'express'
-import {
-  UploadedFile, UseInterceptors, Req,
-  Controller, Put, UseGuards, Body, Res,
-} from '@nestjs/common'
 import { Role } from 'src/role.decorator'
 import { AuthGuard } from '@nestjs/passport'
+import {
+  Param, Put, UseGuards, Body, Req, Res,
+  UploadedFile, Controller, UseInterceptors,
+} from '@nestjs/common'
 import { TalentService } from './talent.service'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { TalentBioStatsDto } from './dto/bio-stats.dto'
@@ -32,7 +32,7 @@ export class TalentController {
     @Body() personalInfoDto: TalentPersonalInfoDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return await this.talentService.personalInfo(res, req.user, personalInfoDto, file)
+    await this.talentService.personalInfo(res, req.user, personalInfoDto, file)
   }
 
   @Role('talent')
@@ -42,6 +42,16 @@ export class TalentController {
     @Req() req: IRequest,
     @Body() bio: TalentBioStatsDto,
   ) {
-    return await this.talentService.bioStats(res, bio, req.user)
+    await this.talentService.bioStats(res, bio, req.user)
+  }
+
+  @Role('admin')
+  @Put('/edit/bio-stats/:userId')
+  async editBioStats(
+    @Res() res: Response,
+    @Body() bio: TalentBioStatsDto,
+    @Param('userId') userId: string,
+  ) {
+    await this.talentService.editBioStats(res, userId, bio)
   }
 }

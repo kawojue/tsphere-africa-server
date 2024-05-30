@@ -187,4 +187,33 @@ export class TalentService {
             this.misc.handleServerError(res, err, 'Error saving Bio and Statistics')
         }
     }
+
+    async editBioStats(
+        res: Response,
+        userId: string,
+        bio: TalentBioStatsDto,
+    ) {
+        try {
+            const talent = await this.prisma.talent.findUnique({
+                where: { userId }
+            })
+
+            if (!talent) {
+                return this.response.sendError(res, StatusCodes.NotFound, 'Talent not found')
+            }
+
+            const updatedBioStat = await this.prisma.talentBioStats.upsert({
+                where: {
+                    talentId: talent.id
+                },
+                create: { ...bio, talent: { connect: { id: talent.id } } },
+                update: bio
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, { data: updatedBioStat })
+        } catch (err) {
+            this.misc.handleServerError(res, err, 'Error saving Bio and Statistics')
+        }
+    }
+
 }
