@@ -131,8 +131,8 @@ export class MiscService {
         }
     }
 
-    async handleServerError(res: Response, err?: any, msg?: string) {
+    handleServerError(res: Response, err?: any, msg?: string) {
         console.error(err)
-        return this.response.sendError(res, StatusCodes.InternalServerError, msg || 'Something went wrong')
+        return this.response.sendError(res, StatusCodes.InternalServerError, msg || err?.message || 'Something went wrong')
     }
 }
