@@ -74,11 +74,11 @@ export class ModminController {
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Patch('/users/toggle-verification/:userId')
-  async toggleUserVerification(
+  async verifyUser(
     @Res() res: Response,
     @Param('userId') userId: string,
   ) {
-    return await this.modminService.toggleUserVerification(res, userId)
+    return await this.modminService.verifyUser(res, userId)
   }
 
   @Get('/users')
