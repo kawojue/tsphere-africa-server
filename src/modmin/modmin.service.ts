@@ -192,6 +192,7 @@ export class ModminService {
                 lastname: true,
                 firstname: true,
                 createdAt: true,
+                userStatus: true,
                 primarySkill: true,
             }
 
@@ -327,6 +328,7 @@ export class ModminService {
                     firstname: true,
                     portfolio: true,
                     createdAt: true,
+                    userStatus: true,
                     bankDetails: true,
                     experiences: true,
                     primarySkill: true,
