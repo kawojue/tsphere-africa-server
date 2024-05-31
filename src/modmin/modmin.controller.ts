@@ -73,7 +73,7 @@ export class ModminController {
   @ApiBearerAuth()
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Patch('/users/toggle-verification/:userId')
+  @Patch('/users/verify/:userId')
   async verifyUser(
     @Res() res: Response,
     @Param('userId') userId: string,
