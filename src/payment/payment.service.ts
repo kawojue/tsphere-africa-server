@@ -431,4 +431,24 @@ export class PaymentService {
             this.misc.handlePaystackAndServerError(res, err)
         }
     }
+
+    async makePayment(
+        res: Response,
+        userId: string
+    ) {
+        try {
+            const wallet = await this.prisma.wallet.findUnique({
+                where: {
+                    id: userId,
+
+                }
+            })
+
+            if (!wallet) {
+                return this.response
+            }
+        } catch (err) {
+            this.misc.handlePaystackAndServerError(res, err)
+        }
+    }
 }

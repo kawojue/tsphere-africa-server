@@ -149,22 +149,6 @@ export class ModminService {
     ) {
         try {
             s = s.trim()
-            let users: {
-                firstname: string
-                username: string
-                lastname: string
-                email: string
-                id: string
-                avatar: {
-                    idx: string
-                    url: string
-                    path: string
-                    type: string
-                }
-                role: $Enums.Role
-                createdAt: Date
-                primarySkill: string | null
-            }[]
 
             let total: number
             s = s?.trim() ?? ''
@@ -224,43 +208,29 @@ export class ModminService {
                     { lastname: 'asc' },
                 ]
 
-            if (type === "verified") {
-                users = await this.prisma.user.findMany({
-                    where: {
-                        verified: true,
-                        OR
-                    },
-                    orderBy,
-                    take: limit,
-                    skip: offset,
-                    select,
-                })
+            const users = await this.prisma.user.findMany({
+                where: type === "verified" ? {
+                    verified: true,
+                    OR
+                } : type === "unverified" ? {
+                    verified: false,
+                    OR
+                } : { OR },
+                orderBy,
+                take: limit,
+                skip: offset,
+                select,
+            })
 
-                total = await this.prisma.user.count({ where: { verified: true, OR } })
-            } else if (type === "unverified") {
-                users = await this.prisma.user.findMany({
-                    where: {
-                        verified: false,
-                        OR
-                    },
-                    orderBy,
-                    take: limit,
-                    skip: offset,
-                    select,
-                })
-
-                total = await this.prisma.user.count({ where: { verified: false, OR } })
-            } else {
-                users = await this.prisma.user.findMany({
-                    where: { OR },
-                    orderBy,
-                    take: limit,
-                    skip: offset,
-                    select,
-                })
-
-                total = await this.prisma.user.count({ where: { OR } })
-            }
+            total = await this.prisma.user.count({
+                where: type === "verified" ? {
+                    verified: true,
+                    OR
+                } : type === "unverified" ? {
+                    verified: false,
+                    OR
+                } : { OR }
+            })
 
             const totalPages = Math.ceil(total / limit)
 
@@ -352,6 +322,7 @@ export class ModminService {
                     skills: true,
                     avatar: true,
                     username: true,
+                    verified: true,
                     lastname: true,
                     firstname: true,
                     portfolio: true,
@@ -383,7 +354,7 @@ export class ModminService {
         }
     }
 
-    async toggleUserVerification(res: Response, userId: string) {
+    async verifyUser(res: Response, userId: string) {
         try {
             const user = await this.prisma.user.findUnique({
                 where: { id: userId }
@@ -393,13 +364,17 @@ export class ModminService {
                 return this.response.sendError(res, StatusCodes.NotFound, "User not found")
             }
 
-            const updatedUser = await this.prisma.user.update({
+            if (user.verified) {
+                return this.response.sendError(res, StatusCodes.UnprocessableEntity, `${user.role} has already been verified`)
+            }
+
+            const verifiedUser = await this.prisma.user.update({
                 where: { id: userId },
-                data: { verified: !!user.verified }
+                data: { verified: true }
             })
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                message: updatedUser.verified ? 'User is now verified' : 'Verifiction has been removed'
+                message: `${verifiedUser.role} has now been verified`
             })
         } catch (err) {
             this.misc.handleServerError(res, err)
