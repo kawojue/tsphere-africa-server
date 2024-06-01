@@ -46,7 +46,7 @@ export class TalentController {
   }
 
   @Role('admin')
-  @Put('/edit/bio-stats/:userId')
+  @Put('/bio-stats/edit/:userId')
   async editBioStats(
     @Res() res: Response,
     @Body() bio: TalentBioStatsDto,
