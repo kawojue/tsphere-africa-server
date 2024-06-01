@@ -1,5 +1,5 @@
+const ExcelJS = require('exceljs')
 import { Response } from 'express'
-import PDFDocument from 'pdfkit'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
@@ -103,41 +103,40 @@ export class ModminService {
         return { users, total, totalPages }
     }
 
-    async createUserListPdf({ q, s = '', page = 1, limit = 200, type }: FetchUserDto): Promise<Buffer> {
-        const { users } = await this.listUsers({
-            q, s, page, limit, type
+    async createUserListExcel({ q, s = '', page = 1, limit = 200, type }: FetchUserDto): Promise<Buffer> {
+        const { users } = await this.listUsers({ q, s, page, limit, type })
+
+        const workbook = new ExcelJS.Workbook()
+        workbook.creator = 'Talent Sphere Africa'
+        const worksheet = workbook.addWorksheet('Users')
+
+        const headerRow = worksheet.addRow([
+            'Name', 'ID', 'Role', 'Email', 'Username', 'Primary Skill',
+            'Verification Status', 'Membered At'
+        ])
+
+        headerRow.eachCell((cell) => {
+            cell.font = { bold: true, size: 14 }
+            cell.alignment = { vertical: 'middle', horizontal: 'center' }
         })
 
-        return new Promise((resolve, reject) => {
-            const doc = new PDFDocument()
-            let buffers: Buffer[] = []
-
-            doc.on('data', buffers.push.bind(buffers))
-            doc.on('end', () => {
-                const pdfData = Buffer.concat(buffers)
-                resolve(pdfData)
-            })
-
-            doc.on('error', reject)
-
-            doc.fontSize(17).text('List of Users', { align: 'center' })
-
-            users.forEach(user => {
-                doc.fontSize(12).text(`Name: ${user.firstname} ${user.lastname}`)
-                doc.text(`ID: ${user.id}`)
-                doc.text(`Role: ${user.role}`)
-                doc.text(`Email: ${user.email}`)
-                doc.text(`Username: ${user.username}`)
-                doc.text(`Lastname: ${user.lastname}`)
-                doc.text(`Firstname: ${user.firstname}`)
-                doc.text(`Primary Skill: ${user.primarySkill}`)
-                doc.text(`Verification Status: ${user.verified ? 'Verified' : 'Unverified'}`)
-                doc.text(`Membered At: ${new Date(user.createdAt).toDateString()}`)
-                doc.text('-------------------------------------')
-            })
-
-            doc.end()
+        users.forEach(user => {
+            worksheet.addRow([
+                `${user.firstname} ${user.lastname}`, user.id, user.role, user.email,
+                user.username, user.primarySkill, user.verified ? 'Verified' : 'Unverified',
+                new Date(user.createdAt).toDateString()
+            ])
         })
+
+        worksheet.columns.forEach(column => {
+            let maxLength = 0
+            column.eachCell({ includeEmpty: true }, cell => {
+                maxLength = Math.max(maxLength, cell.value ? cell.value.toString().length : 10)
+            })
+            column.width = maxLength + 2
+        })
+
+        return await workbook.xlsx.writeBuffer() as Buffer
     }
 
     async registerAdmin(

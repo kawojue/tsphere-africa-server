@@ -102,16 +102,17 @@ export class ModminController {
     @Query() query: FetchUserDto
   ) {
     try {
-      const pdfData = await this.modminService.createUserListPdf(query)
+      const excelData: Buffer = await this.modminService.createUserListExcel(query)
 
       res.writeHead(200, {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename=users_report.pdf',
-        'Content-Length': pdfData.length
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename=users.xlsx',
+        'Content-Length': excelData.length
       })
 
-      res.end(pdfData)
+      res.end(excelData)
     } catch (err) {
+      console.error(err)
       throw new HttpException("Error downloading report", StatusCodes.InternalServerError)
     }
   }
