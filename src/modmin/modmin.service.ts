@@ -698,6 +698,7 @@ export class ModminService {
 
     async fetchBriefs(
         res: Response,
+        { sub, role }: ExpressUser,
         {
             q, s = '', page = 1, limit = 50
         }: SortUserDto
@@ -707,14 +708,29 @@ export class ModminService {
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
+            const OR: ({
+                title: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            } | {
+                type: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            } | {
+                category: {
+                    contains: string
+                    mode: "insensitive"
+                }
+            })[] = [
+                    { title: { contains: s, mode: 'insensitive' } },
+                    { type: { contains: s, mode: 'insensitive' } },
+                    { category: { contains: s, mode: 'insensitive' } },
+                ]
+
             const briefs = await this.prisma.briefForm.findMany({
-                where: {
-                    OR: [
-                        { title: { contains: s, mode: 'insensitive' } },
-                        { type: { contains: s, mode: 'insensitive' } },
-                        { category: { contains: s, mode: 'insensitive' } },
-                    ]
-                },
+                where: role === "admin" ? { OR } : { clientId: sub, OR },
                 skip: offset,
                 take: limit,
                 select: {
@@ -737,15 +753,32 @@ export class ModminService {
                 orderBy: q === "name" ? { title: 'asc' } : { createdAt: 'desc' }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: briefs })
+            const length = await this.prisma.briefForm.count({
+                where: role === "admin" ? { OR } : { clientId: sub, OR }
+            })
+
+            const totalPages = Math.ceil(length / limit)
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: briefs, totalPages, length
+            })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error fetching briefs")
         }
     }
 
-    async fetchBrief(res: Response, briefId: string) {
+    async fetchBrief(
+        res: Response,
+        briefId: string,
+        { sub, role }: ExpressUser
+    ) {
         const brief = await this.prisma.briefForm.findUnique({
-            where: { id: briefId },
+            where: role === "admin" ? {
+                id: briefId
+            } : {
+                id: briefId,
+                clientId: sub,
+            },
             include: {
                 client: {
                     select: {

@@ -1,5 +1,10 @@
 import { Response } from 'express'
 import { Role } from 'src/role.decorator'
+import StatusCodes from 'enums/StatusCodes'
+import {
+  Body, Res, Get, HttpException, Param, Req,
+  Patch, Query, Post, Controller, UseGuards,
+} from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { Role as Roles } from '@prisma/client'
 import { ModminService } from './modmin.service'
@@ -12,10 +17,6 @@ import {
   AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
 } from './dto/user.dto'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
-import {
-  Body, Controller, Get, HttpException, Param, Patch, Post, Query, Res, UseGuards
-} from '@nestjs/common'
-import StatusCodes from 'enums/StatusCodes'
 
 @ApiTags('Admin')
 @Controller('modmin')
@@ -191,14 +192,22 @@ export class ModminController {
   @Get('/briefs')
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async fetchBriefs(@Res() res: Response, @Query() q: SortUserDto) {
-    await this.modminService.fetchBriefs(res, q)
+  async fetchBriefs(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Query() q: SortUserDto
+  ) {
+    await this.modminService.fetchBriefs(res, req.user, q)
   }
 
   @Get('/briefs/:briefId')
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async fetchBrief(@Res() res: Response, @Param('briefId') briefId: string) {
-    await this.modminService.fetchBrief(res, briefId)
+  async fetchBrief(
+    @Res() res: Response,
+    @Req() req: IRequest,
+    @Param('briefId') briefId: string
+  ) {
+    await this.modminService.fetchBrief(res, briefId, req.user)
   }
 }

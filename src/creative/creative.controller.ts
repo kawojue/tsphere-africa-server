@@ -46,6 +46,16 @@ export class CreativeController {
     return await this.creativeService.bio(res, bio, req.user)
   }
 
+  @Role('admin')
+  @Patch('/bio/edit/:userId')
+  async updateBio(
+    @Res() res: Response,
+    @Body() { bio }: BioDto,
+    @Param('userId') userId: string,
+  ) {
+    await this.creativeService.updateBio(res, userId, bio)
+  }
+
   @Role('creative')
   @Put('/certification')
   async addCertification(

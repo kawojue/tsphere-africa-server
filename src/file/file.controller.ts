@@ -13,7 +13,6 @@ import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common'
 export class FileController {
   constructor(private readonly fileService: FileService) { }
 
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/download')
   async downloadFile(@Res() res: Response, @Query() q: DownloadFileDTO) {
     await this.fileService.downloadFile(res, q.path)

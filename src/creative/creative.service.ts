@@ -26,8 +26,9 @@ export class CreativeService {
         res: Response,
         { sub }: ExpressUser,
         {
-            lastname, state, religion, address, gender, idType, altPhone, country,
-            dob, fbHandle, igHandle, language, xHandle, phone, username, firstname,
+            igHandle, xHandle, phone, username, firstname,
+            idType, altPhone, country, language, fbHandle,
+            lastname, state, religion, dob, address, gender,
         }: CreativePersonalInfoDto,
         file: Express.Multer.File
     ) {
@@ -177,6 +178,41 @@ export class CreativeService {
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 data: { bio: creative.bio }
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, 'Error saving Bio')
+        }
+    }
+
+    async updateBio(
+        res: Response,
+        userId: string,
+        bio: string,
+    ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+                include: {
+                    creative: true
+                }
+            })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, "User not found")
+            }
+
+            if (user.role !== "creative") {
+                return this.response.sendError(res, StatusCodes.UnprocessableEntity, "User's role is not creative")
+            }
+
+            const creative = await this.prisma.creative.update({
+                where: { userId },
+                data: { bio }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: creative,
+                message: "User bio has been updated successfully"
             })
         } catch (err) {
             this.misc.handleServerError(res, err, 'Error saving Bio')
