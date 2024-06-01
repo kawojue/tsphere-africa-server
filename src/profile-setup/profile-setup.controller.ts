@@ -110,7 +110,7 @@ export class ProfileSetupController {
   }
 
   @Role(UserRole.admin)
-  @Delete('/remove/:userId')
+  @Delete('/skills/remove/:userId')
   async deleteSkills(
     @Res() res: Response,
     @Param('userId') userId: string
