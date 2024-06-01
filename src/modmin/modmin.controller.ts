@@ -13,8 +13,9 @@ import {
 } from './dto/user.dto'
 import { LoginAdminDto, RegisterAdminDto } from './dto/auth.dto'
 import {
-  Body, Controller, Get, Param, Patch, Post, Query, Res, UseGuards
+  Body, Controller, Get, HttpException, Param, Patch, Post, Query, Res, UseGuards
 } from '@nestjs/common'
+import StatusCodes from 'enums/StatusCodes'
 
 @ApiTags('Admin')
 @Controller('modmin')
@@ -23,12 +24,12 @@ export class ModminController {
 
   @Post('/register')
   async registerAdmin(@Res() res: Response, @Body() adminDto: RegisterAdminDto) {
-    return await this.modminService.registerAdmin(res, adminDto)
+    await this.modminService.registerAdmin(res, adminDto)
   }
 
   @Post('/login')
   async loginAdmin(@Res() res: Response, @Body() adminDto: LoginAdminDto) {
-    return await this.modminService.loginAdmin(res, adminDto)
+    await this.modminService.loginAdmin(res, adminDto)
   }
 
   @ApiBearerAuth()
@@ -39,7 +40,7 @@ export class ModminController {
     @Res() res: Response,
     @Query() query: AnalyticsDto,
   ) {
-    return await this.modminService.userAnalytics(res, query)
+    await this.modminService.userAnalytics(res, query)
   }
 
   @ApiBearerAuth()
@@ -47,7 +48,7 @@ export class ModminController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/article/analytics/dashboard')
   async articleAnalytics(@Res() res: Response,) {
-    return await this.modminService.articleAnalytics(res)
+    await this.modminService.articleAnalytics(res)
   }
 
   @ApiBearerAuth()
@@ -55,7 +56,7 @@ export class ModminController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/referral/analytics/dashboard')
   async referralAnalytics(@Res() res: Response,) {
-    return await this.modminService.referralAnalytics(res)
+    await this.modminService.referralAnalytics(res)
   }
 
   @Get('/user/totggle-suspension/:userId')
@@ -67,7 +68,7 @@ export class ModminController {
     @Param('userId') userId: string,
     @Query() query: UserSuspensionDto,
   ) {
-    return await this.modminService.toggleUserSuspension(res, userId, query)
+    await this.modminService.toggleUserSuspension(res, userId, query)
   }
 
   @ApiBearerAuth()
@@ -78,18 +79,41 @@ export class ModminController {
     @Res() res: Response,
     @Param('userId') userId: string,
   ) {
-    return await this.modminService.verifyUser(res, userId)
+    await this.modminService.verifyUser(res, userId)
   }
 
   @Get('/users')
   @ApiBearerAuth()
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async fetchAllUsers(
+  async fetchUsers(
     @Res() res: Response,
     @Query() query: FetchUserDto
   ) {
-    return await this.modminService.fetchUsers(res, query)
+    await this.modminService.fetchUsers(res, query)
+  }
+
+  @ApiBearerAuth()
+  @Role(Roles.admin)
+  @Get('/users/download-report')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async downloadUsers(
+    @Res() res: Response,
+    @Query() query: FetchUserDto
+  ) {
+    try {
+      const pdfData = await this.modminService.createUserListPdf(query)
+
+      res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename=users_report.pdf',
+        'Content-Length': pdfData.length
+      })
+
+      res.end(pdfData)
+    } catch (err) {
+      throw new HttpException("Error downloading report", StatusCodes.InternalServerError)
+    }
   }
 
   @ApiBearerAuth()
@@ -100,7 +124,7 @@ export class ModminController {
     @Res() res: Response,
     @Param('userId') userId: string,
   ) {
-    return await this.modminService.fetchUserProfile(res, userId)
+    await this.modminService.fetchUserProfile(res, userId)
   }
 
   @ApiBearerAuth()
@@ -108,7 +132,7 @@ export class ModminController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/user/chart/dashboard')
   async userChart(@Res() res: Response) {
-    return await this.modminService.userChart(res)
+    await this.modminService.userChart(res)
   }
 
   @ApiBearerAuth()
@@ -116,7 +140,7 @@ export class ModminController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/referral/chart/dashboard')
   async referralChart(@Res() res: Response) {
-    return await this.modminService.referralChart(res)
+    await this.modminService.referralChart(res)
   }
 
   @ApiBearerAuth()
@@ -127,7 +151,7 @@ export class ModminController {
     @Res() res: Response,
     @Query() query: SortUserDto,
   ) {
-    return await this.modminService.fetchReferrals(res, query)
+    await this.modminService.fetchReferrals(res, query)
   }
 
   @ApiBearerAuth()
@@ -138,7 +162,7 @@ export class ModminController {
     @Res() res: Response,
     @Param('referralId') referralId: string,
   ) {
-    return await this.modminService.fetchReferral(res, referralId)
+    await this.modminService.fetchReferral(res, referralId)
   }
 
   @Patch('/projects/:projectId/status')

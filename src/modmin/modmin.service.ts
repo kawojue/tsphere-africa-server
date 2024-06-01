@@ -1,14 +1,15 @@
 import { Response } from 'express'
+import PDFDocument from 'pdfkit'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleText } from 'helpers/formatTexts'
+import { ContractStatus } from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
 import {
     UpdateProjectStatusDTO, UpdateContractStatusDTO
 } from './dto/status.dto'
-import { $Enums, ContractStatus } from '@prisma/client'
 import { EncryptionService } from 'lib/encryption.service'
 import {
     AnalyticsDto, FetchUserDto, SortUserDto, UserSuspensionDto
@@ -23,6 +24,121 @@ export class ModminService {
         private readonly prisma: PrismaService,
         private readonly encryption: EncryptionService,
     ) { }
+
+    private async listUsers({ q, s, page, limit, type }: FetchUserDto) {
+        s = s?.trim() ?? ''
+        limit = Number(limit)
+        const offset = (Number(page) - 1) * limit
+
+        const OR: ({
+            firstname: {
+                contains: string
+                mode: "insensitive"
+            }
+        } | {
+            username: {
+                contains: string
+                mode: "insensitive"
+            }
+        } | {
+            lastname: {
+                contains: string
+                mode: "insensitive"
+            }
+        } | {
+            email: {
+                contains: string
+                mode: "insensitive"
+            }
+        })[] = [
+                { firstname: { contains: s, mode: 'insensitive' } },
+                { username: { contains: s, mode: 'insensitive' } },
+                { lastname: { contains: s, mode: 'insensitive' } },
+                { email: { contains: s, mode: 'insensitive' } }
+            ]
+
+        const users = await this.prisma.user.findMany({
+            where: type === "verified" ? {
+                verified: true,
+                OR
+            } : type === "unverified" ? {
+                verified: false,
+                OR
+            } : { OR },
+            orderBy: q === "date" ? {
+                createdAt: 'desc'
+            } : [
+                { firstname: 'asc' },
+                { lastname: 'asc' },
+            ],
+            take: limit,
+            skip: offset,
+            select: {
+                id: true,
+                role: true,
+                email: true,
+                avatar: true,
+                verified: true,
+                username: true,
+                lastname: true,
+                firstname: true,
+                createdAt: true,
+                userStatus: true,
+                primarySkill: true,
+            },
+        })
+
+        const total = await this.prisma.user.count({
+            where: type === "verified" ? {
+                verified: true,
+                OR
+            } : type === "unverified" ? {
+                verified: false,
+                OR
+            } : { OR }
+        })
+
+        const totalPages = Math.ceil(total / limit)
+
+        return { users, total, totalPages }
+    }
+
+    async createUserListPdf({ q, s = '', page = 1, limit = 200, type }: FetchUserDto): Promise<Buffer> {
+        const { users } = await this.listUsers({
+            q, s, page, limit, type
+        })
+
+        return new Promise((resolve, reject) => {
+            const doc = new PDFDocument()
+            let buffers: Buffer[] = []
+
+            doc.on('data', buffers.push.bind(buffers))
+            doc.on('end', () => {
+                const pdfData = Buffer.concat(buffers)
+                resolve(pdfData)
+            })
+
+            doc.on('error', reject)
+
+            doc.fontSize(17).text('List of Users', { align: 'center' })
+
+            users.forEach(user => {
+                doc.fontSize(12).text(`Name: ${user.firstname} ${user.lastname}`)
+                doc.text(`ID: ${user.id}`)
+                doc.text(`Role: ${user.role}`)
+                doc.text(`Email: ${user.email}`)
+                doc.text(`Username: ${user.username}`)
+                doc.text(`Lastname: ${user.lastname}`)
+                doc.text(`Firstname: ${user.firstname}`)
+                doc.text(`Primary Skill: ${user.primarySkill}`)
+                doc.text(`Verification Status: ${user.verified ? 'Verified' : 'Unverified'}`)
+                doc.text(`Membered At: ${new Date(user.createdAt).toDateString()}`)
+                doc.text('-------------------------------------')
+            })
+
+            doc.end()
+        })
+    }
 
     async registerAdmin(
         res: Response,
@@ -148,100 +264,21 @@ export class ModminService {
         { q, s = '', page = 1, limit = 200, type }: FetchUserDto,
     ) {
         try {
-            s = s.trim()
-
-            let total: number
-            s = s?.trim() ?? ''
-            limit = Number(limit)
-            const offset = (Number(page) - 1) * limit
-
-            const OR: ({
-                firstname: {
-                    contains: string
-                    mode: "insensitive"
-                }
-            } | {
-                username: {
-                    contains: string
-                    mode: "insensitive"
-                }
-            } | {
-                lastname: {
-                    contains: string
-                    mode: "insensitive"
-                }
-            } | {
-                email: {
-                    contains: string
-                    mode: "insensitive"
-                }
-            })[] = [
-                    { firstname: { contains: s, mode: 'insensitive' } },
-                    { username: { contains: s, mode: 'insensitive' } },
-                    { lastname: { contains: s, mode: 'insensitive' } },
-                    { email: { contains: s, mode: 'insensitive' } }
-                ]
-
-            const select = {
-                id: true,
-                role: true,
-                email: true,
-                avatar: true,
-                verified: true,
-                username: true,
-                lastname: true,
-                firstname: true,
-                createdAt: true,
-                userStatus: true,
-                primarySkill: true,
-            }
-
-            const orderBy: {
-                createdAt: "desc"
-            } | ({
-                firstname: "asc"
-            } | {
-                lastname: "asc"
-            })[] = q === "date" ? {
-                createdAt: 'desc'
-            } : [
-                    { firstname: 'asc' },
-                    { lastname: 'asc' },
-                ]
-
-            const users = await this.prisma.user.findMany({
-                where: type === "verified" ? {
-                    verified: true,
-                    OR
-                } : type === "unverified" ? {
-                    verified: false,
-                    OR
-                } : { OR },
-                orderBy,
-                take: limit,
-                skip: offset,
-                select,
+            const usersList = await this.listUsers({
+                q, s, page, limit, type
             })
-
-            total = await this.prisma.user.count({
-                where: type === "verified" ? {
-                    verified: true,
-                    OR
-                } : type === "unverified" ? {
-                    verified: false,
-                    OR
-                } : { OR }
-            })
-
-            const totalPages = Math.ceil(total / limit)
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: { users, total, totalPages }
+                data: usersList
             })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
     }
+
+    async usersReport(
+        res: Response
+    ) { }
 
     async userChart(res: Response) {
         try {

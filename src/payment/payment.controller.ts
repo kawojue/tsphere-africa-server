@@ -10,8 +10,8 @@ import {
   Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards
 } from '@nestjs/common'
 
-@ApiTags("Payment")
 @ApiBearerAuth()
+@ApiTags("Payment")
 @Controller('payment')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class PaymentController {
@@ -22,7 +22,7 @@ export class PaymentController {
     @Req() req: IRequest,
     @Res() res: Response,
   ) {
-    return await this.paymentService.analytics(res, req.user)
+    await this.paymentService.analytics(res, req.user)
   }
 
   @Get('/chart')
@@ -31,7 +31,7 @@ export class PaymentController {
     @Res() res: Response,
     @Query() q: PaymentChartDto
   ) {
-    return await this.paymentService.charts(res, q, req.user)
+    await this.paymentService.charts(res, q, req.user)
   }
 
   @Get('/histories')
@@ -40,7 +40,7 @@ export class PaymentController {
     @Res() res: Response,
     @Query() query: TxHistoriesDto,
   ) {
-    return await this.paymentService.fetchTxHistories(res, req.user, query)
+    await this.paymentService.fetchTxHistories(res, req.user, query)
   }
 
   @Get('/histories/:tx_id')
@@ -49,7 +49,7 @@ export class PaymentController {
     @Res() res: Response,
     @Param('tx_id') tx_id: string,
   ) {
-    return await this.paymentService.fetchTxHistory(res, tx_id, req.user)
+    await this.paymentService.fetchTxHistory(res, tx_id, req.user)
   }
 
   @Post('/request-pin')
@@ -57,7 +57,7 @@ export class PaymentController {
     @Req() req: IRequest,
     @Res() res: Response,
   ) {
-    return await this.paymentService.requestPin(res, req.user)
+    await this.paymentService.requestPin(res, req.user)
   }
 
   @Post('/withdraw')
@@ -66,6 +66,6 @@ export class PaymentController {
     @Res() res: Response,
     @Body() body: WithdrawalDto
   ) {
-    return await this.paymentService.withdraw(res, req.user, body)
+    await this.paymentService.withdraw(res, req.user, body)
   }
 }
