@@ -18,7 +18,7 @@ export class ContactController {
 
   @Post('/contact-us')
   async contactUs(@Res() res: Response, @Body() body: ContactDto) {
-    return await this.contactService.contactUs(res, body)
+    await this.contactService.contactUs(res, body)
   }
 
   @Get('/fetch')
@@ -26,7 +26,7 @@ export class ContactController {
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async fetchContacts(@Res() res: Response, @Query() query: InfiniteScrollDto) {
-    return await this.contactService.fetchContacts(res, query)
+    await this.contactService.fetchContacts(res, query)
   }
 
   @Get('/fetch/:contactId')
@@ -34,7 +34,7 @@ export class ContactController {
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async getContact(@Res() res: Response, @Param('contactId') contactId: string) {
-    return await this.contactService.getContact(res, contactId)
+    await this.contactService.getContact(res, contactId)
   }
 
   @Delete('/remove/:contactId')
@@ -42,7 +42,7 @@ export class ContactController {
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async removeContact(@Res() res: Response, @Param('contactId') contactId: string) {
-    return await this.contactService.removeContact(res, contactId)
+    await this.contactService.removeContact(res, contactId)
   }
 
   @Get('/reply/:contactId')
@@ -54,6 +54,6 @@ export class ContactController {
     @Body() body: ReplyContactDto,
     @Param('contactId') contactId: string,
   ) {
-    return await this.contactService.replyContact(res, contactId, body)
+    await this.contactService.replyContact(res, contactId, body)
   }
 }

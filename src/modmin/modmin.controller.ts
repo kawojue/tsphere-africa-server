@@ -167,8 +167,9 @@ export class ModminController {
     await this.modminService.fetchReferral(res, referralId)
   }
 
-  @Patch('/projects/:projectId/status')
+  @ApiBearerAuth()
   @Role(Roles.admin)
+  @Patch('/projects/:projectId/status')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async updateProjectStatus(
     @Res() res: Response,
@@ -178,8 +179,9 @@ export class ModminController {
     await this.modminService.updateProjectStatus(res, projectId, q)
   }
 
-  @Patch('/hires/:contractId/status')
+  @ApiBearerAuth()
   @Role(Roles.admin)
+  @Patch('/hires/:contractId/status')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async updateContractStatus(
     @Res() res: Response,
@@ -190,6 +192,7 @@ export class ModminController {
   }
 
   @Get('/briefs')
+  @ApiBearerAuth()
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async fetchBriefs(
@@ -200,8 +203,9 @@ export class ModminController {
     await this.modminService.fetchBriefs(res, req.user, q)
   }
 
-  @Get('/briefs/:briefId')
+  @ApiBearerAuth()
   @Role(Roles.admin)
+  @Get('/briefs/:briefId')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async fetchBrief(
     @Res() res: Response,

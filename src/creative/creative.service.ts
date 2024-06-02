@@ -153,6 +153,114 @@ export class CreativeService {
         }
     }
 
+    async editPersonalInfo(
+        res: Response,
+        userId: string,
+        {
+            igHandle, xHandle, phone, username, firstname,
+            idType, altPhone, country, language, fbHandle,
+            lastname, state, religion, dob, address, gender,
+        }: CreativePersonalInfoDto,
+        file: Express.Multer.File
+    ) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    id: userId
+                },
+                include: {
+                    talent: {
+                        select: {
+                            id: true,
+                            personalInfo: true
+                        }
+                    }
+                }
+            })
+
+            if (!user) {
+                return this.response.sendError(res, StatusCodes.NotFound, "User not found")
+            }
+
+            let proofOfId = {} as IFile
+            const personalInfo = user.talent?.personalInfo
+
+            if (file) {
+                const result = validateFile(file, 5 << 20, 'jpg', 'png')
+
+                if (result?.status) {
+                    return this.response.sendError(res, result.status, result.message)
+                }
+
+                const path = `${userId}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                await this.aws.uploadS3(result.file, path)
+                proofOfId = {
+                    path,
+                    type: file.mimetype,
+                    url: this.aws.getS3(path)
+                }
+
+                if (personalInfo?.proofOfId?.path) {
+                    await this.aws.deleteS3(personalInfo.proofOfId.path)
+                }
+            }
+
+            if (username && username !== user.username) {
+                if (!this.misc.isValidUsername(username)) {
+                    return this.response.sendError(res, StatusCodes.BadRequest, 'Username is not allowed')
+                }
+
+                const usernameExists = await this.prisma.user.findUnique({
+                    where: { username }
+                })
+
+                if (usernameExists) {
+                    return this.response.sendError(res, StatusCodes.Conflict, 'Username has been taken')
+                }
+
+                await this.prisma.referral.update({
+                    where: { userId },
+                    data: { key: genReferralKey(username) }
+                })
+            } else {
+                username = user.username
+            }
+
+            firstname = firstname && user.firstname !== firstname ? titleText(firstname) : user.firstname
+            lastname = lastname && user.lastname !== lastname ? titleText(lastname) : user.lastname
+
+            let languages: string[] = []
+
+            if (language) {
+                languages = JSON.parse(language.replace(/'/g, '"')) as Array<string>
+            }
+
+            const [personalInfoData] = await this.prisma.$transaction([
+                this.prisma.talentPersonalInfo.update({
+                    where: { talentId: user.talent.id },
+                    data: {
+                        country, state, religion, address, idType, languages,
+                        fbHandle, igHandle, xHandle, phone, altPhone, gender, dob,
+                        proofOfId: proofOfId?.path ? proofOfId : personalInfo?.proofOfId,
+                    }
+                }),
+                this.prisma.user.update({
+                    where: {
+                        id: user.id
+                    },
+                    data: { username, firstname, lastname }
+                })
+            ])
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: personalInfoData,
+                message: "Personal Information has been updated successfully"
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err, 'Error saving personal information')
+        }
+    }
+
     async bio(
         res: Response,
         bio: string,
