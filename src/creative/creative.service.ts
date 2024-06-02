@@ -267,20 +267,9 @@ export class CreativeService {
         { sub }: ExpressUser
     ) {
         try {
-            const user = await this.prisma.user.findUnique({
-                where: {
-                    id: sub
-                },
-                include: {
-                    creative: true
-                }
-            })
-
             const creative = await this.prisma.creative.upsert({
-                where: {
-                    userId: user.id
-                },
-                create: { bio, user: { connect: { id: user.id } } },
+                where: { userId: sub },
+                create: { bio, user: { connect: { id: sub } } },
                 update: { bio }
             })
 
@@ -300,9 +289,6 @@ export class CreativeService {
         try {
             const user = await this.prisma.user.findUnique({
                 where: { id: userId },
-                include: {
-                    creative: true
-                }
             })
 
             if (!user) {
