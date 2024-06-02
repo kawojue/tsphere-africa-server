@@ -197,6 +197,41 @@ export class ProfileSetupService {
         }
     }
 
+    async deletePortfolio(
+        res: Response,
+        userId: string,
+    ) {
+        try {
+            const portfolio = await this.prisma.portfolio.findUnique({
+                where: { userId }
+            })
+
+            if (!portfolio) {
+                return this.response.sendError(res, StatusCodes.NotFound, "Portfolio not found")
+            }
+
+            const files = [
+                ...portfolio.images.map(image => image.path),
+                portfolio.video?.path,
+                portfolio.audio?.path
+            ].filter(Boolean)
+
+            for (const path of files) {
+                await this.aws.deleteS3(path)
+            }
+
+            await this.prisma.portfolio.delete({
+                where: { userId }
+            })
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                message: "Portfolio has been deleted sucessfully"
+            })
+        } catch (err) {
+            this.misc.handleServerError(res, err)
+        }
+    }
+
     async addExperience(
         res: Response,
         { sub }: ExpressUser,

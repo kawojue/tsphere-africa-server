@@ -70,6 +70,12 @@ export class ProfileSetupController {
     await this.profileSetupService.uploadPortfolioAudio(res, req.user, file)
   }
 
+  @Role(UserRole.admin)
+  @Delete('/portfolio/delete/:userId')
+  async deletePortfolio(@Res() res: Response, @Param('userId') userId: string) {
+    await this.profileSetupService.deletePortfolio(res, userId)
+  }
+
   @Role(UserRole.talent, UserRole.creative)
   @Post('/experience')
   async addExperience(
