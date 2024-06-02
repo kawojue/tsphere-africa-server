@@ -16,10 +16,10 @@ import { ProfileSetupService } from './profile-setup.service'
 import { RateAndAvailabilityDto } from './dto/rate-availability.dto'
 import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
 
-@ApiTags("Profile Setup")
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@ApiTags("Profile Setup")
 @Controller('profile-setup')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 export class ProfileSetupController {
   constructor(private readonly profileSetupService: ProfileSetupService) { }
 

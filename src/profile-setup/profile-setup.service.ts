@@ -384,7 +384,7 @@ export class ProfileSetupService {
                 return this.response.sendError(res, StatusCodes.NotFound, "User not found")
             }
 
-            if (user.skillAttachments.length > 0) {
+            if (user.skillAttachments?.length) {
                 try {
                     for (const attachment of user.skillAttachments) {
                         if (attachment?.path) {
@@ -396,14 +396,16 @@ export class ProfileSetupService {
                 }
             }
 
-            await this.prisma.skill.deleteMany({
-                where: { userId: user.id }
-            })
+            await this.prisma.$transaction([
+                this.prisma.skill.deleteMany({
+                    where: { userId: user.id }
+                }),
+                this.prisma.user.update({
+                    where: { id: user.id },
+                    data: { skillAttachments: [] }
+                })
+            ])
 
-            await this.prisma.user.update({
-                where: { id: user.id },
-                data: { skillAttachments: [] }
-            })
 
             this.response.sendSuccess(res, StatusCodes.OK, {
                 message: "All skills and attachments deleted successfully"

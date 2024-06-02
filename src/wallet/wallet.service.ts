@@ -36,8 +36,7 @@ export class WalletService {
         const bank = await this.paystack.getBankByBankCode(bankCode)
 
         if (!bank) {
-            this.response.sendError(res, StatusCodes.NotFound, "No supported Bank Name is associated with this bank code.")
-            return
+            return this.response.sendError(res, StatusCodes.NotFound, "No supported Bank Name is associated with this bank code.")
         }
 
         this.response.sendSuccess(res, StatusCodes.OK, { data: bank })

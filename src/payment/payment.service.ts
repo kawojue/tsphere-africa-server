@@ -7,11 +7,11 @@ import { MiscService } from 'lib/misc.service'
 import { BrevoService } from 'lib/brevo.service'
 import { TxStatus, TxType } from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
-import { WithdrawalDto } from './dto/withdraw.dto'
 import { genRandomCode } from 'helpers/genRandStr'
 import { TxHistoriesDto } from './dto/txHistory.dto'
 import { PaymentChartDto } from './dto/analytics.dto'
 import { MailService } from 'src/mailer/mailer.service'
+import { AmountDTO, WithdrawalDTO } from './dto/withdraw.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 
 @Injectable()
@@ -24,21 +24,6 @@ export class PaymentService {
         private readonly prisma: PrismaService,
         private readonly paystack: PaystackService,
     ) { }
-
-    async payment(res: Response, { sub }: ExpressUser) {
-        const balance = await this.prisma.wallet.findUnique({ where: { userId: sub } })
-
-        const primaryAccount = await this.prisma.bankDetails.findFirst({
-            where: {
-                userId: sub,
-                primary: true,
-            }
-        })
-
-        this.response.sendSuccess(res, StatusCodes.OK, {
-            data: { balance, primaryAccount }
-        })
-    }
 
     async analytics(res: Response, { sub, role }: ExpressUser) {
         try {
@@ -243,10 +228,6 @@ export class PaymentService {
         try {
             const user = await this.prisma.user.findUnique({ where: { id: sub } })
 
-            if (!user) {
-                return this.response.sendError(res, StatusCodes.NotFound, "Account not found")
-            }
-
             const totp = await this.prisma.totp.findUnique({
                 where: { userId: sub },
             })
@@ -311,7 +292,7 @@ export class PaymentService {
     async withdraw(
         res: Response,
         { sub }: ExpressUser,
-        { amount, linkedBankId, pin }: WithdrawalDto
+        { amount, linkedBankId, pin }: WithdrawalDTO
     ) {
         try {
             amount = Number(amount)
@@ -434,19 +415,41 @@ export class PaymentService {
 
     async makePayment(
         res: Response,
-        userId: string
+        userId: string,
+        { amount }: AmountDTO
     ) {
         try {
-            const wallet = await this.prisma.wallet.findUnique({
-                where: {
-                    id: userId,
+            amount = Number(amount)
 
-                }
+            const wallet = await this.prisma.wallet.findUnique({
+                where: { userId }
             })
 
             if (!wallet) {
-                return this.response
+                return this.response.sendError(res, StatusCodes.NotFound, "User's walllet not found")
             }
+
+            const [_, tx] = await this.prisma.$transaction([
+                this.prisma.wallet.update({
+                    where: { userId },
+                    data: { balance: { increment: amount } }
+                }),
+                this.prisma.txHistory.create({
+                    data: {
+                        amount,
+                        type: 'DEPOSIT',
+                        status: 'SUCCESS',
+                        narration: 'Talent Sphere Africa',
+                        user: { connect: { id: userId } },
+                        reference: `transfer-${userId}-${genRandomCode()}`,
+                    }
+                })
+            ])
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: tx,
+                message: "Transaction successful"
+            })
         } catch (err) {
             this.misc.handlePaystackAndServerError(res, err)
         }

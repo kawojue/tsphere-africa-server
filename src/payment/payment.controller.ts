@@ -1,11 +1,11 @@
 import { Response } from 'express'
 import { AuthGuard } from '@nestjs/passport'
 import { PaymentService } from './payment.service'
-import { WithdrawalDto } from './dto/withdraw.dto'
 import { RolesGuard } from 'src/jwt/jwt-auth.guard'
 import { TxHistoriesDto } from './dto/txHistory.dto'
 import { PaymentChartDto } from './dto/analytics.dto'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { AmountDTO, WithdrawalDTO } from './dto/withdraw.dto'
 import {
   Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards
 } from '@nestjs/common'
@@ -18,10 +18,7 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) { }
 
   @Get('/analytics')
-  async analytics(
-    @Req() req: IRequest,
-    @Res() res: Response,
-  ) {
+  async analytics(@Req() req: IRequest, @Res() res: Response) {
     await this.paymentService.analytics(res, req.user)
   }
 
@@ -53,10 +50,7 @@ export class PaymentController {
   }
 
   @Post('/request-pin')
-  async requestPin(
-    @Req() req: IRequest,
-    @Res() res: Response,
-  ) {
+  async requestPin(@Req() req: IRequest, @Res() res: Response) {
     await this.paymentService.requestPin(res, req.user)
   }
 
@@ -64,8 +58,22 @@ export class PaymentController {
   async withdraw(
     @Req() req: IRequest,
     @Res() res: Response,
-    @Body() body: WithdrawalDto
+    @Body() body: WithdrawalDTO
   ) {
     await this.paymentService.withdraw(res, req.user, body)
   }
+
+  @Post('/single-payment/:userId')
+  async makePayment(
+    @Res() res: Response,
+    @Body() body: AmountDTO,
+    @Param('userId') userId: string,
+  ) {
+    await this.paymentService.makePayment(res, userId, body)
+  }
+
+  // @Post('/bulk-payment/:userId')
+  // async makeBulkPayment(
+
+  // ) { }
 }
