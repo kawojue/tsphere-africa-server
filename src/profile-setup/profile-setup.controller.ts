@@ -141,6 +141,6 @@ export class ProfileSetupController {
     @Param('userId') userId: string,
     @Body() body: RateAndAvailabilityDto
   ) {
-    await this.editRateAndAvailability(res, userId, body)
+    await this.profileSetupService.editRateAndAvailability(res, userId, body)
   }
 }
