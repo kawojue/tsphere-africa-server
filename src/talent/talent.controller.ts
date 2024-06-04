@@ -50,7 +50,7 @@ export class TalentController {
   })
   @ApiConsumes('multipart/form-data', 'image/jpeg', 'image/png')
   @Role('admin')
-  @Put('/talent/edit/:userId')
+  @Put('/personal-info/edit/:userId')
   @UseInterceptors(FileInterceptor('proof_id'))
   async editPersonalInfo(
     @Res() res: Response,
