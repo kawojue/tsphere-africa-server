@@ -111,14 +111,6 @@ export class TalentPersonalInfoDto extends UsernameDto {
     address: string
 
     @ApiProperty({
-        example: 'My Normal Local Govt.'
-    })
-    @IsString()
-    @IsNotEmpty()
-    @IsOptional()
-    localGovt: string
-
-    @ApiProperty({
         examples: ['National Identity Slip', 'National Identity Card', 'Driving License', 'Passport']
     })
     @IsString()
