@@ -126,7 +126,7 @@ export class TalentPersonalInfoDto extends UsernameDto {
     idType: string
 
     @ApiProperty({
-        example: 'Chinko'
+        example: '["Chinko","Japanese"]'
     })
     @IsString()
     @IsNotEmpty()
