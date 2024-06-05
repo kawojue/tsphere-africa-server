@@ -37,10 +37,7 @@ export class ModminController {
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/user/analytics/dashboard')
-  async userAnalytics(
-    @Res() res: Response,
-    @Query() query: AnalyticsDto,
-  ) {
+  async userAnalytics(@Res() res: Response, @Query() query: AnalyticsDto) {
     await this.modminService.userAnalytics(res, query)
   }
 
@@ -48,7 +45,7 @@ export class ModminController {
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/article/analytics/dashboard')
-  async articleAnalytics(@Res() res: Response,) {
+  async articleAnalytics(@Res() res: Response) {
     await this.modminService.articleAnalytics(res)
   }
 
@@ -56,7 +53,7 @@ export class ModminController {
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/referral/analytics/dashboard')
-  async referralAnalytics(@Res() res: Response,) {
+  async referralAnalytics(@Res() res: Response) {
     await this.modminService.referralAnalytics(res)
   }
 
@@ -76,10 +73,7 @@ export class ModminController {
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Patch('/users/verify/:userId')
-  async verifyUser(
-    @Res() res: Response,
-    @Param('userId') userId: string,
-  ) {
+  async verifyUser(@Res() res: Response, @Param('userId') userId: string) {
     await this.modminService.verifyUser(res, userId)
   }
 
@@ -87,10 +81,7 @@ export class ModminController {
   @ApiBearerAuth()
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async fetchUsers(
-    @Res() res: Response,
-    @Query() query: FetchUserDto
-  ) {
+  async fetchUsers(@Res() res: Response, @Query() query: FetchUserDto) {
     await this.modminService.fetchUsers(res, query)
   }
 
@@ -98,10 +89,7 @@ export class ModminController {
   @Role(Roles.admin)
   @Get('/users/download-report')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async downloadUsers(
-    @Res() res: Response,
-    @Query() query: FetchUserDto
-  ) {
+  async downloadUsers(@Res() res: Response, @Query() query: FetchUserDto) {
     try {
       const excelData: Buffer = await this.modminService.createUserListExcel(query)
 
@@ -122,10 +110,7 @@ export class ModminController {
   @Role(Roles.admin)
   @Get('/users/user/:userId')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async fetchUserProfile(
-    @Res() res: Response,
-    @Param('userId') userId: string,
-  ) {
+  async fetchUserProfile(@Res() res: Response, @Param('userId') userId: string) {
     await this.modminService.fetchUserProfile(res, userId)
   }
 
@@ -149,10 +134,7 @@ export class ModminController {
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/referrals')
-  async fetchReferrals(
-    @Res() res: Response,
-    @Query() query: SortUserDto,
-  ) {
+  async fetchReferrals(@Res() res: Response, @Query() query: SortUserDto) {
     await this.modminService.fetchReferrals(res, query)
   }
 
@@ -160,10 +142,7 @@ export class ModminController {
   @Role(Roles.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/referrals/referral/:referralId')
-  async fetchReferral(
-    @Res() res: Response,
-    @Param('referralId') referralId: string,
-  ) {
+  async fetchReferral(@Res() res: Response, @Param('referralId') referralId: string,) {
     await this.modminService.fetchReferral(res, referralId)
   }
 

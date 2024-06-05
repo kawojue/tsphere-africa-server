@@ -62,7 +62,7 @@ export class TalentService {
                 }
             }
 
-            let proofOfId = {} as IFile
+            let proofOfId: IFile
             if (file) {
                 const result = validateFile(file, 5 << 20, 'jpg', 'png')
 
@@ -176,7 +176,7 @@ export class TalentService {
                 return this.response.sendError(res, StatusCodes.NotFound, "User not found")
             }
 
-            let proofOfId = {} as IFile
+            let proofOfId: IFile
             const personalInfo = user.talent?.personalInfo
 
             if (file) {
