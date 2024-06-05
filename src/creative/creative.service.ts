@@ -62,7 +62,7 @@ export class CreativeService {
                 }
             }
 
-            let proofOfId = {} as IFile
+            let proofOfId: IFile
             if (file) {
                 const result = validateFile(file, 5 << 20, 'jpg', 'png')
 
@@ -100,17 +100,8 @@ export class CreativeService {
                 username = user.username
             }
 
-            if (firstname && user.firstname !== firstname) {
-                firstname = titleText(firstname)
-            } else {
-                firstname = user.firstname
-            }
-
-            if (lastname && user.lastname !== lastname) {
-                lastname = titleText(lastname)
-            } else {
-                lastname = user.lastname
-            }
+            firstname = firstname && user.firstname !== firstname ? titleText(firstname) : user.firstname
+            lastname = lastname && user.lastname !== lastname ? titleText(lastname) : user.lastname
 
             const languages = JSON.parse(language.replace(/'/g, '"')) as Array<string>
 
@@ -182,7 +173,7 @@ export class CreativeService {
                 return this.response.sendError(res, StatusCodes.NotFound, "User not found")
             }
 
-            let proofOfId = {} as IFile
+            let proofOfId: IFile
             const personalInfo = user.talent?.personalInfo
 
             if (file) {
