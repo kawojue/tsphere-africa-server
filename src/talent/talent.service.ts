@@ -159,9 +159,7 @@ export class TalentService {
     ) {
         try {
             const user = await this.prisma.user.findUnique({
-                where: {
-                    id: userId
-                },
+                where: { id: userId },
                 include: {
                     talent: {
                         select: {
@@ -240,9 +238,7 @@ export class TalentService {
                     }
                 }),
                 this.prisma.user.update({
-                    where: {
-                        id: user.id
-                    },
+                    where: { id: userId },
                     data: { username, firstname, lastname }
                 })
             ])

@@ -156,11 +156,9 @@ export class CreativeService {
     ) {
         try {
             const user = await this.prisma.user.findUnique({
-                where: {
-                    id: userId
-                },
+                where: { id: userId },
                 include: {
-                    talent: {
+                    creative: {
                         select: {
                             id: true,
                             personalInfo: true
@@ -174,7 +172,7 @@ export class CreativeService {
             }
 
             let proofOfId: IFile
-            const personalInfo = user.talent?.personalInfo
+            const personalInfo = user.creative?.personalInfo
 
             if (file) {
                 const result = validateFile(file, 5 << 20, 'jpg', 'png')
@@ -228,17 +226,15 @@ export class CreativeService {
 
             const [personalInfoData] = await this.prisma.$transaction([
                 this.prisma.talentPersonalInfo.update({
-                    where: { talentId: user.talent.id },
+                    where: { talentId: user.creative.id },
                     data: {
-                        country, state, religion, address, idType, languages,
-                        fbHandle, igHandle, xHandle, phone, altPhone, gender, dob,
+                        gender, religion, dob, country, state, address, idType,
+                        languages, fbHandle, igHandle, xHandle, phone, altPhone,
                         proofOfId: proofOfId?.path ? proofOfId : personalInfo?.proofOfId,
                     }
                 }),
                 this.prisma.user.update({
-                    where: {
-                        id: user.id
-                    },
+                    where: { id: userId },
                     data: { username, firstname, lastname }
                 })
             ])
