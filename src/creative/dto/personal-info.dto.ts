@@ -80,14 +80,6 @@ export class CreativePersonalInfoDto extends UsernameDto {
     state: string
 
     @ApiProperty({
-        example: 'My Normal Local Govt.'
-    })
-    @IsString()
-    @IsNotEmpty()
-    @IsOptional()
-    localGovt: string
-
-    @ApiProperty({
         example: '10, Lmao Street 😏'
     })
     @IsString()
