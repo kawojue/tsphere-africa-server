@@ -1,13 +1,12 @@
 import { Response } from 'express'
-import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleText } from 'helpers/formatTexts'
-import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { genFileName, validateFile } from 'utils/file'
 import { genReferralKey } from 'helpers/genReferralKey'
 import { TalentBioStatsDto } from './dto/bio-stats.dto'
 import { TalentPersonalInfoDto } from './dto/personal-info.dto'
@@ -70,7 +69,7 @@ export class TalentService {
                     return this.response.sendError(res, result.status, result.message)
                 }
 
-                const path = `${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                const path = `${sub}/${genFileName(result.file)}`
                 await this.aws.uploadS3(result.file, path)
                 proofOfId = {
                     path,
@@ -184,7 +183,7 @@ export class TalentService {
                     return this.response.sendError(res, result.status, result.message)
                 }
 
-                const path = `${userId}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                const path = `${userId}/${genFileName(result.file)}`
                 await this.aws.uploadS3(result.file, path)
                 proofOfId = {
                     path,

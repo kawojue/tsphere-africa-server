@@ -1,10 +1,10 @@
 import { Server } from 'socket.io'
 import { Message } from '@prisma/client'
+import { genFileName } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { MiscService } from 'lib/misc.service'
-import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 
 @Injectable()
@@ -41,7 +41,7 @@ export class RealtimeService {
 
     validateFile(file: string) {
         const maxSize = 10 << 20
-        const allowedTypes = ['video/mp4', 'image/png', 'image/jpeg']
+        const allowedTypes = ['video/mp4', 'image/png', 'image/jpeg', 'image/jpg']
         const fileSize = Buffer.byteLength(file, 'base64')
 
         if (fileSize > maxSize) {
@@ -64,7 +64,7 @@ export class RealtimeService {
     async saveFile(file: string, userId: string) {
         const base64Data = file.replace(/^data:.*;base64,/, '')
         const fileType = this.getFileType(file)
-        const filePath = `${userId}/${genFileName()}.${this.misc.getFileExtension(fileType)}`
+        const filePath = `${userId}/${genFileName(fileType)}`
 
         await this.aws.uploadS3Base64(Buffer.from(base64Data, 'base64'), filePath, fileType)
 

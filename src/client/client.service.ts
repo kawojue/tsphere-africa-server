@@ -1,5 +1,5 @@
 import { Response } from 'express'
-import { validateFile } from 'utils/file'
+import { genFileName, validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
@@ -10,7 +10,6 @@ import {
 } from './dto/brief.dto'
 import { titleText } from 'helpers/formatTexts'
 import { FundWalletDTO } from './dto/wallet.dto'
-import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import {
@@ -114,7 +113,7 @@ export class ClientService {
                         return this.response.sendError(res, result.status, result.message)
                     }
 
-                    const path = `profile/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                    const path = `profile/${sub}/${genFileName(result.file)}`
                     await this.aws.uploadS3(result.file, path)
                     return {
                         path,
@@ -161,7 +160,7 @@ export class ClientService {
                     return this.response.sendError(res, result.status, result.message)
                 }
 
-                const path = `profile/${sub}/${genFileName()}.${this.misc.getFileExtension(result.file)}`
+                const path = `profile/${sub}/${genFileName(result.file)}`
                 await this.aws.uploadS3(result.file, path)
 
                 document = {
@@ -225,7 +224,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `brief_form/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                        const path = `brief_form/${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -253,7 +252,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `brief_form/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                        const path = `brief_form/${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -281,7 +280,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `brief_form/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                        const path = `brief_form/${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -460,7 +459,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `project/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                        const path = `project/${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -498,7 +497,7 @@ export class ClientService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `brief_form/${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                        const path = `brief_form/${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -1003,7 +1002,7 @@ export class ClientService {
                 }
             }
 
-            const path = `contract/${projectId}/${genFileName()}.${this.misc.getFileExtension(file)}`
+            const path = `contract/${projectId}/${genFileName(re.file)}`
             const url = this.aws.getS3(path)
             await this.aws.uploadS3(file, path)
 

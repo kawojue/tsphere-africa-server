@@ -1,15 +1,14 @@
 import { Response } from 'express'
-import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { SkillsDto } from './dto/skills.dto'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
-import { genFileName } from 'helpers/genFilename'
 import { Experience, Skill } from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
 import { ExperiencesDTO } from './dto/experiece.dto'
+import { genFileName, validateFile } from 'utils/file'
 import { RateAndAvailabilityDto } from './dto/rate-availability.dto'
 
 @Injectable()
@@ -45,7 +44,7 @@ export class ProfileSetupService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `${user.id}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                        const path = `${user.id}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,
@@ -121,7 +120,7 @@ export class ProfileSetupService {
                 return this.response.sendError(res, result.status, result.message)
             }
 
-            const path = `${user.id}/${genFileName()}.${this.misc.getFileExtension(file)}`
+            const path = `${user.id}/${genFileName(result.file)}`
             await this.aws.uploadS3(result.file, path)
             const video = {
                 path,
@@ -171,7 +170,7 @@ export class ProfileSetupService {
                 return this.response.sendError(res, result.status, result.message)
             }
 
-            const path = `${user.id}/${genFileName()}.${this.misc.getFileExtension(file)}`
+            const path = `${user.id}/${genFileName(result.file)}`
             await this.aws.uploadS3(result.file, path)
             const audio = {
                 path,
@@ -305,7 +304,7 @@ export class ProfileSetupService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `${user.id}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                        const path = `${user.id}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,

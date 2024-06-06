@@ -1,14 +1,13 @@
 import { Job } from '@prisma/client'
-import { validateFile } from 'utils/file'
 import { Request, Response } from 'express'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
-import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
+import { genFileName, validateFile } from 'utils/file'
 import { ApplyJobDTO, PostJobDto } from './dto/job.dto'
 import { InfiniteScrollDto } from 'src/user/dto/infinite-scroll.dto'
 
@@ -48,7 +47,7 @@ export class JobService {
                         return this.response.sendError(res, result.status, result.message)
                     }
 
-                    const path = `${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                    const path = `${sub}/${genFileName(result.file)}`
                     await this.aws.uploadS3(result.file, path)
                     return {
                         path,
@@ -200,7 +199,7 @@ export class JobService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `${sub}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                        const path = `${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             path,

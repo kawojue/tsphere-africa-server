@@ -4,7 +4,6 @@ import {
     EmailDto, SignupDto, ReferralDto,
 } from './dto/auth.dto'
 import { Referral } from '@prisma/client'
-import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
@@ -12,8 +11,8 @@ import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { BrevoService } from 'lib/brevo.service'
 import { toLowerCase } from 'helpers/formatTexts'
-import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { genFileName, validateFile } from 'utils/file'
 import { genReferralKey } from 'helpers/genReferralKey'
 import { MailService } from 'src/mailer/mailer.service'
 import { EncryptionService } from 'lib/encryption.service'
@@ -478,7 +477,7 @@ export class AuthService {
                 return this.response.sendError(res, result.status, result.message)
             }
 
-            const path = `${user.id}/${genFileName()}.${this.misc.getFileExtension(file)}`
+            const path = `${user.id}/${genFileName(result.file)}`
             await this.aws.uploadS3(result.file, path)
             const url = this.aws.getS3(path)
 

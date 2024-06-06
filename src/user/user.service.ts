@@ -2,16 +2,15 @@ import { Response } from 'express'
 import {
     FetchProfilesDto, InfiniteScrollDto
 } from './dto/infinite-scroll.dto'
-import { validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
-import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
 import { HandleBookingDTO } from './dto/booking.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
+import { genFileName, validateFile } from 'utils/file'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 import { DeclineContractDTO, FectchContractsDTO } from './dto/contract.dto'
@@ -24,7 +23,6 @@ export class UserService {
         private readonly response: SendRes,
         private readonly misc: MiscService,
         private readonly prisma: PrismaService,
-        private readonly paystack: PaystackService
     ) { }
 
     async fetchProfiles(
@@ -836,7 +834,7 @@ export class UserService {
                 return this.response.sendError(res, re.status, re.message)
             }
 
-            const path = `contract/${sub}/${genFileName()}.${this.misc.getFileExtension(re.file)}`
+            const path = `contract/${sub}/${genFileName(re.file)}`
             await this.aws.uploadS3(re.file, path)
 
             const newContract = await this.prisma.contract.update({

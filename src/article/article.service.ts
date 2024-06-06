@@ -4,9 +4,9 @@ import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
-import { genFileName } from 'helpers/genFilename'
 import { Article, Comment } from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
+import { genFileName, validateFile } from 'utils/file'
 import { CommentDto, FetchCommentsDto } from './dto/comment.dto'
 import { FetchArticlesDto, PublishArticleDto } from './dto/article.dto'
 
@@ -30,15 +30,12 @@ export class ArticleService {
                 return this.response.sendError(res, StatusCodes.BadRequest, "Cover photo is required")
             }
 
-            if (file.size > (5 << 20)) {
-                return this.response.sendError(res, StatusCodes.PayloadTooLarge, "Cover photo size is too large")
+            const re = validateFile(file, 5 << 20, 'jpg', 'png')
+            if (re?.status) {
+                return this.response.sendError(res, re.status, re.message)
             }
 
-            if (!['png', 'jpg'].includes(file.originalname.split('.').pop())) {
-                return this.response.sendError(res, StatusCodes.UnsupportedContent, "Cover photo should be in form of image")
-            }
-
-            const path = `${sub}/article/${genFileName()}.${this.misc.getFileExtension(file)}`
+            const path = `${sub}/article/${genFileName(re.file)}`
             await this.aws.uploadS3(file, path)
             const cover_photo = {
                 path,

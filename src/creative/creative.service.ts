@@ -1,13 +1,12 @@
 import { Response } from 'express'
-import { validateFile } from 'utils/file'
 import StatusCodes from 'enums/StatusCodes'
 import { Injectable, } from '@nestjs/common'
 import { AwsService } from 'lib/aws.service'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleText } from 'helpers/formatTexts'
-import { genFileName } from 'helpers/genFilename'
 import { PrismaService } from 'lib/prisma.service'
+import { genFileName, validateFile } from 'utils/file'
 import { CreativeCertification } from '@prisma/client'
 import { genReferralKey } from 'helpers/genReferralKey'
 import { CertificationsDTO } from './dto/certification.dto'
@@ -70,7 +69,7 @@ export class CreativeService {
                     return this.response.sendError(res, result.status, result.message)
                 }
 
-                const path = `${sub}/${genFileName()}.${this.misc.getFileExtension(result.file)}`
+                const path = `${sub}/${genFileName(result.file)}`
                 await this.aws.uploadS3(result.file, path)
                 proofOfId = {
                     path,
@@ -181,7 +180,7 @@ export class CreativeService {
                     return this.response.sendError(res, result.status, result.message)
                 }
 
-                const path = `${userId}/${genFileName()}.${this.misc.getFileExtension(file)}`
+                const path = `${userId}/${genFileName(result.file)}`
                 await this.aws.uploadS3(result.file, path)
                 proofOfId = {
                     path,
