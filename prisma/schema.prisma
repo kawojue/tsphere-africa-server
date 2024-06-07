@@ -293,7 +293,6 @@ model CreativePersonalInfo {
     religion   String?
     dob        String?
     country    String?
-    localGovt  String?
     state      String?
     address    String?
     idType     String?
@@ -367,7 +366,6 @@ model TalentPersonalInfo {
     playingMinAge String?
     nationality   String?
     workingTitle  String?
-    localGovt     String?
     country       String?
     state         String?
     address       String?
