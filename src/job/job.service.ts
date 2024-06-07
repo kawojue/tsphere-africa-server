@@ -249,8 +249,22 @@ export class JobService {
         limit = Number(limit)
         const offset = (Number(page) - 1) * limit
 
+        const OR = [
+            { rate: { contains: s } },
+            { playingAge: { contains: s } },
+            { role: { contains: s, mode: 'insensitive' } },
+            { location: { contains: s, mode: 'insensitive' } },
+            { experience: { contains: s, mode: 'insensitive' } },
+            { requirement: { contains: s, mode: 'insensitive' } },
+            { description: { contains: s, mode: 'insensitive' } }
+        ]
+
         let jobs = await this.prisma.job.findMany({
-            where: role === "client" ? { userId: sub } : {},
+            // @ts-ignore
+            where: role === "client" ? {
+                userId: sub,
+                OR,
+            } : { OR },
             skip: offset,
             take: limit,
             orderBy: q === "name" ? { title: 'asc' } : { postedAt: 'desc' }
