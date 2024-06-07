@@ -688,7 +688,7 @@ export class UserService {
                     },
                     {
                         status: 'PENDING',
-                        label: 'Incoming'
+                        label: (role === 'creative' || role === 'talent') ? 'Incoming' : 'Pending'
                     },
                     {
                         status: 'DECLINED',
@@ -721,7 +721,8 @@ export class UserService {
                             }
                         }
                     }),
-                    label: 'COMPLETED'
+                    label: 'Completed',
+                    status: 'COMPLETED'
                 })
             }
 
