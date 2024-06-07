@@ -688,7 +688,7 @@ export class UserService {
                     },
                     {
                         status: 'PENDING',
-                        label: 'Pending'
+                        label: 'Incoming'
                     },
                     {
                         status: 'DECLINED',
@@ -727,7 +727,7 @@ export class UserService {
 
             for (const { label, status } of statuses) {
                 const count = await this.prisma.hire.count({
-                    where: role === "admin" ? {} : role === "client" ? {
+                    where: role === "admin" ? { status } : role === "client" ? {
                         status,
                         clientId: sub,
                     } : {
@@ -789,7 +789,7 @@ export class UserService {
                 ] : { updatedAt: 'desc' }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: { bookings, analytics } })
+            this.response.sendSuccess(res, StatusCodes.OK, { data: { bookings, analytics, role } })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
