@@ -224,8 +224,8 @@ export class CreativeService {
             }
 
             const [personalInfoData] = await this.prisma.$transaction([
-                this.prisma.talentPersonalInfo.update({
-                    where: { talentId: user.creative.id },
+                this.prisma.creativePersonalInfo.update({
+                    where: { creativeId: user.creative.id },
                     data: {
                         gender, religion, dob, country, state, address, idType,
                         languages, fbHandle, igHandle, xHandle, phone, altPhone,
