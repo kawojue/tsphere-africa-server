@@ -12,7 +12,6 @@ import { HandleBookingDTO } from './dto/booking.dto'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
 import { genFileName, validateFile } from 'utils/file'
 import { FetchReviewsDTO, RatingDTO } from './dto/rating.dto'
-import { PaystackService } from 'lib/Paystack/paystack.service'
 import { DeclineContractDTO, FectchContractsDTO } from './dto/contract.dto'
 import { $Enums, ContractStatus, HireStatus, Project } from '@prisma/client'
 
