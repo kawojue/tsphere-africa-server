@@ -986,7 +986,7 @@ export class ClientService {
             }
 
             const project = await this.prisma.project.findUnique({
-                where: { id: projectId },
+                where: { id: projectId, clientId: sub },
             })
 
             if (!project) {
