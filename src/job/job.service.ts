@@ -177,12 +177,10 @@ export class JobService {
                 return this.response.sendError(res, StatusCodes.BadRequest, "Add attachments or write a cover letter")
             }
 
-            const alreadyApplied = await this.prisma.jobApplication.findUnique({
+            const alreadyApplied = await this.prisma.jobApplication.findFirst({
                 where: {
-                    userId_jobId: {
-                        userId: sub,
-                        jobId,
-                    }
+                    userId: sub,
+                    jobId,
                 }
             })
 

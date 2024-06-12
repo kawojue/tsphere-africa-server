@@ -94,7 +94,7 @@ model BriefForm {
     createdAt            DateTime      @default(now())
     updatedAt            DateTime      @updatedAt
     client               Client        @relation(fields: [clientId], references: [id])
-    clientId             String        @unique @db.ObjectId
+    clientId             String        @db.ObjectId
 }
 
 model Referral {
@@ -171,8 +171,8 @@ model TxHistory {
     description              String?
     createdAt                DateTime @default(now())
     updatedAt                DateTime @updatedAt
-    user                     User     @relation(references: [id], fields: [userId])
-    userId                   String   @unique @db.ObjectId
+    user                     User?    @relation(references: [id], fields: [userId])
+    userId                   String?  @db.ObjectId
 }
 
 model SubscribedEmails {
@@ -239,7 +239,7 @@ model BankDetails {
     updatedAt     DateTime @updatedAt
     createdAt     DateTime @default(now())
     user          User     @relation(fields: [userId], references: [id])
-    userId        String   @unique @db.ObjectId
+    userId        String   @db.ObjectId
 }
 
 model Experience {
@@ -251,7 +251,7 @@ model Experience {
     roleOrPosition    String?
     projectDuration   String?
     user              User    @relation(fields: [userId], references: [id])
-    userId            String  @unique @db.ObjectId
+    userId            String  @db.ObjectId
 }
 
 model RateAndAvailability {
@@ -272,7 +272,7 @@ model Skill {
     chargeTime        ChargeTime?
     charge            Float?
     user              User        @relation(fields: [userId], references: [id])
-    userId            String      @unique @db.ObjectId
+    userId            String      @db.ObjectId
 }
 
 model Creative {
@@ -313,7 +313,7 @@ model CreativeCertification {
     level      String?
     level_type String?
     creative   Creative @relation(fields: [creativeId], references: [id])
-    creativeId String   @unique @db.ObjectId
+    creativeId String   @db.ObjectId
 }
 
 model Client {
@@ -416,8 +416,8 @@ model Job {
     jobApplications JobApplication[]
     admin           Admin?           @relation(fields: [adminId], references: [id])
     user            User?            @relation(fields: [userId], references: [id])
-    adminId         String?          @unique @db.ObjectId
-    userId          String?          @unique @db.ObjectId
+    adminId         String?          @db.ObjectId
+    userId          String?          @db.ObjectId
 }
 
 model JobApplication {
@@ -430,8 +430,6 @@ model JobApplication {
     user         User            @relation(fields: [userId], references: [id])
     jobId        String          @db.ObjectId
     userId       String          @db.ObjectId
-
-    @@unique([userId, jobId])
 }
 
 model Article {
@@ -462,8 +460,6 @@ model Comment {
     articleId   String   @db.ObjectId
     user        User?    @relation(references: [id], fields: [userId])
     userId      String?  @db.ObjectId
-
-    @@unique([userId, articleId])
 }
 
 model Like {
@@ -473,8 +469,6 @@ model Like {
     articleId String   @db.ObjectId
     user      User?    @relation(fields: [userId], references: [id])
     userId    String?  @db.ObjectId
-
-    @@unique([userId, articleId])
 }
 
 model Project {
@@ -492,7 +486,7 @@ model Project {
     attachments     File[]
     additionalInfo  AdditionalInfoProject?
     client          User                   @relation("ClientProjects", fields: [clientId], references: [id])
-    clientId        String                 @unique @db.ObjectId
+    clientId        String                 @db.ObjectId
     status          ProjectStatus          @default(PENDING)
     hires           Hire[]
     createdAt       DateTime               @default(now())
@@ -505,9 +499,9 @@ model ProjectRoleInfo {
     role_type          String
     offer              Float?
     project            Project @relation(fields: [projectId], references: [id])
-    projectId          String  @unique @db.ObjectId
+    projectId          String  @db.ObjectId
     talentOrCreative   User    @relation("UserProjects", fields: [talentOrCreativeId], references: [id])
-    talentOrCreativeId String  @unique @db.ObjectId
+    talentOrCreativeId String  @db.ObjectId
 }
 
 model AdditionalInfoProject {

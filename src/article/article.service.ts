@@ -165,12 +165,10 @@ export class ArticleService {
                 return this.response.sendError(res, StatusCodes.NotFound, 'Article not found')
             }
 
-            const existingLike = await this.prisma.like.findUnique({
+            const existingLike = await this.prisma.like.findFirst({
                 where: {
-                    userId_articleId: {
-                        articleId,
-                        userId: sub,
-                    },
+                    userId: sub,
+                    articleId,
                 },
             })
 

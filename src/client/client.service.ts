@@ -1,5 +1,4 @@
 import { Response } from 'express'
-import { genFileName, validateFile } from 'utils/file'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
@@ -12,6 +11,7 @@ import { titleText } from 'helpers/formatTexts'
 import { FundWalletDTO } from './dto/wallet.dto'
 import { PrismaService } from 'lib/prisma.service'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
+import { genFileName, validateFile } from 'utils/file'
 import {
     ClientProfileSetupDTO, ClientProfileSetupQueryDTO
 } from './dto/profile.dto'
