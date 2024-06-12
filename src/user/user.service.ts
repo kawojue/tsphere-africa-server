@@ -766,6 +766,17 @@ export class UserService {
                     { project: { role_name: { contains: s, mode: 'insensitive' } } },
                 ]
 
+            const totalBookings = await this.prisma.hire.count({
+                where: role === "admin" ? { OR } : role === "client" ? {
+                    OR,
+                    clientId: sub,
+                } : {
+                    OR,
+                    talentOrCreativeId: sub,
+                    status: { in: ['HIRED', 'DECLINED', 'ACCEPTED'] },
+                }
+            })
+
             const bookings = await this.prisma.hire.findMany({
                 where: role === "admin" ? { OR } : role === "client" ? {
                     OR,
@@ -789,7 +800,25 @@ export class UserService {
                 ] : { updatedAt: 'desc' }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { data: { bookings, analytics, role } })
+            const totalPages = Math.ceil(totalBookings / limit)
+            const currentPage = Number(page)
+            const hasNext = currentPage < totalPages
+            const hasPrev = currentPage > 1
+
+            this.response.sendSuccess(res, StatusCodes.OK, {
+                data: {
+                    bookings,
+                    analytics,
+                    role,
+                    metadata: {
+                        total: totalBookings,
+                        currentPage,
+                        totalPages,
+                        hasNext,
+                        hasPrev,
+                    }
+                }
+            })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
