@@ -252,7 +252,14 @@ export class UserService {
         { role, sub }: ExpressUser,
     ) {
         try {
-            const user = await this.prisma.user.findUnique({
+            const user = role === "admin" ? await this.prisma.admin.findUnique({
+                where: { id: sub },
+                select: {
+                    id: true,
+                    email: true,
+                    fullName: true,
+                },
+            }) : await this.prisma.user.findUnique({
                 where: {
                     role,
                     id: sub,
