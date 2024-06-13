@@ -245,7 +245,7 @@ export class ArticleService {
     }
 
     private async clearArticle(article: Article, articleId: string) {
-        const cover_photo = article.coverPhoto
+        const cover_photo = article.coverPhoto as any
         if (cover_photo?.path) {
             await this.aws.deleteS3(cover_photo.path)
         }

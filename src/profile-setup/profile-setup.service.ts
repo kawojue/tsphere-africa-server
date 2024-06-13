@@ -36,9 +36,9 @@ export class ProfileSetupService {
                     include: { portfolio: true }
                 })
 
-                let filesArray = [] as IFile[]
+                let filesArray = []
                 try {
-                    const results = await Promise.all(files.map(async (file) => {
+                    filesArray = await Promise.all(files.map(async (file) => {
                         const result = validateFile(file, 10 << 20, 'jpg', 'png')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
@@ -47,13 +47,11 @@ export class ProfileSetupService {
                         const path = `${user.id}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
-                            path,
                             type: file.mimetype,
+                            path, size: file.size,
                             url: this.aws.getS3(path),
                         }
                     }))
-
-                    filesArray = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
                         if (filesArray.length > 0) {
@@ -69,7 +67,7 @@ export class ProfileSetupService {
                     }
                 }
 
-                const images = user?.portfolio?.images || []
+                const images = user?.portfolio?.images as any[] || []
                 if (images.length > 0) {
                     for (const img of images) {
                         if (img?.path) {
@@ -107,12 +105,8 @@ export class ProfileSetupService {
             }
 
             const user = await this.prisma.user.findUnique({
-                where: {
-                    id: sub
-                },
-                include: {
-                    portfolio: true
-                }
+                where: { id: sub },
+                include: { portfolio: true }
             })
 
             const result = validateFile(file, 30 << 20, 'mp4')
@@ -123,13 +117,14 @@ export class ProfileSetupService {
             const path = `${user.id}/${genFileName(result.file)}`
             await this.aws.uploadS3(result.file, path)
             const video = {
-                path,
+                type: file.mimetype,
+                path, size: file.size,
                 url: this.aws.getS3(path),
-                type: result.file.mimetype,
             }
 
-            if (user?.portfolio?.video?.path) {
-                await this.aws.deleteS3(user.portfolio.video.path)
+            const _video = user.portfolio?.video as any
+            if (_video?.path) {
+                await this.aws.deleteS3(_video.path)
             }
 
             const portfolio = await this.prisma.portfolio.upsert({
@@ -173,19 +168,18 @@ export class ProfileSetupService {
             const path = `${user.id}/${genFileName(result.file)}`
             await this.aws.uploadS3(result.file, path)
             const audio = {
-                path,
+                type: file.mimetype,
+                path, size: file.size,
                 url: this.aws.getS3(path),
-                type: result.file.mimetype,
             }
 
-            if (user?.portfolio?.audio?.path) {
-                await this.aws.deleteS3(user.portfolio.audio.path)
+            const _audio = user.portfolio as any
+            if (_audio?.path) {
+                await this.aws.deleteS3(_audio.path)
             }
 
             const portfolio = await this.prisma.portfolio.upsert({
-                where: {
-                    userId: user.id
-                },
+                where: { userId: user.id },
                 create: { audio, user: { connect: { id: user.id } } },
                 update: { audio }
             })
@@ -202,17 +196,26 @@ export class ProfileSetupService {
     ) {
         try {
             const portfolio = await this.prisma.portfolio.findUnique({
-                where: { userId }
-            })
+                where: { userId },
+                select: {
+                    video: true,
+                    audio: true,
+                    images: true,
+                }
+            }) as {
+                audio: { path?: string }
+                images: { path?: string }[]
+                video: { path?: string }
+            }
 
             if (!portfolio) {
                 return this.response.sendError(res, StatusCodes.NotFound, "Portfolio not found")
             }
 
             const files = [
-                ...portfolio.images.map(image => image.path),
+                ...portfolio.images.map(image => image?.path),
                 portfolio.video?.path,
-                portfolio.audio?.path
+                portfolio.audio?.path,
             ].filter(Boolean)
 
             for (const path of files) {
@@ -295,10 +298,10 @@ export class ProfileSetupService {
                 include: { skills: true }
             })
 
-            let attachments = [] as IFile[]
+            let attachments = []
             if (files.length > 0) {
                 try {
-                    const results = await Promise.all(files.map(async (file) => {
+                    attachments = await Promise.all(files.map(async (file) => {
                         const result = validateFile(file, 10 << 20, 'jpg', 'png', 'mp4', 'mp3', 'wav', 'aac')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
@@ -307,13 +310,11 @@ export class ProfileSetupService {
                         const path = `${user.id}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
-                            path,
+                            type: file.mimetype,
+                            path, size: file.size,
                             url: this.aws.getS3(path),
-                            type: result.file.mimetype,
                         }
                     }))
-
-                    attachments = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
                         if (attachments.length > 0) {
@@ -331,7 +332,7 @@ export class ProfileSetupService {
             }
 
             const newUserSkills = [] as Skill[]
-            const userSkillAttachments = user?.skillAttachments || []
+            const userSkillAttachments = user?.skillAttachments as any[] || []
 
             const countOldSkills = await this.prisma.skill.count({
                 where: { userId: user.id }
@@ -383,9 +384,10 @@ export class ProfileSetupService {
                 return this.response.sendError(res, StatusCodes.NotFound, "User not found")
             }
 
-            if (user.skillAttachments?.length) {
+            const skillAttachments = user.skillAttachments as any[]
+            if (skillAttachments?.length) {
                 try {
-                    for (const attachment of user.skillAttachments) {
+                    for (const attachment of skillAttachments) {
                         if (attachment?.path) {
                             await this.aws.deleteS3(attachment.path)
                         }

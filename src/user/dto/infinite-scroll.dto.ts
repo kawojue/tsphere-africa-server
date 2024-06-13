@@ -1,13 +1,16 @@
 import { UserRole } from 'enums/base.enum'
 import { ApiProperty } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
+import { toLowerCase } from 'helpers/formatTexts'
 import { IsEnum, IsOptional, IsString } from 'class-validator'
 
 export class SearchDto {
     @ApiProperty({
-        example: 'kawojue'
+        example: ' '
     })
     @IsString()
     @IsOptional()
+    @Transform(({ value }) => toLowerCase(value))
     search?: string
 }
 

@@ -463,14 +463,8 @@ export class AuthService {
             }
 
             const user = await this.prisma.user.findUnique({
-                where: {
-                    id: sub
-                }
+                where: { id: sub }
             })
-
-            if (user.avatar?.path) {
-                await this.aws.deleteS3(user.avatar.path)
-            }
 
             const result = validateFile(file, 5 << 20, 'jpg', 'png')
             if (result?.status) {
@@ -481,15 +475,19 @@ export class AuthService {
             await this.aws.uploadS3(result.file, path)
             const url = this.aws.getS3(path)
 
+            const avatar = user.avatar as any
+            if (avatar?.path) {
+                await this.aws.deleteS3(avatar.path)
+            }
+
             await this.prisma.user.update({
                 where: {
                     id: sub
                 },
                 data: {
                     avatar: {
-                        url,
-                        path,
-                        type: result.file.mimetype,
+                        type: file.mimetype,
+                        url, path, size: file.size,
                     }
                 }
             })

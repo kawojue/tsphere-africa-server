@@ -1,5 +1,5 @@
 datasource db {
-    provider = "mongodb"
+    provider = "postgresql"
     url      = env("DATABASE_URI")
 }
 
@@ -8,7 +8,7 @@ generator client {
 }
 
 model User {
-    id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+    id                  String               @id @default(uuid()) @db.Uuid
     email               String               @unique
     username            String               @unique
     firstname           String
@@ -23,7 +23,7 @@ model User {
     createdAt           DateTime             @default(now())
     updatedAt           DateTime             @updatedAt
     totp                Totp?
-    avatar              File?
+    avatar              Json?
     Inbox               Inbox?
     talent              Talent?
     client              Client?
@@ -35,7 +35,7 @@ model User {
     rateAndAvailability RateAndAvailability?
     jobs                Job[]
     likes               Like[]
-    skillAttachments    File[]
+    skillAttachments    Json[]
     hires               Hire[]               @relation("ClientHires")
     bookings            Hire[]               @relation("UserHires")
     skills              Skill[]
@@ -56,14 +56,14 @@ model User {
 }
 
 model BriefForm {
-    id                   String        @id @default(auto()) @map("_id") @db.ObjectId
+    id                   String        @id @default(uuid()) @db.Uuid
     title                String
     type                 String
     category             String
     description          String?
-    videos               File[]
-    images               File[]
-    docs                 File[]
+    videos               Json[]
+    images               Json[]
+    docs                 Json[]
     role_name            String?
     role_type            String?
     gender               Gender?
@@ -89,36 +89,36 @@ model BriefForm {
     audition_instruction String?
     brief_date_expiry    String?
     brief_time_expiry    String?
-    attachments          File[]
+    attachments          Json[]
     briefType            BriefFormType
     createdAt            DateTime      @default(now())
     updatedAt            DateTime      @updatedAt
     client               Client        @relation(fields: [clientId], references: [id])
-    clientId             String        @db.ObjectId
+    clientId             String        @db.Uuid
 }
 
 model Referral {
-    id        String     @id @default(auto()) @map("_id") @db.ObjectId
+    id        String     @id @default(uuid()) @db.Uuid
     points    Int        @default(0)
     key       String     @unique
     referred  Referred[]
     user      User       @relation(references: [id], fields: [userId])
-    userId    String     @unique @db.ObjectId
+    userId    String     @unique @db.Uuid
     createdAt DateTime   @default(now())
     updatedAt DateTime   @updatedAt
 }
 
 model Referred {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    id         String   @id @default(uuid()) @db.Uuid
     createdAt  DateTime @default(now())
     referral   Referral @relation(fields: [referralId], references: [id])
-    referralId String   @db.ObjectId
+    referralId String   @db.Uuid
     user       User     @relation(fields: [userId], references: [id])
-    userId     String   @db.ObjectId
+    userId     String   @db.Uuid
 }
 
 model Wallet {
-    id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+    id                  String    @id @default(uuid()) @db.Uuid
     balance             Float     @default(0.00)
     lastAmountWithdrawn Float     @default(0.00)
     lastAmountDeposited Float     @default(0.00)
@@ -127,11 +127,11 @@ model Wallet {
     createdAt           DateTime  @default(now())
     updatedAt           DateTime  @updatedAt
     user                User      @relation(fields: [userId], references: [id])
-    userId              String    @unique @db.ObjectId
+    userId              String    @unique @db.Uuid
 }
 
 model Recipient {
-    id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+    id                 String   @id @default(uuid()) @db.Uuid
     domain             String
     recipient_id       Int
     recipient_code     String   @unique
@@ -147,7 +147,7 @@ model Recipient {
 }
 
 model TxHistory {
-    id                       String   @id @default(auto()) @map("_id") @db.ObjectId
+    id                       String   @id @default(uuid()) @db.Uuid
     reference                String   @unique
     amount                   Float    @default(0.00)
     settlementAmount         Float    @default(0.00)
@@ -172,16 +172,16 @@ model TxHistory {
     createdAt                DateTime @default(now())
     updatedAt                DateTime @updatedAt
     user                     User?    @relation(references: [id], fields: [userId])
-    userId                   String?  @db.ObjectId
+    userId                   String?  @db.Uuid
 }
 
 model SubscribedEmails {
-    id    String @id @default(auto()) @map("_id") @db.ObjectId
+    id    String @id @default(uuid()) @db.Uuid
     email String @unique
 }
 
 model Contact {
-    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    id          String    @id @default(uuid()) @db.Uuid
     email       String
     fullname    String
     messageBody String
@@ -191,7 +191,7 @@ model Contact {
 }
 
 model Admin {
-    id               String    @id @default(auto()) @map("_id") @db.ObjectId
+    id               String    @id @default(uuid()) @db.Uuid
     fullName         String
     password         String
     email            String    @unique
@@ -204,33 +204,33 @@ model Admin {
 }
 
 model Validation {
-    id           String   @id @default(auto()) @map("_id") @db.ObjectId
+    id           String   @id @default(uuid()) @db.Uuid
     token        String   @unique
     token_expiry DateTime
     randomCode   String
     user         User     @relation(fields: [userId], references: [id])
-    userId       String   @unique @db.ObjectId
+    userId       String   @unique @db.Uuid
 }
 
 model Totp {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    id         String   @id @default(uuid()) @db.Uuid
     otp        String
     otp_expiry DateTime
     user       User     @relation(fields: [userId], references: [id])
-    userId     String   @unique @db.ObjectId
+    userId     String   @unique @db.Uuid
 }
 
 model Portfolio {
-    id     String @id @default(auto()) @map("_id") @db.ObjectId
-    video  File?
-    audio  File?
-    images File[]
+    id     String @id @default(uuid()) @db.Uuid
+    video  Json?
+    audio  Json?
+    images Json[]
     user   User   @relation(fields: [userId], references: [id])
-    userId String @unique @db.ObjectId
+    userId String @unique @db.Uuid
 }
 
 model BankDetails {
-    id            String   @id @default(auto()) @map("_id") @db.ObjectId
+    id            String   @id @default(uuid()) @db.Uuid
     bankName      String
     accountName   String
     accountNumber String
@@ -239,11 +239,11 @@ model BankDetails {
     updatedAt     DateTime @updatedAt
     createdAt     DateTime @default(now())
     user          User     @relation(fields: [userId], references: [id])
-    userId        String   @db.ObjectId
+    userId        String   @db.Uuid
 }
 
 model Experience {
-    id                String  @id @default(auto()) @map("_id") @db.ObjectId
+    id                String  @id @default(uuid()) @db.Uuid
     yearsOfExperience String
     proficiencyLevel  String
     brandsWorkedWith  String?
@@ -251,42 +251,42 @@ model Experience {
     roleOrPosition    String?
     projectDuration   String?
     user              User    @relation(fields: [userId], references: [id])
-    userId            String  @db.ObjectId
+    userId            String  @db.Uuid
 }
 
 model RateAndAvailability {
-    id           String     @id @default(auto()) @map("_id") @db.ObjectId
+    id           String     @id @default(uuid()) @db.Uuid
     availability Boolean    @default(true)
     chargeTime   ChargeTime
     charge       Float
     weekdays     String[]
     user         User       @relation(fields: [userId], references: [id])
-    userId       String     @unique @db.ObjectId
+    userId       String     @unique @db.Uuid
 }
 
 model Skill {
-    id                String      @id @default(auto()) @map("_id") @db.ObjectId
+    id                String      @id @default(uuid()) @db.Uuid
     category          String
     subSkills         String[]
     yearsOfExperience String
     chargeTime        ChargeTime?
     charge            Float?
     user              User        @relation(fields: [userId], references: [id])
-    userId            String      @db.ObjectId
+    userId            String      @db.Uuid
 }
 
 model Creative {
-    id             String                  @id @default(auto()) @map("_id") @db.ObjectId
+    id             String                  @id @default(uuid()) @db.Uuid
     bio            String?
     personalInfo   CreativePersonalInfo?
     certifications CreativeCertification[]
     user           User                    @relation(references: [id], fields: [userId])
-    userId         String                  @unique @db.ObjectId
+    userId         String                  @unique @db.Uuid
 }
 
 model CreativePersonalInfo {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
-    proofOfId  File?
+    id         String   @id @default(uuid()) @db.Uuid
+    proofOfId  Json?
     phone      String?
     altPhone   String?
     gender     Gender?
@@ -301,11 +301,11 @@ model CreativePersonalInfo {
     igHandle   String?
     xHandle    String?
     creative   Creative @relation(fields: [creativeId], references: [id])
-    creativeId String   @unique @db.ObjectId
+    creativeId String   @unique @db.Uuid
 }
 
 model CreativeCertification {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    id         String   @id @default(uuid()) @db.Uuid
     school     String
     startDate  String
     endDate    String
@@ -313,19 +313,19 @@ model CreativeCertification {
     level      String?
     level_type String?
     creative   Creative @relation(fields: [creativeId], references: [id])
-    creativeId String   @db.ObjectId
+    creativeId String   @db.Uuid
 }
 
 model Client {
-    id          String       @id @default(auto()) @map("_id") @db.ObjectId
+    id          String       @id @default(uuid()) @db.Uuid
     brief_forms BriefForm[]
     setup       ClientSetup?
     user        User         @relation(fields: [userId], references: [id])
-    userId      String       @unique @db.ObjectId
+    userId      String       @unique @db.Uuid
 }
 
 model ClientSetup {
-    id            String          @id @default(auto()) @map("_id") @db.ObjectId
+    id            String          @id @default(uuid()) @db.Uuid
     type          ClientSetupType
     address       String
     country       String
@@ -338,25 +338,25 @@ model ClientSetup {
     facebook      String?
     linkedIn      String?
     document_type String?
-    document      File?
+    document      Json?
     id_type       String?
-    proof_of_id   File[]
+    proof_of_id   Json[]
     reg_type      String?
     reg_no        String?
     client        Client          @relation(fields: [clientId], references: [id])
-    clientId      String          @unique @db.ObjectId
+    clientId      String          @unique @db.Uuid
 }
 
 model Talent {
-    id           String              @id @default(auto()) @map("_id") @db.ObjectId
+    id           String              @id @default(uuid()) @db.Uuid
     personalInfo TalentPersonalInfo?
     bioStats     talentBioStats?
     user         User                @relation(fields: [userId], references: [id])
-    userId       String              @unique @db.ObjectId
+    userId       String              @unique @db.Uuid
 }
 
 model TalentPersonalInfo {
-    id            String   @id @default(auto()) @map("_id") @db.ObjectId
+    id            String   @id @default(uuid()) @db.Uuid
     phone         String?
     altPhone      String?
     gender        Gender?
@@ -370,17 +370,17 @@ model TalentPersonalInfo {
     state         String?
     address       String?
     idType        String
-    proofOfId     File?
+    proofOfId     Json?
     languages     String[]
     fbHandle      String?
     igHandle      String?
     xHandle       String?
     talent        Talent   @relation(fields: [talentId], references: [id])
-    talentId      String   @unique @db.ObjectId
+    talentId      String   @unique @db.Uuid
 }
 
 model talentBioStats {
-    id        String  @id @default(auto()) @map("_id") @db.ObjectId
+    id        String  @id @default(uuid()) @db.Uuid
     bio       String?
     height    String?
     weight    String?
@@ -392,11 +392,11 @@ model talentBioStats {
     waist     String?
     dressSize String?
     talent    Talent  @relation(fields: [talentId], references: [id])
-    talentId  String  @unique @db.ObjectId
+    talentId  String  @unique @db.Uuid
 }
 
 model Job {
-    id              String           @id @default(auto()) @map("_id") @db.ObjectId
+    id              String           @id @default(uuid()) @db.Uuid
     type            String
     title           String
     role            String
@@ -409,33 +409,33 @@ model Job {
     experience      String
     gender          Gender?
     rate            String?
-    attachments     File[]
+    attachments     Json[]
     status          JobStatus
     postedAt        DateTime         @default(now())
     approvedAt      DateTime?
     jobApplications JobApplication[]
     admin           Admin?           @relation(fields: [adminId], references: [id])
     user            User?            @relation(fields: [userId], references: [id])
-    adminId         String?          @db.ObjectId
-    userId          String?          @db.ObjectId
+    adminId         String?          @db.Uuid
+    userId          String?          @db.Uuid
 }
 
 model JobApplication {
-    id           String          @id @default(auto()) @map("_id") @db.ObjectId
-    attachments  File[]
+    id           String          @id @default(uuid()) @db.Uuid
+    attachments  Json[]
     cover_letter String?
     status       ApplicantStatus @default(PENDING)
     appliedAt    DateTime        @default(now())
     job          Job             @relation(fields: [jobId], references: [id])
     user         User            @relation(fields: [userId], references: [id])
-    jobId        String          @db.ObjectId
-    userId       String          @db.ObjectId
+    jobId        String          @db.Uuid
+    userId       String          @db.Uuid
 }
 
 model Article {
-    id               String    @id @default(auto()) @map("_id") @db.ObjectId
+    id               String    @id @default(uuid()) @db.Uuid
     content          String
-    coverPhoto       File
+    coverPhoto       Json
     title            String
     category         String
     views            Int       @default(0)
@@ -447,32 +447,32 @@ model Article {
     likes            Like[]
     comments         Comment[]
     author           User?     @relation(fields: [authorId], references: [id])
-    authorId         String?   @unique @db.ObjectId
+    authorId         String?   @unique @db.Uuid
     admin            Admin?    @relation(fields: [adminId], references: [id])
-    adminId          String?   @db.ObjectId
+    adminId          String?   @db.Uuid
 }
 
 model Comment {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    id          String   @id @default(uuid()) @db.Uuid
     content     String
     commentedAt DateTime @default(now())
     article     Article  @relation(fields: [articleId], references: [id])
-    articleId   String   @db.ObjectId
+    articleId   String   @db.Uuid
     user        User?    @relation(references: [id], fields: [userId])
-    userId      String?  @db.ObjectId
+    userId      String?  @db.Uuid
 }
 
 model Like {
-    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    id        String   @id @default(uuid()) @db.Uuid
     likedAt   DateTime @default(now())
     article   Article  @relation(fields: [articleId], references: [id])
-    articleId String   @db.ObjectId
+    articleId String   @db.Uuid
     user      User?    @relation(fields: [userId], references: [id])
-    userId    String?  @db.ObjectId
+    userId    String?  @db.Uuid
 }
 
 model Project {
-    id              String                 @id @default(auto()) @map("_id") @db.ObjectId
+    id              String                 @id @default(uuid()) @db.Uuid
     proj_title      String
     proj_type       String
     role_name       String
@@ -483,10 +483,10 @@ model Project {
     location        String
     proj_time       String
     additional_note String?
-    attachments     File[]
+    attachments     Json[]
     additionalInfo  AdditionalInfoProject?
     client          User                   @relation("ClientProjects", fields: [clientId], references: [id])
-    clientId        String                 @db.ObjectId
+    clientId        String                 @db.Uuid
     status          ProjectStatus          @default(PENDING)
     hires           Hire[]
     createdAt       DateTime               @default(now())
@@ -495,35 +495,35 @@ model Project {
 }
 
 model ProjectRoleInfo {
-    id                 String  @id @default(auto()) @map("_id") @db.ObjectId
+    id                 String  @id @default(uuid()) @db.Uuid
     role_type          String
     offer              Float?
     project            Project @relation(fields: [projectId], references: [id])
-    projectId          String  @db.ObjectId
+    projectId          String  @db.Uuid
     talentOrCreative   User    @relation("UserProjects", fields: [talentOrCreativeId], references: [id])
-    talentOrCreativeId String  @db.ObjectId
+    talentOrCreativeId String  @db.Uuid
 }
 
 model AdditionalInfoProject {
-    id           String  @id @default(auto()) @map("_id") @db.ObjectId
+    id           String  @id @default(uuid()) @db.Uuid
     org_name     String
     job_title    String?
     country      String
     phone_number String
     means_of_id  String
-    proof_of_id  File[]
+    proof_of_id  Json[]
     project      Project @relation(references: [id], fields: [projectId])
-    projectId    String  @unique @db.ObjectId
+    projectId    String  @unique @db.Uuid
 }
 
 model Hire {
-    id                 String     @id @default(auto()) @map("_id") @db.ObjectId
+    id                 String     @id @default(uuid()) @db.Uuid
     project            Project    @relation(fields: [projectId], references: [id])
-    projectId          String     @db.ObjectId
+    projectId          String     @db.Uuid
     client             User       @relation("ClientHires", fields: [clientId], references: [id])
-    clientId           String     @db.ObjectId
+    clientId           String     @db.Uuid
     talentOrCreative   User       @relation("UserHires", fields: [talentOrCreativeId], references: [id])
-    talentOrCreativeId String     @db.ObjectId
+    talentOrCreativeId String     @db.Uuid
     status             HireStatus @default(PENDING)
     declineReason      String?
     createdAt          DateTime   @default(now())
@@ -531,67 +531,60 @@ model Hire {
 }
 
 model Contract {
-    id            String         @id @default(auto()) @map("_id") @db.ObjectId
-    file          File
-    signature     File?
+    id            String         @id @default(uuid()) @db.Uuid
+    file          Json
+    signature     Json?
     status        ContractStatus @default(PENDING)
     signedByUser  Boolean        @default(false)
     signedAt      DateTime?
     declineReason String?
     declinedAt    DateTime?
     user          User?          @relation(fields: [userId], references: [id])
-    userId        String?        @db.ObjectId
+    userId        String?        @db.Uuid
     project       Project        @relation(fields: [projectId], references: [id])
-    projectId     String         @unique @db.ObjectId
+    projectId     String         @unique @db.Uuid
     createdAt     DateTime       @default(now())
     updatedAt     DateTime       @updatedAt
 }
 
 model Rating {
-    id           String   @id @default(auto()) @map("_id") @db.ObjectId
+    id           String   @id @default(uuid()) @db.Uuid
     point        Float
     review       String
     target       User     @relation("TargetUser", fields: [targetUserId], references: [id])
-    targetUserId String   @db.ObjectId
+    targetUserId String   @db.Uuid
     rater        User     @relation("RaterUser", fields: [raterUserId], references: [id])
-    raterUserId  String   @db.ObjectId
+    raterUserId  String   @db.Uuid
     createdAt    DateTime @default(now())
 }
 
 model Inbox {
-    id       String    @id @default(auto()) @map("_id") @db.ObjectId
+    id       String    @id @default(uuid()) @db.Uuid
     user     User?     @relation(fields: [userId], references: [id])
-    userId   String?   @unique @db.ObjectId
+    userId   String?   @unique @db.Uuid
     admin    Admin?    @relation(fields: [adminId], references: [id])
-    adminId  String?   @db.ObjectId
+    adminId  String?   @db.Uuid
     messages Message[]
 }
 
 model Message {
-    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    id        String   @id @default(uuid()) @db.Uuid
     content   String?
-    file      File?
+    file      Json?
     createdAt DateTime @default(now())
     isRead    Boolean  @default(false)
 
-    inboxId         String  @db.ObjectId
-    userSenderId    String? @db.ObjectId
-    adminSenderId   String? @db.ObjectId
-    userReceiverId  String? @db.ObjectId
-    adminReceiverId String? @db.ObjectId
+    inboxId         String  @db.Uuid
+    userSenderId    String? @db.Uuid
+    adminSenderId   String? @db.Uuid
+    userReceiverId  String? @db.Uuid
+    adminReceiverId String? @db.Uuid
 
     inbox         Inbox  @relation(fields: [inboxId], references: [id])
     userSender    User?  @relation("UserSentMessages", fields: [userSenderId], references: [id])
     adminSender   Admin? @relation("AdminSentMessages", fields: [adminSenderId], references: [id])
     userReceiver  User?  @relation("UserReceivedMessages", fields: [userReceiverId], references: [id])
     adminReceiver Admin? @relation("AdminReceivedMessages", fields: [adminReceiverId], references: [id])
-}
-
-type File {
-    idx  String? @default(uuid())
-    url  String
-    path String
-    type String?
 }
 
 enum Role {

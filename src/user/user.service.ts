@@ -32,7 +32,6 @@ export class UserService {
         }: FetchProfilesDto
     ) {
         try {
-            search = search?.trim() ?? ''
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
@@ -300,7 +299,6 @@ export class UserService {
         { limit = 100, page = 1, search = '' }: InfiniteScrollDto
     ) {
         try {
-            search = search?.trim() ?? ''
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
@@ -393,7 +391,6 @@ export class UserService {
         }: FetchReviewsDTO
     ) {
         try {
-            search = search?.trim() ?? ''
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
@@ -536,7 +533,6 @@ export class UserService {
         }: FectchContractsDTO,
     ) {
         try {
-            search = search?.trim() ?? ''
             limit = Number(limit)
             const offset = (page - 1) * limit
 
@@ -673,7 +669,6 @@ export class UserService {
         { sub, role }: ExpressUser,
     ) {
         try {
-            s = s?.trim() ?? ''
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 

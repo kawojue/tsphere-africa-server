@@ -1,5 +1,7 @@
 import { UserStatus } from '@prisma/client'
 import { ApiProperty } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
+import { toLowerCase } from 'helpers/formatTexts'
 import { IsEnum, IsOptional } from 'class-validator'
 import { Analytics, SortUser, FetchUser } from 'enums/base.enum'
 
@@ -38,6 +40,7 @@ export class SearchDto extends InfiniteScroll {
         example: ' '
     })
     @IsOptional()
+    @Transform(({ value }) => toLowerCase(value))
     s: string
 }
 

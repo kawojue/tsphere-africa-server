@@ -7,9 +7,9 @@ import { MiscService } from 'lib/misc.service'
 import { titleText } from 'helpers/formatTexts'
 import { PrismaService } from 'lib/prisma.service'
 import { genFileName, validateFile } from 'utils/file'
-import { CreativeCertification } from '@prisma/client'
 import { genReferralKey } from 'helpers/genReferralKey'
 import { CertificationsDTO } from './dto/certification.dto'
+import { CreativeCertification, Prisma } from '@prisma/client'
 import { CreativePersonalInfoDto } from './dto/personal-info.dto'
 
 @Injectable()
@@ -49,7 +49,7 @@ export class CreativeService {
                 return this.response.sendError(res, StatusCodes.Unauthorized, "Can't edit since you're verified")
             }
 
-            const personalInfo = user.creative?.personalInfo
+            const personalInfo = user.creative?.personalInfo as any
 
             if (!personalInfo?.proofOfId?.path) {
                 if (!file) {
@@ -61,7 +61,7 @@ export class CreativeService {
                 }
             }
 
-            let proofOfId: IFile
+            let proofOfId: any
             if (file) {
                 const result = validateFile(file, 5 << 20, 'jpg', 'png')
 
@@ -72,8 +72,8 @@ export class CreativeService {
                 const path = `${sub}/${genFileName(result.file)}`
                 await this.aws.uploadS3(result.file, path)
                 proofOfId = {
-                    path,
                     type: file.mimetype,
+                    path, size: file.size,
                     url: this.aws.getS3(path)
                 }
             }
@@ -170,8 +170,8 @@ export class CreativeService {
                 return this.response.sendError(res, StatusCodes.NotFound, "User not found")
             }
 
-            let proofOfId: IFile
-            const personalInfo = user.creative?.personalInfo
+            let proofOfId: Prisma.JsonValue
+            const personalInfo = user.creative?.personalInfo as any
 
             if (file) {
                 const result = validateFile(file, 5 << 20, 'jpg', 'png')
@@ -183,8 +183,8 @@ export class CreativeService {
                 const path = `${userId}/${genFileName(result.file)}`
                 await this.aws.uploadS3(result.file, path)
                 proofOfId = {
-                    path,
                     type: file.mimetype,
+                    path, size: file.size,
                     url: this.aws.getS3(path)
                 }
 
@@ -229,6 +229,7 @@ export class CreativeService {
                     data: {
                         gender, religion, dob, country, state, address, idType,
                         languages, fbHandle, igHandle, xHandle, phone, altPhone,
+                        // @ts-ignore
                         proofOfId: proofOfId?.path ? proofOfId : personalInfo?.proofOfId,
                     }
                 }),

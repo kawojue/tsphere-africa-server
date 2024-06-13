@@ -15,11 +15,11 @@ import { genFileName, validateFile } from 'utils/file'
 import {
     ClientProfileSetupDTO, ClientProfileSetupQueryDTO
 } from './dto/profile.dto'
-import {
-    ClientSetup, HireStatus, Project, ProjectStatus, TxStatus
-} from '@prisma/client'
 import { PaystackService } from 'lib/Paystack/paystack.service'
 import { UpdateHireStatusDTO } from 'src/modmin/dto/status.dto'
+import {
+    ClientSetup, HireStatus, Prisma, Project, ProjectStatus, TxStatus
+} from '@prisma/client'
 import { CreateProjectDTO, ExistingProjectDTO } from './dto/project.dto'
 
 @Injectable()
@@ -32,7 +32,7 @@ export class ClientService {
         private readonly paystack: PaystackService,
     ) { }
 
-    private async removeFiles(files: IFile[]) {
+    private async removeFiles(files: any[]) {
         if (files.length > 0) {
             for (const file of files) {
                 if (file?.path) {
@@ -100,13 +100,13 @@ export class ClientService {
                 return this.response.sendError(res, StatusCodes.BadRequest, "Only the front and back of the ID")
             }
 
-            let document: IFile
-            let proof_of_id: IFile[] = []
+            let document: Prisma.JsonValue
+            let proof_of_id = []
 
             let clientSetup: ClientSetup
 
             if (filteredProof.length > 0) {
-                const results = await Promise.all(filteredProof.map(async file => {
+                proof_of_id = await Promise.all(filteredProof.map(async file => {
                     const result = validateFile(file, 10 << 20, 'png', 'jpg', 'jpeg')
 
                     if (result?.status) {
@@ -121,8 +121,6 @@ export class ClientService {
                         url: this.aws.getS3(path),
                     }
                 }))
-
-                proof_of_id = results.filter((result): result is IFile => !!result)
             }
 
             if (type === "PERSONAL") {
@@ -211,13 +209,13 @@ export class ClientService {
             const filteredImages = files.filter(file => file.fieldname === "images")
             const filteredVideos = files.filter(file => file.fieldname === "videos")
 
-            let docs = [] as IFile[]
-            let videos = [] as IFile[]
-            let images = [] as IFile[]
+            let docs = []
+            let videos = []
+            let images = []
 
             if (filteredDocs.length) {
                 try {
-                    const results = await Promise.all(filteredDocs.map(async file => {
+                    docs = await Promise.all(filteredDocs.map(async file => {
                         const result = validateFile(file, 5 << 20, 'pdf', 'docx')
 
                         if (result?.status) {
@@ -227,13 +225,11 @@ export class ClientService {
                         const path = `brief_form/${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
-                            path,
                             type: file.mimetype,
+                            path, size: file.size,
                             url: this.aws.getS3(path),
                         }
                     }))
-
-                    docs = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
                         await this.removeFiles(docs)
@@ -245,7 +241,7 @@ export class ClientService {
 
             if (filteredImages.length) {
                 try {
-                    const results = await Promise.all(filteredImages.map(async file => {
+                    images = await Promise.all(filteredImages.map(async file => {
                         const result = validateFile(file, 10 << 20, 'jpg', 'png')
 
                         if (result?.status) {
@@ -255,13 +251,11 @@ export class ClientService {
                         const path = `brief_form/${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
-                            path,
                             type: file.mimetype,
+                            path, size: file.size,
                             url: this.aws.getS3(path),
                         }
                     }))
-
-                    images = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
                         await this.removeFiles(images)
@@ -273,7 +267,7 @@ export class ClientService {
 
             if (filteredVideos.length) {
                 try {
-                    const results = await Promise.all(filteredVideos.map(async file => {
+                    videos = await Promise.all(filteredVideos.map(async file => {
                         const result = validateFile(file, 20 << 20, 'mp4',)
 
                         if (result?.status) {
@@ -283,13 +277,11 @@ export class ClientService {
                         const path = `brief_form/${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
-                            path,
                             type: file.mimetype,
+                            path, size: file.size,
                             url: this.aws.getS3(path),
                         }
                     }))
-
-                    videos = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
                         await this.removeFiles(videos)
@@ -447,12 +439,12 @@ export class ClientService {
                 return this.response.sendError(res, StatusCodes.BadRequest, "You're not verified yet. Upload your proof of ID with the project")
             }
 
-            let attachments: IFile[]
-            let proof_of_id: IFile[]
+            let attachments = []
+            let proof_of_id = []
 
             if (extractedAttachments.length) {
                 try {
-                    const results = await Promise.all(extractedAttachments.map(async file => {
+                    attachments = await Promise.all(extractedAttachments.map(async file => {
                         const result = validateFile(file, 5 << 20, 'jpg', 'png', 'mp4', 'wav', 'aac', 'mp3')
 
                         if (result?.status) {
@@ -462,13 +454,11 @@ export class ClientService {
                         const path = `project/${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
-                            path,
                             type: file.mimetype,
+                            path, size: file.size,
                             url: this.aws.getS3(path),
                         }
                     }))
-
-                    attachments = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
                         await this.removeFiles(attachments)
@@ -490,7 +480,7 @@ export class ClientService {
 
             if (project && !user.verified) {
                 try {
-                    const results = await Promise.all(extractedProofOfId.map(async file => {
+                    proof_of_id = await Promise.all(extractedProofOfId.map(async file => {
                         const result = validateFile(file, 5 << 20, 'jpg', 'png')
 
                         if (result?.status) {
@@ -505,8 +495,6 @@ export class ClientService {
                             url: this.aws.getS3(path),
                         }
                     }))
-
-                    proof_of_id = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
                         await this.removeFiles(proof_of_id)
@@ -802,7 +790,6 @@ export class ClientService {
         }: SortUserDto
     ) {
         try {
-            s = s?.trim() ?? ''
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
@@ -1029,7 +1016,6 @@ export class ClientService {
         { q, s = '', page = 1, limit = 50 }: SortUserDto
     ) {
         try {
-            s = s?.trim() ?? ''
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 

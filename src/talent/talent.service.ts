@@ -10,6 +10,7 @@ import { genFileName, validateFile } from 'utils/file'
 import { genReferralKey } from 'helpers/genReferralKey'
 import { TalentBioStatsDto } from './dto/bio-stats.dto'
 import { TalentPersonalInfoDto } from './dto/personal-info.dto'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class TalentService {
@@ -33,9 +34,7 @@ export class TalentService {
     ) {
         try {
             const user = await this.prisma.user.findUnique({
-                where: {
-                    id: sub
-                },
+                where: { id: sub },
                 include: {
                     talent: {
                         select: {
@@ -49,7 +48,7 @@ export class TalentService {
                 return this.response.sendError(res, StatusCodes.Unauthorized, "Can't edit since you're verified")
             }
 
-            const personalInfo = user.talent?.personalInfo
+            const personalInfo = user.talent?.personalInfo as any
 
             if (!personalInfo?.proofOfId?.path) {
                 if (!file) {
@@ -61,7 +60,7 @@ export class TalentService {
                 }
             }
 
-            let proofOfId: IFile
+            let proofOfId: Prisma.JsonValue
             if (file) {
                 const result = validateFile(file, 5 << 20, 'jpg', 'png')
 
@@ -72,9 +71,9 @@ export class TalentService {
                 const path = `${sub}/${genFileName(result.file)}`
                 await this.aws.uploadS3(result.file, path)
                 proofOfId = {
-                    path,
                     type: file.mimetype,
-                    url: this.aws.getS3(path)
+                    path, size: file.size,
+                    url: this.aws.getS3(path),
                 }
             }
 
@@ -126,6 +125,7 @@ export class TalentService {
                     languages, fbHandle, igHandle, xHandle, workingTitle,
                     phone, altPhone, gender, religion, dob, playingMaxAge,
                     playingMinAge, nationality, country, state, address, idType,
+                    // @ts-ignore
                     proofOfId: proofOfId?.path ? proofOfId : personalInfo?.proofOfId,
                     talent: { connect: { id: talent.id } }
                 },
@@ -173,8 +173,8 @@ export class TalentService {
                 return this.response.sendError(res, StatusCodes.NotFound, "User not found")
             }
 
-            let proofOfId: IFile
-            const personalInfo = user.talent?.personalInfo
+            let proofOfId: Prisma.JsonValue
+            const personalInfo = user.talent?.personalInfo as any
 
             if (file) {
                 const result = validateFile(file, 5 << 20, 'jpg', 'png')
@@ -186,9 +186,9 @@ export class TalentService {
                 const path = `${userId}/${genFileName(result.file)}`
                 await this.aws.uploadS3(result.file, path)
                 proofOfId = {
-                    path,
                     type: file.mimetype,
-                    url: this.aws.getS3(path)
+                    path, size: file.size,
+                    url: this.aws.getS3(path),
                 }
 
                 if (personalInfo?.proofOfId?.path) {
@@ -233,6 +233,7 @@ export class TalentService {
                         languages, fbHandle, igHandle, xHandle, workingTitle,
                         phone, altPhone, gender, religion, dob, playingMaxAge,
                         playingMinAge, nationality, country, state, address, idType,
+                        // @ts-ignore
                         proofOfId: proofOfId?.path ? proofOfId : personalInfo?.proofOfId,
                     }
                 }),

@@ -39,9 +39,9 @@ export class JobService {
                 return this.response.sendError(res, StatusCodes.BadRequest, 'Invalid deadline date')
             }
 
-            let filesArray = [] as IFile[]
+            let filesArray = []
             try {
-                const results = await Promise.all(files.map(async (file) => {
+                filesArray = await Promise.all(files.map(async (file) => {
                     const result = validateFile(file, 30 << 20, 'jpg', 'png', 'mp4', 'mp3', 'wav', 'aac')
                     if (result?.status) {
                         return this.response.sendError(res, result.status, result.message)
@@ -50,13 +50,11 @@ export class JobService {
                     const path = `${sub}/${genFileName(result.file)}`
                     await this.aws.uploadS3(result.file, path)
                     return {
-                        path,
                         type: file.mimetype,
+                        path, size: file.size,
                         url: this.aws.getS3(path),
                     }
                 }))
-
-                filesArray = results.filter((result): result is IFile => !!result)
             } catch {
                 try {
                     if (filesArray.length > 0) {
@@ -188,10 +186,10 @@ export class JobService {
                 return this.response.sendError(res, StatusCodes.Conflict, "You've already applied for this job")
             }
 
-            let filesArray = [] as IFile[]
+            let filesArray = []
             if (attachments.length > 0) {
                 try {
-                    const results = await Promise.all(attachments.map(async (file) => {
+                    filesArray = await Promise.all(attachments.map(async (file) => {
                         const result = validateFile(file, 10 << 20, 'jpg', 'png', 'mp4')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
@@ -200,13 +198,11 @@ export class JobService {
                         const path = `${sub}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
-                            path,
+                            type: file.mimetype,
+                            path, size: file.size,
                             url: this.aws.getS3(path),
-                            type: result.file.mimetype,
                         }
                     }))
-
-                    filesArray = results.filter((result): result is IFile => !!result)
                 } catch {
                     try {
                         if (filesArray.length > 0) {
@@ -243,7 +239,6 @@ export class JobService {
         { sub, role }: ExpressUser,
         { page = 1, limit = 50, s = '', q }: SortUserDto
     ) {
-        s = s?.trim() ?? ''
         limit = Number(limit)
         const offset = (Number(page) - 1) * limit
 

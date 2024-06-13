@@ -16,9 +16,3 @@ interface JwtPayload {
     role: Role
     userStatus?: UserStatus
 }
-
-interface IFile {
-    url: string
-    path: string
-    type: string
-}

@@ -26,7 +26,6 @@ export class ModminService {
     ) { }
 
     private async listUsers({ q, s, page, limit, type }: FetchUserDto) {
-        s = s?.trim() ?? ''
         limit = Number(limit)
         const offset = (Number(page) - 1) * limit
 
@@ -486,7 +485,7 @@ export class ModminService {
         { q, s = '', page = 1, limit = 50 }: SortUserDto
     ) {
         try {
-            s = s?.trim() ?? ''
+
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
@@ -704,7 +703,6 @@ export class ModminService {
         }: SortUserDto
     ) {
         try {
-            s = s?.trim()
             limit = Number(limit)
             const offset = (Number(page) - 1) * limit
 
