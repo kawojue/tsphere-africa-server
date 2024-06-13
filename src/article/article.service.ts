@@ -38,9 +38,9 @@ export class ArticleService {
             const path = `${sub}/article/${genFileName(re.file)}`
             await this.aws.uploadS3(file, path)
             const cover_photo = {
-                path,
+                type: file.mimetype,
+                path, size: file.size,
                 url: this.aws.getS3(path),
-                type: file.mimetype
             }
 
             const article = await this.prisma.article.create({
