@@ -7,7 +7,7 @@ export function genToken(userId: string, randomCode: string) {
 
     const currentDate = new Date()
     const token_expiry = new Date(
-        currentDate.setHours(currentDate.getHours() + 24)
+        currentDate.setDate(currentDate.getDate() + 7)
     )
 
     return { token, token_expiry }
