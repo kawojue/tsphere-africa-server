@@ -7,7 +7,6 @@ import { MiscService } from 'lib/misc.service'
 import {
     CreateBriefFillDTO, CreateBriefDocumentDTO,
 } from './dto/brief.dto'
-import { titleText } from 'helpers/formatTexts'
 import { FundWalletDTO } from './dto/wallet.dto'
 import { PrismaService } from 'lib/prisma.service'
 import { SortUserDto } from 'src/modmin/dto/user.dto'
