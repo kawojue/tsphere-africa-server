@@ -45,10 +45,7 @@ export class UserController {
   @Get('/my-profile')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async fetchMyProfile(
-    @Res() res: Response,
-    @Req() req: IRequest,
-  ) {
+  async fetchMyProfile(@Res() res: Response, @Req() req: IRequest) {
     await this.userService.fetchMyProfile(res, req.user)
   }
 

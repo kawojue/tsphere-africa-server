@@ -9,8 +9,8 @@ import {
 } from '@nestjs/swagger'
 import { ExperiencesDTO } from './dto/experiece.dto'
 import {
-  Controller, Delete, Param, Post, UseInterceptors, Put,
-  UploadedFiles, UseGuards, Req, Res, Body, UploadedFile,
+  UploadedFiles, UseGuards, Res, Body, UploadedFile,
+  Controller, Delete, Param, UseInterceptors, Put, Req,
 } from '@nestjs/common'
 import { ProfileSetupService } from './profile-setup.service'
 import { RateAndAvailabilityDto } from './dto/rate-availability.dto'
@@ -77,7 +77,7 @@ export class ProfileSetupController {
   }
 
   @Role(UserRole.talent, UserRole.creative)
-  @Post('/experience')
+  @Put('/experience')
   async addExperience(
     @Res() res: Response,
     @Req() req: IRequest,

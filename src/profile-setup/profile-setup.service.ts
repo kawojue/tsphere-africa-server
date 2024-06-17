@@ -240,6 +240,16 @@ export class ProfileSetupService {
         { experiences }: ExperiencesDTO
     ) {
         try {
+            const formerExperiences = await this.prisma.experience.findMany({
+                where: { userId: sub }
+            })
+
+            if (formerExperiences.length > 0) {
+                await this.prisma.experience.deleteMany({
+                    where: { userId: sub }
+                })
+            }
+
             let exps: Experience[] = []
             for (const experience of experiences) {
                 const exp = await this.prisma.experience.create({
