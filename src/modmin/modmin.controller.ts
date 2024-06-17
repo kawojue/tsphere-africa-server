@@ -140,8 +140,8 @@ export class ModminController {
 
   @ApiBearerAuth()
   @Role(Roles.admin)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('/referrals/:referralId')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   async fetchReferral(@Res() res: Response, @Param('referralId') referralId: string,) {
     await this.modminService.fetchReferral(res, referralId)
   }
