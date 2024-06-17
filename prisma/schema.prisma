@@ -330,7 +330,8 @@ model ClientSetup {
     address       String
     country       String
     state         String
-    lga           String
+    city          String?
+    company_name  String?
     prof_title    String?
     dob           String?
     website       String?

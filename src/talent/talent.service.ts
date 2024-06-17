@@ -1,4 +1,5 @@
 import { Response } from 'express'
+import { Prisma } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
 import { AwsService } from 'lib/aws.service'
@@ -10,7 +11,6 @@ import { genFileName, validateFile } from 'utils/file'
 import { genReferralKey } from 'helpers/genReferralKey'
 import { TalentBioStatsDto } from './dto/bio-stats.dto'
 import { TalentPersonalInfoDto } from './dto/personal-info.dto'
-import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class TalentService {
@@ -62,7 +62,7 @@ export class TalentService {
 
             let proofOfId: Prisma.JsonValue
             if (file) {
-                const result = validateFile(file, 5 << 20, 'jpg', 'png')
+                const result = validateFile(file, 5 << 20, 'jpg', 'png', 'jpeg')
 
                 if (result?.status) {
                     return this.response.sendError(res, result.status, result.message)
@@ -177,7 +177,7 @@ export class TalentService {
             const personalInfo = user.talent?.personalInfo as any
 
             if (file) {
-                const result = validateFile(file, 5 << 20, 'jpg', 'png')
+                const result = validateFile(file, 5 << 20, 'jpg', 'png', 'jpeg')
 
                 if (result?.status) {
                     return this.response.sendError(res, result.status, result.message)

@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
+import { titleText } from 'helpers/formatTexts'
 import { ClientSetupType } from '@prisma/client'
 import {
     IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl
@@ -19,6 +21,7 @@ export class ClientProfileSetupDTO {
     @IsString()
     @IsNotEmpty()
     @IsOptional()
+    @Transform(({ value }) => titleText(value))
     firstname: string
 
     @ApiProperty({
@@ -27,6 +30,7 @@ export class ClientProfileSetupDTO {
     @IsString()
     @IsNotEmpty()
     @IsOptional()
+    @Transform(({ value }) => titleText(value))
     lastname: string
 
     @ApiProperty({
@@ -41,6 +45,7 @@ export class ClientProfileSetupDTO {
     })
     @IsString()
     @IsNotEmpty()
+    @Transform(({ value }) => titleText(value))
     country: string
 
     @ApiProperty({
@@ -48,6 +53,7 @@ export class ClientProfileSetupDTO {
     })
     @IsString()
     @IsNotEmpty()
+    @Transform(({ value }) => titleText(value))
     state: string
 
     @ApiProperty({
@@ -56,7 +62,17 @@ export class ClientProfileSetupDTO {
     @IsString()
     @IsOptional()
     @IsNotEmpty()
-    lga: string
+    @Transform(({ value }) => titleText(value))
+    city: string
+
+    @ApiProperty({
+        example: 'Talent Sphere'
+    })
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty()
+    @Transform(({ value }) => titleText(value))
+    company_name: string
 
     @ApiProperty({
         example: 'Eng. (Engineer)'

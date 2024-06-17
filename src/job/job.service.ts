@@ -42,7 +42,7 @@ export class JobService {
             let filesArray = []
             try {
                 filesArray = await Promise.all(files.map(async (file) => {
-                    const result = validateFile(file, 30 << 20, 'jpg', 'png', 'mp4', 'mp3', 'wav', 'aac')
+                    const result = validateFile(file, 30 << 20, 'jpg', 'png', 'jpeg', 'mp4', 'mp3', 'wav', 'aac')
                     if (result?.status) {
                         return this.response.sendError(res, result.status, result.message)
                     }
@@ -190,7 +190,7 @@ export class JobService {
             if (attachments.length > 0) {
                 try {
                     filesArray = await Promise.all(attachments.map(async (file) => {
-                        const result = validateFile(file, 10 << 20, 'jpg', 'png', 'mp4')
+                        const result = validateFile(file, 10 << 20, 'jpg', 'png', 'jpeg', 'mp4')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
                         }

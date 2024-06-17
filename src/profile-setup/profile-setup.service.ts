@@ -39,7 +39,7 @@ export class ProfileSetupService {
                 let filesArray = []
                 try {
                     filesArray = await Promise.all(files.map(async (file) => {
-                        const result = validateFile(file, 10 << 20, 'jpg', 'png')
+                        const result = validateFile(file, 10 << 20, 'jpg', 'png', 'jpeg')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
                         }
@@ -312,7 +312,7 @@ export class ProfileSetupService {
             if (files.length > 0) {
                 try {
                     attachments = await Promise.all(files.map(async (file) => {
-                        const result = validateFile(file, 10 << 20, 'jpg', 'png', 'mp4', 'mp3', 'wav', 'aac')
+                        const result = validateFile(file, 10 << 20, 'jpg', 'png', 'jpeg', 'mp4', 'mp3', 'wav', 'aac')
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
                         }

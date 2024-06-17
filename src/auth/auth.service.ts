@@ -466,7 +466,7 @@ export class AuthService {
                 where: { id: sub }
             })
 
-            const result = validateFile(file, 5 << 20, 'jpg', 'png')
+            const result = validateFile(file, 5 << 20, 'jpg', 'png', 'jpeg')
             if (result?.status) {
                 return this.response.sendError(res, result.status, result.message)
             }

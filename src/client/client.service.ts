@@ -58,9 +58,9 @@ export class ClientService {
         files: Array<Express.Multer.File>,
         { type }: ClientProfileSetupQueryDTO,
         {
-            address, country, website, firstname, lastname,
-            lga, state, dob, document_type, facebook, id_type,
-            instagram, linkedIn, reg_type, reg_no, prof_title,
+            address, country, website, firstname, lastname, dob,
+            city, state, document_type, facebook, id_type, reg_no,
+            instagram, linkedIn, reg_type, prof_title, company_name,
         }: ClientProfileSetupDTO,
     ) {
         try {
@@ -70,18 +70,6 @@ export class ClientService {
 
             if (user.verified) {
                 return this.response.sendError(res, StatusCodes.Unauthorized, "Can't edit since you're verified")
-            }
-
-            if (firstname && firstname?.trim()) {
-                firstname = titleText(firstname)
-            } else {
-                firstname = user.firstname
-            }
-
-            if (lastname && lastname?.trim()) {
-                lastname = titleText(lastname)
-            } else {
-                lastname = user.lastname
             }
 
             const filteredDoc = files.find(file => file.fieldname === "doc")
@@ -128,13 +116,13 @@ export class ClientService {
                     this.prisma.clientSetup.upsert({
                         where: { clientId: client.id },
                         create: {
-                            state, facebook, id_type, lga, type,
+                            state, facebook, id_type, city, type,
                             instagram, linkedIn, dob, prof_title,
                             address, country, website, proof_of_id,
                             client: { connect: { id: client.id } },
                         },
                         update: {
-                            lga, type, instagram, linkedIn, dob, prof_title,
+                            city, type, instagram, linkedIn, dob, prof_title,
                             address, country, website, state, facebook, id_type,
                         }
                     }),
@@ -172,13 +160,13 @@ export class ClientService {
                         where: { clientId: client.id },
                         create: {
                             client: { connect: { id: client.id } },
-                            address, country, website, proof_of_id, document,
-                            instagram, linkedIn, dob, prof_title, document_type,
-                            state, facebook, id_type, lga, type, reg_type, reg_no,
+                            address, country, proof_of_id, document, company_name,
+                            website, instagram, linkedIn, prof_title, document_type,
+                            state, facebook, id_type, dob, city, type, reg_type, reg_no,
                         },
                         update: {
-                            address, country, website, instagram, linkedIn, dob, prof_title,
-                            document_type, state, facebook, id_type, lga, type, reg_type, reg_no,
+                            address, country, website, instagram, linkedIn, prof_title, company_name,
+                            document_type, state, facebook, id_type, city, dob, type, reg_type, reg_no,
                         }
                     }),
                     this.prisma.user.update({
@@ -242,7 +230,7 @@ export class ClientService {
             if (filteredImages.length) {
                 try {
                     images = await Promise.all(filteredImages.map(async file => {
-                        const result = validateFile(file, 10 << 20, 'jpg', 'png')
+                        const result = validateFile(file, 10 << 20, 'jpg', 'png', 'jpeg')
 
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
@@ -445,7 +433,7 @@ export class ClientService {
             if (extractedAttachments.length) {
                 try {
                     attachments = await Promise.all(extractedAttachments.map(async file => {
-                        const result = validateFile(file, 5 << 20, 'jpg', 'png', 'mp4', 'wav', 'aac', 'mp3')
+                        const result = validateFile(file, 5 << 20, 'jpg', 'png', 'jpeg', 'mp4', 'wav', 'aac', 'mp3')
 
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
@@ -481,7 +469,7 @@ export class ClientService {
             if (project && !user.verified) {
                 try {
                     proof_of_id = await Promise.all(extractedProofOfId.map(async file => {
-                        const result = validateFile(file, 5 << 20, 'jpg', 'png')
+                        const result = validateFile(file, 5 << 20, 'jpg', 'png', 'jpeg')
 
                         if (result?.status) {
                             return this.response.sendError(res, result.status, result.message)
