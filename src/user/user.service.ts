@@ -121,6 +121,11 @@ export class UserService {
                             personalInfo: true,
                         }
                     },
+                    client: {
+                        select: {
+                            setup: true,
+                        }
+                    },
                     primarySkill: true,
                     skillAttachments: true,
                 }
@@ -289,7 +294,7 @@ export class UserService {
                             bio: true,
                             personalInfo: true,
                             certifications: true,
-                        } : { userId: true }
+                        } : { setup: true }
                     },
                 }
             })
