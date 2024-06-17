@@ -126,3 +126,12 @@ export class ReferralDto {
     @IsOptional()
     refKey: string
 }
+
+export class CountryDTO {
+    @ApiProperty({
+        example: 'Nigeria'
+    })
+    @IsString()
+    @IsNotEmpty()
+    name: string
+}

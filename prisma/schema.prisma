@@ -93,7 +93,7 @@ model BriefForm {
     briefType            BriefFormType
     createdAt            DateTime      @default(now())
     updatedAt            DateTime      @updatedAt
-    client               Client        @relation(fields: [clientId], references: [id])
+    client               Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
     clientId             String        @db.Uuid
 }
 
@@ -102,7 +102,7 @@ model Referral {
     points    Int        @default(0)
     key       String     @unique
     referred  Referred[]
-    user      User       @relation(references: [id], fields: [userId])
+    user      User       @relation(references: [id], fields: [userId], onDelete: Cascade)
     userId    String     @unique @db.Uuid
     createdAt DateTime   @default(now())
     updatedAt DateTime   @updatedAt
@@ -111,9 +111,9 @@ model Referral {
 model Referred {
     id         String   @id @default(uuid()) @db.Uuid
     createdAt  DateTime @default(now())
-    referral   Referral @relation(fields: [referralId], references: [id])
+    referral   Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
     referralId String   @db.Uuid
-    user       User     @relation(fields: [userId], references: [id])
+    user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId     String   @db.Uuid
 }
 
@@ -126,7 +126,7 @@ model Wallet {
     lastDepoistedAt     DateTime?
     createdAt           DateTime  @default(now())
     updatedAt           DateTime  @updatedAt
-    user                User      @relation(fields: [userId], references: [id])
+    user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId              String    @unique @db.Uuid
 }
 
@@ -171,7 +171,7 @@ model TxHistory {
     description              String?
     createdAt                DateTime @default(now())
     updatedAt                DateTime @updatedAt
-    user                     User?    @relation(references: [id], fields: [userId])
+    user                     User?    @relation(references: [id], fields: [userId], onDelete: Cascade)
     userId                   String?  @db.Uuid
 }
 
@@ -208,7 +208,7 @@ model Validation {
     token        String   @unique
     token_expiry DateTime
     randomCode   String
-    user         User     @relation(fields: [userId], references: [id])
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId       String   @unique @db.Uuid
 }
 
@@ -216,7 +216,7 @@ model Totp {
     id         String   @id @default(uuid()) @db.Uuid
     otp        String
     otp_expiry DateTime
-    user       User     @relation(fields: [userId], references: [id])
+    user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId     String   @unique @db.Uuid
 }
 
@@ -225,7 +225,7 @@ model Portfolio {
     video  Json?
     audio  Json?
     images Json[]
-    user   User   @relation(fields: [userId], references: [id])
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId String @unique @db.Uuid
 }
 
@@ -238,7 +238,7 @@ model BankDetails {
     primary       Boolean  @default(false)
     updatedAt     DateTime @updatedAt
     createdAt     DateTime @default(now())
-    user          User     @relation(fields: [userId], references: [id])
+    user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId        String   @db.Uuid
 }
 
@@ -250,7 +250,7 @@ model Experience {
     projectType       String?
     roleOrPosition    String?
     projectDuration   String?
-    user              User    @relation(fields: [userId], references: [id])
+    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId            String  @db.Uuid
 }
 
@@ -260,7 +260,7 @@ model RateAndAvailability {
     chargeTime   ChargeTime
     charge       Float
     weekdays     String[]
-    user         User       @relation(fields: [userId], references: [id])
+    user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId       String     @unique @db.Uuid
 }
 
@@ -271,7 +271,7 @@ model Skill {
     yearsOfExperience String
     chargeTime        ChargeTime?
     charge            Float?
-    user              User        @relation(fields: [userId], references: [id])
+    user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId            String      @db.Uuid
 }
 
@@ -280,7 +280,7 @@ model Creative {
     bio            String?
     personalInfo   CreativePersonalInfo?
     certifications CreativeCertification[]
-    user           User                    @relation(references: [id], fields: [userId])
+    user           User                    @relation(references: [id], fields: [userId], onDelete: Cascade)
     userId         String                  @unique @db.Uuid
 }
 
@@ -300,7 +300,7 @@ model CreativePersonalInfo {
     fbHandle   String?
     igHandle   String?
     xHandle    String?
-    creative   Creative @relation(fields: [creativeId], references: [id])
+    creative   Creative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
     creativeId String   @unique @db.Uuid
 }
 
@@ -312,7 +312,7 @@ model CreativeCertification {
     study      String
     level      String?
     level_type String?
-    creative   Creative @relation(fields: [creativeId], references: [id])
+    creative   Creative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
     creativeId String   @db.Uuid
 }
 
@@ -320,7 +320,7 @@ model Client {
     id          String       @id @default(uuid()) @db.Uuid
     brief_forms BriefForm[]
     setup       ClientSetup?
-    user        User         @relation(fields: [userId], references: [id])
+    user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId      String       @unique @db.Uuid
 }
 
@@ -344,7 +344,7 @@ model ClientSetup {
     proof_of_id   Json[]
     reg_type      String?
     reg_no        String?
-    client        Client          @relation(fields: [clientId], references: [id])
+    client        Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
     clientId      String          @unique @db.Uuid
 }
 
@@ -352,7 +352,7 @@ model Talent {
     id           String              @id @default(uuid()) @db.Uuid
     personalInfo TalentPersonalInfo?
     bioStats     talentBioStats?
-    user         User                @relation(fields: [userId], references: [id])
+    user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId       String              @unique @db.Uuid
 }
 
@@ -376,7 +376,7 @@ model TalentPersonalInfo {
     fbHandle      String?
     igHandle      String?
     xHandle       String?
-    talent        Talent   @relation(fields: [talentId], references: [id])
+    talent        Talent   @relation(fields: [talentId], references: [id], onDelete: Cascade)
     talentId      String   @unique @db.Uuid
 }
 
@@ -392,7 +392,7 @@ model talentBioStats {
     hips      String?
     waist     String?
     dressSize String?
-    talent    Talent  @relation(fields: [talentId], references: [id])
+    talent    Talent  @relation(fields: [talentId], references: [id], onDelete: Cascade)
     talentId  String  @unique @db.Uuid
 }
 
@@ -415,8 +415,8 @@ model Job {
     postedAt        DateTime         @default(now())
     approvedAt      DateTime?
     jobApplications JobApplication[]
-    admin           Admin?           @relation(fields: [adminId], references: [id])
-    user            User?            @relation(fields: [userId], references: [id])
+    admin           Admin?           @relation(fields: [adminId], references: [id], onDelete: Cascade)
+    user            User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
     adminId         String?          @db.Uuid
     userId          String?          @db.Uuid
 }
@@ -427,8 +427,8 @@ model JobApplication {
     cover_letter String?
     status       ApplicantStatus @default(PENDING)
     appliedAt    DateTime        @default(now())
-    job          Job             @relation(fields: [jobId], references: [id])
-    user         User            @relation(fields: [userId], references: [id])
+    job          Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+    user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
     jobId        String          @db.Uuid
     userId       String          @db.Uuid
 }
@@ -447,9 +447,9 @@ model Article {
     approvedAt       DateTime?
     likes            Like[]
     comments         Comment[]
-    author           User?     @relation(fields: [authorId], references: [id])
+    author           User?     @relation(fields: [authorId], references: [id], onDelete: Cascade)
     authorId         String?   @unique @db.Uuid
-    admin            Admin?    @relation(fields: [adminId], references: [id])
+    admin            Admin?    @relation(fields: [adminId], references: [id], onDelete: Cascade)
     adminId          String?   @db.Uuid
 }
 
@@ -457,18 +457,18 @@ model Comment {
     id          String   @id @default(uuid()) @db.Uuid
     content     String
     commentedAt DateTime @default(now())
-    article     Article  @relation(fields: [articleId], references: [id])
+    article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
     articleId   String   @db.Uuid
-    user        User?    @relation(references: [id], fields: [userId])
+    user        User?    @relation(references: [id], fields: [userId], onDelete: Cascade)
     userId      String?  @db.Uuid
 }
 
 model Like {
     id        String   @id @default(uuid()) @db.Uuid
     likedAt   DateTime @default(now())
-    article   Article  @relation(fields: [articleId], references: [id])
+    article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
     articleId String   @db.Uuid
-    user      User?    @relation(fields: [userId], references: [id])
+    user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId    String?  @db.Uuid
 }
 
@@ -486,7 +486,7 @@ model Project {
     additional_note String?
     attachments     Json[]
     additionalInfo  AdditionalInfoProject?
-    client          User                   @relation("ClientProjects", fields: [clientId], references: [id])
+    client          User                   @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
     clientId        String                 @db.Uuid
     status          ProjectStatus          @default(PENDING)
     hires           Hire[]
@@ -499,9 +499,9 @@ model ProjectRoleInfo {
     id                 String  @id @default(uuid()) @db.Uuid
     role_type          String
     offer              Float?
-    project            Project @relation(fields: [projectId], references: [id])
+    project            Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
     projectId          String  @db.Uuid
-    talentOrCreative   User    @relation("UserProjects", fields: [talentOrCreativeId], references: [id])
+    talentOrCreative   User    @relation("UserProjects", fields: [talentOrCreativeId], references: [id], onDelete: Cascade)
     talentOrCreativeId String  @db.Uuid
 }
 
@@ -513,17 +513,17 @@ model AdditionalInfoProject {
     phone_number String
     means_of_id  String
     proof_of_id  Json[]
-    project      Project @relation(references: [id], fields: [projectId])
+    project      Project @relation(references: [id], fields: [projectId], onDelete: Cascade)
     projectId    String  @unique @db.Uuid
 }
 
 model Hire {
     id                 String     @id @default(uuid()) @db.Uuid
-    project            Project    @relation(fields: [projectId], references: [id])
+    project            Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
     projectId          String     @db.Uuid
-    client             User       @relation("ClientHires", fields: [clientId], references: [id])
+    client             User       @relation("ClientHires", fields: [clientId], references: [id], onDelete: Cascade)
     clientId           String     @db.Uuid
-    talentOrCreative   User       @relation("UserHires", fields: [talentOrCreativeId], references: [id])
+    talentOrCreative   User       @relation("UserHires", fields: [talentOrCreativeId], references: [id], onDelete: Cascade)
     talentOrCreativeId String     @db.Uuid
     status             HireStatus @default(PENDING)
     declineReason      String?
@@ -540,9 +540,9 @@ model Contract {
     signedAt      DateTime?
     declineReason String?
     declinedAt    DateTime?
-    user          User?          @relation(fields: [userId], references: [id])
+    user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId        String?        @db.Uuid
-    project       Project        @relation(fields: [projectId], references: [id])
+    project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
     projectId     String         @unique @db.Uuid
     createdAt     DateTime       @default(now())
     updatedAt     DateTime       @updatedAt
@@ -552,18 +552,18 @@ model Rating {
     id           String   @id @default(uuid()) @db.Uuid
     point        Float
     review       String
-    target       User     @relation("TargetUser", fields: [targetUserId], references: [id])
+    target       User     @relation("TargetUser", fields: [targetUserId], references: [id], onDelete: Cascade)
     targetUserId String   @db.Uuid
-    rater        User     @relation("RaterUser", fields: [raterUserId], references: [id])
+    rater        User     @relation("RaterUser", fields: [raterUserId], references: [id], onDelete: Cascade)
     raterUserId  String   @db.Uuid
     createdAt    DateTime @default(now())
 }
 
 model Inbox {
     id       String    @id @default(uuid()) @db.Uuid
-    user     User?     @relation(fields: [userId], references: [id])
+    user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId   String?   @unique @db.Uuid
-    admin    Admin?    @relation(fields: [adminId], references: [id])
+    admin    Admin?    @relation(fields: [adminId], references: [id], onDelete: Cascade)
     adminId  String?   @db.Uuid
     messages Message[]
 }
@@ -582,10 +582,26 @@ model Message {
     adminReceiverId String? @db.Uuid
 
     inbox         Inbox  @relation(fields: [inboxId], references: [id])
-    userSender    User?  @relation("UserSentMessages", fields: [userSenderId], references: [id])
-    adminSender   Admin? @relation("AdminSentMessages", fields: [adminSenderId], references: [id])
-    userReceiver  User?  @relation("UserReceivedMessages", fields: [userReceiverId], references: [id])
-    adminReceiver Admin? @relation("AdminReceivedMessages", fields: [adminReceiverId], references: [id])
+    userSender    User?  @relation("UserSentMessages", fields: [userSenderId], references: [id], onDelete: Cascade)
+    adminSender   Admin? @relation("AdminSentMessages", fields: [adminSenderId], references: [id], onDelete: Cascade)
+    userReceiver  User?  @relation("UserReceivedMessages", fields: [userReceiverId], references: [id], onDelete: Cascade)
+    adminReceiver Admin? @relation("AdminReceivedMessages", fields: [adminReceiverId], references: [id], onDelete: Cascade)
+}
+
+model Country {
+    id     String  @id @default(uuid()) @db.Uuid
+    name   String
+    iso2   String?
+    iso3   String?
+    states State[]
+}
+
+model State {
+    id         String  @id @default(uuid()) @db.Uuid
+    name       String
+    state_code String?
+    country    Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+    countryId  String  @db.Uuid
 }
 
 enum Role {
