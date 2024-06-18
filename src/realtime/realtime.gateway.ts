@@ -28,7 +28,6 @@ import { RealtimeService } from './realtime.service'
       'https://api.talentsphereafrica.co',
       'https://api.talentsphereafrica.com',
       'https://talentsphere-staging.onrender.com',
-      'https://talentsphere-staging.onrender.com',
     ],
   }
 })
