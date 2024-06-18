@@ -63,10 +63,6 @@ export class ClientService {
         }: ClientProfileSetupDTO,
     ) {
         try {
-            const user = await this.prisma.user.findUnique({
-                where: { id: sub }
-            })
-
             const filteredDoc = files.find(file => file.fieldname === "doc")
             const filteredProof = files.filter(file => file.fieldname === "proofOfId")
 
