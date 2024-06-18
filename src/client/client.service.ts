@@ -67,10 +67,6 @@ export class ClientService {
                 where: { id: sub }
             })
 
-            if (user.verified) {
-                return this.response.sendError(res, StatusCodes.Unauthorized, "Can't edit since you're verified")
-            }
-
             const filteredDoc = files.find(file => file.fieldname === "doc")
             const filteredProof = files.filter(file => file.fieldname === "proofOfId")
 
@@ -79,12 +75,13 @@ export class ClientService {
                 where: { clientId: client.id }
             })
 
-            if (!filteredProof.length && !setup.proof_of_id?.length) {
+            const formerProofOfId = setup?.proof_of_id as any[] || []
+            if (filteredProof.length === 0 && formerProofOfId.length === 0) {
                 return this.response.sendError(res, StatusCodes.BadRequest, 'Upload your proof of ID')
             }
 
             if (filteredProof.length > 2) {
-                return this.response.sendError(res, StatusCodes.BadRequest, "Only the front and back of the ID")
+                return this.response.sendError(res, StatusCodes.BadRequest, "Upload only the front and back of the ID")
             }
 
             let document: Prisma.JsonValue
@@ -103,35 +100,36 @@ export class ClientService {
                     const path = `profile/${sub}/${genFileName(result.file)}`
                     await this.aws.uploadS3(result.file, path)
                     return {
-                        path,
                         type: file.mimetype,
+                        path, size: file.mimetype,
                         url: this.aws.getS3(path),
                     }
                 }))
+
+                if (formerProofOfId.length) {
+                    for (const proofOfId of formerProofOfId) {
+                        if (proofOfId?.path) {
+                            await this.aws.deleteS3(proofOfId.path)
+                        }
+                    }
+                }
             }
 
             if (type === "PERSONAL") {
-                const [_,] = await this.prisma.$transaction([
-                    this.prisma.clientSetup.upsert({
-                        where: { clientId: client.id },
-                        create: {
-                            state, facebook, id_type, city, type,
-                            instagram, linkedIn, dob, prof_title,
-                            address, country, website, proof_of_id,
-                            client: { connect: { id: client.id } },
-                        },
-                        update: {
-                            city, type, instagram, linkedIn, dob, prof_title,
-                            address, country, website, state, facebook, id_type,
-                        }
-                    }),
-                    this.prisma.user.update({
-                        where: { id: sub },
-                        data: { firstname, lastname }
-                    })
-                ])
-
-                clientSetup = _
+                clientSetup = await this.prisma.clientSetup.upsert({
+                    where: { clientId: client.id },
+                    create: {
+                        state, facebook, id_type, city, type,
+                        instagram, linkedIn, dob, prof_title,
+                        address, country, website, proof_of_id,
+                        client: { connect: { id: client.id } },
+                    },
+                    update: {
+                        city, type, instagram, linkedIn,
+                        dob, prof_title, proof_of_id, address,
+                        country, website, state, facebook, id_type,
+                    }
+                })
             }
 
             if (type === "COMPANY") {
@@ -149,32 +147,37 @@ export class ClientService {
                 await this.aws.uploadS3(result.file, path)
 
                 document = {
-                    path,
                     url: this.aws.getS3(path),
                     type: result.file.mimetype,
+                    path, size: result.file.size,
                 }
 
-                const [_,] = await this.prisma.$transaction([
-                    this.prisma.clientSetup.upsert({
-                        where: { clientId: client.id },
-                        create: {
-                            client: { connect: { id: client.id } },
-                            address, country, proof_of_id, document, company_name,
-                            website, instagram, linkedIn, prof_title, document_type,
-                            state, facebook, id_type, dob, city, type, reg_type, reg_no,
-                        },
-                        update: {
-                            address, country, website, instagram, linkedIn, prof_title, company_name,
-                            document_type, state, facebook, id_type, city, dob, type, reg_type, reg_no,
-                        }
-                    }),
-                    this.prisma.user.update({
-                        where: { id: sub },
-                        data: { firstname, lastname }
-                    })
-                ])
+                const formerDocument = setup?.document as any
+                if (document?.path && formerDocument?.path) {
+                    await this.aws.deleteS3(formerDocument.path)
+                }
 
-                clientSetup = _
+                clientSetup = await this.prisma.clientSetup.upsert({
+                    where: { clientId: client.id },
+                    create: {
+                        client: { connect: { id: client.id } },
+                        address, country, proof_of_id, document, company_name,
+                        website, instagram, linkedIn, prof_title, document_type,
+                        state, facebook, id_type, dob, city, type, reg_type, reg_no,
+                    },
+                    update: {
+                        document, address, country, website, instagram,
+                        linkedIn, prof_title, company_name, document_type, dob,
+                        state, facebook, id_type, city, type, reg_type, reg_no,
+                    }
+                })
+            }
+
+            if (firstname || lastname) {
+                await this.prisma.user.update({
+                    where: { id: sub },
+                    data: { firstname, lastname }
+                })
             }
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: clientSetup })

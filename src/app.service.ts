@@ -29,6 +29,10 @@ export class AppService {
       where: { name }
     })
 
+    if (!country) {
+      return this.response.sendError(res, StatusCodes.NotFound, "Country not found")
+    }
+
     const states = await this.prisma.state.findMany({
       where: { countryId: country.id },
       orderBy: { name: 'asc' }
