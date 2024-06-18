@@ -317,12 +317,13 @@ export class ProfileSetupService {
                             return this.response.sendError(res, result.status, result.message)
                         }
 
-                        const path = `${user.id}/${genFileName(result.file)}`
+                        const path = `Skills/${user.id}/${genFileName(result.file)}`
                         await this.aws.uploadS3(result.file, path)
                         return {
                             type: file.mimetype,
                             path, size: file.size,
                             url: this.aws.getS3(path),
+                            identifier: file.fieldname,
                         }
                     }))
                 } catch {
