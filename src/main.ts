@@ -23,6 +23,7 @@ async function bootstrap() {
       'https://api.talentsphereafrica.com',
       'https://www.talentsphereafrica.com',
       'https://talentsphere-staging.onrender.com',
+      'https://staging-frontend-cn26.onrender.com',
     ],
     optionsSuccessStatus: 200,
     methods: 'GET,PATCH,POST,PUT,DELETE',
