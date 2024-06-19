@@ -136,10 +136,6 @@ export class JobService {
                 return this.response.sendError(res, StatusCodes.NotFound, "Job not found")
             }
 
-            if (job.status === 'PENDING') {
-                return this.response.sendError(res, StatusCodes.Unauthorized, "Job is pending approval")
-            }
-
             await this.prisma.job.update({
                 where: { id: jobId },
                 data: { status: 'APPROVED', approvedAt: new Date() }
