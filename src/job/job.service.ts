@@ -141,7 +141,7 @@ export class JobService {
                 data: { status: 'APPROVED', approvedAt: new Date() }
             })
 
-            this.response.sendSuccess(res, StatusCodes.OK, { message: "Job removed successfully" })
+            this.response.sendSuccess(res, StatusCodes.OK, { message: "Job approved successfully" })
         } catch (err) {
             this.misc.handleServerError(res, err)
         }
