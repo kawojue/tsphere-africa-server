@@ -172,7 +172,7 @@ export class ModminController {
 
   @Get('/briefs')
   @ApiBearerAuth()
-  @Role(Roles.admin)
+  @Role(Roles.admin, Roles.client)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async fetchBriefs(
     @Res() res: Response,
@@ -183,8 +183,8 @@ export class ModminController {
   }
 
   @ApiBearerAuth()
-  @Role(Roles.admin)
   @Get('/briefs/:briefId')
+  @Role(Roles.admin, Roles.client)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async fetchBrief(
     @Res() res: Response,

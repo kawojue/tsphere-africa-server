@@ -5,7 +5,7 @@ import StatusCodes from 'enums/StatusCodes'
 import { SendRes } from 'lib/sendRes.service'
 import { MiscService } from 'lib/misc.service'
 import { titleText } from 'helpers/formatTexts'
-import { ContractStatus } from '@prisma/client'
+import { Client, ContractStatus } from '@prisma/client'
 import { PrismaService } from 'lib/prisma.service'
 import {
     UpdateProjectStatusDTO, UpdateContractStatusDTO
@@ -727,8 +727,15 @@ export class ModminService {
                     { category: { contains: s, mode: 'insensitive' } },
                 ]
 
+            let client: Client
+            if (role === "client") {
+                client = await this.prisma.client.findUnique({
+                    where: { userId: sub }
+                })
+            }
+
             const briefs = await this.prisma.briefForm.findMany({
-                where: role === "admin" ? { OR } : { clientId: sub, OR },
+                where: role === "admin" ? { OR } : { clientId: client.id, OR },
                 skip: offset,
                 take: limit,
                 select: {
@@ -770,12 +777,19 @@ export class ModminService {
         briefId: string,
         { sub, role }: ExpressUser
     ) {
+        let client: Client
+        if (role === "client") {
+            client = await this.prisma.client.findUnique({
+                where: { userId: sub }
+            })
+        }
+
         const brief = await this.prisma.briefForm.findUnique({
             where: role === "admin" ? {
                 id: briefId
             } : {
                 id: briefId,
-                clientId: sub,
+                clientId: client.id,
             },
             include: {
                 client: {
