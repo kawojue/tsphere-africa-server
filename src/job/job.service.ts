@@ -235,8 +235,9 @@ export class JobService {
         { sub, role }: ExpressUser,
         { page = 1, limit = 50, s = '', q }: SortUserDto
     ) {
+        page = Number(page)
         limit = Number(limit)
-        const offset = (Number(page) - 1) * limit
+        const offset = (page - 1) * limit
 
         const OR = [
             { rate: { contains: s } },
@@ -283,9 +284,9 @@ export class JobService {
             // @ts-ignore
             const userId = req.user?.sub
 
-            search = search?.trim() ?? ''
+            page = Number(page)
             limit = Number(limit)
-            const offset = (Number(page) - 1) * limit
+            const offset = (page - 1) * limit
 
             const OR1 = [
                 { rate: { contains: search } },
@@ -397,29 +398,25 @@ export class JobService {
                 return this.response.sendError(res, StatusCodes.NotFound, 'Job not found')
             }
 
-            let applicants = []
-
-            if (job) {
-                applicants = await this.prisma.jobApplication.findMany({
-                    where: { jobId: job.id },
-                    include: {
-                        job: true,
-                        user: {
-                            select: {
-                                role: true,
-                                email: true,
-                                avatar: true,
-                                username: true,
-                                lastname: true,
-                                firstname: true,
-                                primarySkill: true,
-                                email_verified: true,
-                                rateAndAvailability: true,
-                            }
+            const applicants = await this.prisma.jobApplication.findMany({
+                where: { jobId: job.id },
+                include: {
+                    job: true,
+                    user: {
+                        select: {
+                            role: true,
+                            email: true,
+                            avatar: true,
+                            username: true,
+                            lastname: true,
+                            firstname: true,
+                            primarySkill: true,
+                            email_verified: true,
+                            rateAndAvailability: true,
                         }
                     }
-                })
-            }
+                }
+            })
 
             this.response.sendSuccess(res, StatusCodes.OK, { data: applicants })
         } catch (err) {
@@ -431,11 +428,26 @@ export class JobService {
         res: Response,
         { page = 1, limit = 50, search = '' }: InfiniteScrollDto
     ) {
-        search = search?.trim() ?? ''
+        page = Number(page)
         limit = Number(limit)
-        const offset = (Number(page) - 1) * limit
+        const offset = (page - 1) * limit
+
+        const searchCriteria = {
+            OR: [
+                { user: { username: { contains: search, mode: 'insensitive' } } },
+                { user: { firstname: { contains: search, mode: 'insensitive' } } },
+                { user: { lastname: { contains: search, mode: 'insensitive' } } },
+            ]
+        }
+
+        const totalApplicants = await this.prisma.jobApplication.count({
+            // @ts-ignore
+            where: searchCriteria
+        })
 
         const applicants = await this.prisma.jobApplication.findMany({
+            // @ts-ignore
+            where: searchCriteria,
             include: {
                 job: true,
                 user: {
@@ -457,6 +469,12 @@ export class JobService {
             orderBy: { appliedAt: 'desc' }
         })
 
-        this.response.sendSuccess(res, StatusCodes.OK, { data: applicants })
+        const totalPages = Math.ceil(totalApplicants / limit)
+
+        this.response.sendSuccess(res, StatusCodes.OK, {
+            data: applicants,
+            totalApplicants: totalApplicants,
+            totalPages: totalPages
+        })
     }
 }

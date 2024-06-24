@@ -103,10 +103,10 @@ export class JobController {
     await this.jobService.getJob(res, jobId)
   }
 
-  @Get('/job-applicants/:jobId')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('/job-applicants/:jobId')
   @Role(Roles.admin, Roles.client)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   async fetchJobApplicants(
     @Req() req: IRequest,
     @Res() res: Response,
@@ -115,10 +115,10 @@ export class JobController {
     await this.jobService.fetchJobApplicants(res, jobId, req.user)
   }
 
-  @Get('/all-job-applicants')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Role(Roles.admin)
+  @Get('/all-job-applicants')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   async fetchAllJobApplicants(@Res() res: Response, @Query() query: InfiniteScrollDto,) {
     await this.jobService.fetchAllJobApplicants(res, query)
   }
