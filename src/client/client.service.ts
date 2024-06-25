@@ -354,18 +354,16 @@ export class ClientService {
 
                 approved = total - (pending + cancelled)
             } else {
-                const client = await this.getClient(sub)
-
                 pending = await this.prisma.project.count({
                     where: {
                         status: 'PENDING',
-                        clientId: client.id,
+                        clientId: sub,
                     }
                 })
                 completed = await this.prisma.project.count({
                     where: {
                         status: 'COMPLETED',
-                        clientId: client.id,
+                        clientId: sub,
                     }
                 })
 
@@ -374,7 +372,7 @@ export class ClientService {
                 const cancelled = await this.prisma.project.count({
                     where: {
                         status: 'CANCELLED',
-                        clientId: client.id,
+                        clientId: sub,
                     }
                 })
 
