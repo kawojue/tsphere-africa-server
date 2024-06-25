@@ -1,4 +1,4 @@
-import { Job } from '@prisma/client'
+import { Job, JobApplication } from '@prisma/client'
 import { Request, Response } from 'express'
 import { Injectable } from '@nestjs/common'
 import StatusCodes from 'enums/StatusCodes'
@@ -356,23 +356,33 @@ export class JobService {
                         })
 
                         totalJobs += recommendedJobs.length
-
                         jobs = recommendedJobs.concat(jobs).slice(0, limit)
                     }
                 }
             }
 
+            const jobsWithApplicantStatus = await Promise.all(jobs.map(async (job) => {
+                let hasApplied: JobApplication
+                if (userId) {
+                    hasApplied = await this.prisma.jobApplication.findFirst({
+                        where: { jobId: job.id, userId }
+                    })
+                }
+
+                return { ...job, hasApplied }
+            }))
+
             const totalPages = Math.ceil(totalJobs / limit)
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: jobs, totalPages, totalJobs
+                data: jobsWithApplicantStatus, totalPages, totalJobs
             })
         } catch (err) {
             this.misc.handleServerError(res, err, "Error listing jobs")
         }
     }
 
-    async getJob(res: Response, jobId: string) {
+    async getJob(req: Request, res: Response, jobId: string) {
         const job = await this.prisma.job.findUnique({
             where: { id: jobId }
         })
@@ -381,7 +391,17 @@ export class JobService {
             return this.response.sendError(res, StatusCodes.NotFound, 'Job not found')
         }
 
-        this.response.sendSuccess(res, StatusCodes.OK, { data: job })
+        // @ts-ignore
+        const sub = req.user?.sub
+
+        let hasApplied: JobApplication
+        if (sub) {
+            hasApplied = await this.prisma.jobApplication.findFirst({
+                where: { userId: sub, jobId }
+            })
+        }
+
+        this.response.sendSuccess(res, StatusCodes.OK, { data: job, hasApplied })
     }
 
     async fetchJobApplicants(

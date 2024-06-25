@@ -327,60 +327,41 @@ export class ClientService {
 
     async analytics(res: Response, { sub, role }: ExpressUser) {
         try {
-            let total = 0
-            let pending = 0
-            let approved = 0
-            let completed = 0
+            const pending = await this.prisma.project.count({
+                where: role === "admin" ? {
+                    status: 'PENDING'
+                } : {
+                    status: 'PENDING',
+                    clientId: sub,
+                }
+            })
 
-            if (role === "admin") {
-                pending = await this.prisma.project.count({
-                    where: {
-                        status: 'PENDING'
-                    }
-                })
-                completed = await this.prisma.project.count({
-                    where: {
-                        status: 'COMPLETED'
-                    }
-                })
+            const completed = await this.prisma.project.count({
+                where: role === "admin" ? {
+                    status: 'COMPLETED'
+                } : {
+                    status: 'COMPLETED',
+                    clientId: sub,
+                }
+            })
 
-                total = await this.prisma.project.count()
+            const total = await this.prisma.project.count({
+                where: role === "admin" ? {} : { clientId: sub }
+            })
 
-                const cancelled = await this.prisma.project.count({
-                    where: {
-                        status: 'CANCELLED'
-                    }
-                })
+            const cancelled = await this.prisma.project.count({
+                where: role === "admin" ? {
+                    status: 'CANCELLED'
+                } : {
+                    status: 'CANCELLED',
+                    clientId: sub,
+                }
+            })
 
-                approved = total - (pending + cancelled)
-            } else {
-                pending = await this.prisma.project.count({
-                    where: {
-                        status: 'PENDING',
-                        clientId: sub,
-                    }
-                })
-                completed = await this.prisma.project.count({
-                    where: {
-                        status: 'COMPLETED',
-                        clientId: sub,
-                    }
-                })
-
-                total = await this.prisma.project.count()
-
-                const cancelled = await this.prisma.project.count({
-                    where: {
-                        status: 'CANCELLED',
-                        clientId: sub,
-                    }
-                })
-
-                approved = total - (pending + cancelled)
-            }
+            const approved = total - (pending + cancelled)
 
             this.response.sendSuccess(res, StatusCodes.OK, {
-                data: { total, approved, pending, completed }
+                data: { total, approved, pending, completed, cancelled }
             })
         } catch (err) {
             this.misc.handleServerError(res, err)

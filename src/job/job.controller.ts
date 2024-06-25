@@ -99,8 +99,12 @@ export class JobController {
   }
 
   @Get('/job-list/:jobId')
-  async getJob(@Res() res: Response, @Param('jobId') jobId: string) {
-    await this.jobService.getJob(res, jobId)
+  async getJob(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Param('jobId') jobId: string,
+  ) {
+    await this.jobService.getJob(req, res, jobId)
   }
 
   @ApiBearerAuth()

@@ -64,6 +64,7 @@ export class AppModule implements NestModule {
       .apply(CustomAuthMiddlware)
       .forRoutes(
         { path: 'job/job-list', method: RequestMethod.GET },
+        { path: 'job/job-list/:jobId', method: RequestMethod.GET },
         { path: 'article/fetch', method: RequestMethod.GET },
       )
 
