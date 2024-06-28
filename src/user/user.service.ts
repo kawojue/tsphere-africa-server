@@ -786,18 +786,16 @@ export class UserService {
 
             const bookings = await this.prisma.hire.findMany({
                 where: role === "admin" ? { OR } : role === "client" ? {
-                    OR,
-                    clientId: sub,
+                    OR, clientId: sub,
                 } : {
-                    OR,
-                    talentOrCreativeId: sub,
+                    OR, talentOrCreativeId: sub,
                     status: { in: ['HIRED', 'DECLINED', 'ACCEPTED'] },
                 },
                 select: {
                     id: true,
                     status: true,
                     project: true,
-                    createdAt: true,
+                    createdAt: true
                 },
                 take: limit,
                 skip: offset,
