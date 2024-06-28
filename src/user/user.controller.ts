@@ -143,7 +143,7 @@ export class UserController {
   @ApiBearerAuth()
   @Get('/bookings/:bookingId')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Role(Roles.talent, Roles.creative)
+  @Role(Roles.talent, Roles.admin, Roles.client, Roles.creative)
   async getBooking(
     @Res() res: Response,
     @Req() req: IRequest,
@@ -155,6 +155,7 @@ export class UserController {
   @ApiBearerAuth()
   @Patch('/bookings/:bookingId/response')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Role(Roles.talent, Roles.creative)
   async handleBookingResponse(
     @Res() res: Response,
     @Req() req: IRequest,
